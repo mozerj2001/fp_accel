@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_bit_cntr_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_bit_cntr" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="167.754 ns"></ZoomEndTime>
+      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="404"></NameColumnWidth>
+      <ValueColumnWidth column_width="172"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="9" />
+   <wvobject fp_name="/tb_bit_cntr/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/uut/i_Vector" type="array">
+      <obj_property name="ElementShortName">i_Vector[53:0]</obj_property>
+      <obj_property name="ObjectShortName">i_Vector[53:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/uut/w_ExtendedVector" type="array">
+      <obj_property name="ElementShortName">w_ExtendedVector[71:0]</obj_property>
+      <obj_property name="ObjectShortName">w_ExtendedVector[71:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/uut/r_6BitSum" type="array">
+      <obj_property name="ElementShortName">r_6BitSum[26:0]</obj_property>
+      <obj_property name="ObjectShortName">r_6BitSum[26:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/VECTOR_WIDTH" type="array">
+      <obj_property name="ElementShortName">VECTOR_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">VECTOR_WIDTH[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/uut/EXT_VECTOR_WIDTH" type="array">
+      <obj_property name="ElementShortName">EXT_VECTOR_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">EXT_VECTOR_WIDTH[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/uut/sum" type="array">
+      <obj_property name="ElementShortName">sum[2:0]</obj_property>
+      <obj_property name="ObjectShortName">sum[2:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/uut/pipeline" type="array">
+      <obj_property name="ElementShortName">pipeline[2:0][4:0]</obj_property>
+      <obj_property name="ObjectShortName">pipeline[2:0][4:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+</wave_config>
