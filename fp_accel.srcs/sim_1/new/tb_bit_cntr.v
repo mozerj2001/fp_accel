@@ -9,9 +9,10 @@ module tb_bit_cntr(
 
     localparam CLK_PERIOD = 10;
     localparam HALF_CLK_PERIOD = 5;
-    localparam VECTOR_WIDTH = 54;
-    localparam PIPELINE_DEPTH = 2;
-    localparam NO_OF_ADDERS = 5;
+    localparam VECTOR_WIDTH = 50;
+    localparam GRANULE_WIDTH = 6;
+    localparam GW3 = 3*GRANULE_WIDTH;
+    localparam PIPELINE_DEPTH = $clog2(VECTOR_WIDTH/GW3)/$clog2(3);
 
     reg clk = 0;
     reg rst;
@@ -21,8 +22,7 @@ module tb_bit_cntr(
     bit_cntr
     #(
         .VECTOR_WIDTH(VECTOR_WIDTH),
-        .PIPELINE_DEPTH(PIPELINE_DEPTH),
-        .NO_OF_ADDERS(NO_OF_ADDERS)
+        .GRANULE_WIDTH(GRANULE_WIDTH)
     )
     uut(
         .clk(clk),
@@ -41,13 +41,13 @@ module tb_bit_cntr(
     initial
     begin
         rst <= 1;
-        vector <= 24'hFFFFFF;
+        vector <= 50'h0FFFFFFFFFFFF;
         #CLK_PERIOD rst <= 0;
 
-        #CLK_PERIOD vector <= 54'h0F0F0F0F0F0F0F;
-        #CLK_PERIOD vector <= 54'h06666666666666;
-        #CLK_PERIOD vector <= 54'h01111111111111;
-        #CLK_PERIOD vector <= 54'h0FFFFFFFFFFFFF;
+        #CLK_PERIOD vector <= 50'h0F0F0F0F0F0F0;
+        #CLK_PERIOD vector <= 50'h0666666666666;
+        #CLK_PERIOD vector <= 50'h0111111111111;
+        #CLK_PERIOD vector <= 50'h0FFFFFFFFFFFF;
     end
 
 endmodule

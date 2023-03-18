@@ -3,13 +3,11 @@
 
 // This is a parametrizable bit counter, that counts the number of bits with
 // the value '1' in the input vector.
-// Assumption: 6-bit LUTs and 3 input adders.
 
 module bit_cntr
     #(
-        parameter VECTOR_WIDTH = 920,
-        parameter PIPELINE_DEPTH = 4,           //log3(VECTOR_WIDTH/18)
-        parameter NO_OF_ADDERS = 40
+        parameter VECTOR_WIDTH = 920,           // how wide the input vector is
+        parameter GRANULE_WIDTH = 6             // how many bits are summed in stage 1
     )
     (
         input wire                      clk,
@@ -19,12 +17,15 @@ module bit_cntr
         output wire [(PIPELINE_DEPTH-1)*2:0] sum 
     );
 
-    localparam EXT_VECTOR_WIDTH = VECTOR_WIDTH + (18 - (VECTOR_WIDTH % 18));
+    localparam GW3 = GRANULE_WIDTH*3;
+    localparam PIPELINE_DEPTH = $clog2(VECTOR_WIDTH/GW3)/$clog2(3);
+    localparam EXT_VECTOR_WIDTH = 3**(PIPELINE_DEPTH+1) * GW3;
+    localparam NO_OF_ADDERS = 100;
 
     // PAD INPUT VECTOR
-    // Pad the input vector to be divisible by eighteen (6*3).
+    // Pad to 3**clog3(VECTOR_WIDTH)*GW3
     wire [EXT_VECTOR_WIDTH-1:0] w_ExtendedVector;
-    assign w_ExtendedVector = {i_Vector, {(18 - (VECTOR_WIDTH % 18)){1'b0}}};
+    assign w_ExtendedVector = {i_Vector, {(EXT_VECTOR_WIDTH-VECTOR_WIDTH){1'b0}}};
 
 
     // PIPELINE PRE-STAGE
