@@ -16,17 +16,19 @@ module bit_cntr
         input wire                      rst,
         input wire [VECTOR_WIDTH-1:0]   i_Vector,
 
-        output wire [(PIPELINE_DEPTH-1)*2:0] sum 
+        output wire [(PIPELINE_DEPTH-1)*2:0] o_Sum 
     );
 
 
     // LOCAL CONSTANTS
     // how many bits per first stage adder?
     localparam GW3 = GRANULE_WIDTH*3;
-    // how many pipeline stages? ($clog3(VECTOR_WIDTH))
+    // how many r_Pipeline stages? ($clog3(VECTOR_WIDTH))
     localparam PIPELINE_DEPTH = $clog2(VECTOR_WIDTH/GW3)/$clog2(3)+1;
     // how wide is the padded vector?
     localparam EXT_VECTOR_WIDTH = 3**(PIPELINE_DEPTH) * GW3;
+    // how wide is the output of the three-input adders at each r_Pipeline stage
+    localparam PP_WIDTH = $clog2(VECTOR_WIDTH);
 
     // PAD INPUT VECTOR
     wire [EXT_VECTOR_WIDTH-1:0] w_ExtendedVector;
@@ -57,30 +59,30 @@ module bit_cntr
     // Add three of the results from the previous stage in every stage.
     // The pipeline itself is an array of three input adder output registers
     // of appropriate sizing.
-    reg [NO_OF_ADDERS-1:0] pipeline [(PIPELINE_DEPTH+1)*2:0];
+    reg [PP_WIDTH-1:0] r_Pipeline [NO_OF_ADDERS-1:0];
 
     genvar jj;
     generate
-        for(jj = 0; jj < NO_OF_ADDERS-1; jj = jj + 1) begin
-            if(jj > (NO_OF_ADDERS-3**(PIPELINE_DEPTH-1)-1))
+        for(jj = 0; jj < NO_OF_ADDERS; jj = jj + 1) begin
+            if(jj > (NO_OF_ADDERS-3**(PIPELINE_DEPTH)-1))
             begin
                 always @ (posedge clk) begin
-                    pipeline[jj] <= w_GranuleSum[3*jj] + 
-                                    w_GranuleSum[3*jj+1] + 
-                                    w_GranuleSum[3*jj+2];
+                    r_Pipeline[jj] <=   w_GranuleSum[3*(jj-NO_OF_ADDERS+3**PIPELINE_DEPTH)] + 
+                                        w_GranuleSum[3*(jj-NO_OF_ADDERS+3**PIPELINE_DEPTH)+1] + 
+                                        w_GranuleSum[3*(jj-NO_OF_ADDERS+3**PIPELINE_DEPTH)+2];
                 end
             end
             else
             begin
                 always @ (posedge clk) begin
-                    pipeline[jj] <= pipeline[3*jj+1] + 
-                                    pipeline[3*jj+2] + 
-                                    pipeline[3*jj+3];
+                    r_Pipeline[jj] <=   r_Pipeline[3*jj+1] + 
+                                        r_Pipeline[3*jj+2] + 
+                                        r_Pipeline[3*jj+3];
                 end
             end
         end
     endgenerate
 
-    assign sum = pipeline[0];
+    assign o_Sum = r_Pipeline[0];
 
 endmodule

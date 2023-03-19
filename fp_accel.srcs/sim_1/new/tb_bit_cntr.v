@@ -30,7 +30,7 @@ module tb_bit_cntr(
         .clk(clk),
         .rst(rst),
         .i_Vector(vector),
-        .sum(sum)
+        .o_Sum(sum)
     );
 
     // STIMULUS
