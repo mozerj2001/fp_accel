@@ -1,0 +1,12 @@
+# Ignore all folders, except the source folder.
+
+fp_accel.cache/*
+fp_accel.hw/*
+fp_accel.ip_user_files/*
+fp_accel.sim/*
+
+# Ignore project file.
+*.xpr
+
+# Ignore all temporary files on Windows.
+*~
