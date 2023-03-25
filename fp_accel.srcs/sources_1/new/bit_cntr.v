@@ -8,15 +8,14 @@
 module bit_cntr
     #(
         parameter VECTOR_WIDTH = 920,           // how wide the input vector is
-        parameter GRANULE_WIDTH = 6,            // how many bits are summed in stage 1
-        parameter NO_OF_ADDERS = 243            // temporary solution, until I find out how to calculate it pre-synthesis
+        parameter GRANULE_WIDTH = 6             // how many bits are summed in stage 1
     )
     (
         input wire                      clk,
         input wire                      rst,
         input wire [VECTOR_WIDTH-1:0]   i_Vector,
 
-        output wire [(PIPELINE_DEPTH-1)*2:0] o_Sum 
+        output wire [$clog2(VECTOR_WIDTH):0] o_Sum 
     );
 
 
@@ -27,8 +26,9 @@ module bit_cntr
     localparam PIPELINE_DEPTH = $clog2(VECTOR_WIDTH/GW3)/$clog2(3)+1;
     // how wide is the padded vector?
     localparam EXT_VECTOR_WIDTH = 3**(PIPELINE_DEPTH) * GW3;
-    // how wide is the output of the three-input adders at each r_Pipeline stage
-    localparam PP_WIDTH = $clog2(VECTOR_WIDTH);
+    // how wide is the output of the three-input adders at each r_Pipeline stage?
+    // WORST CASE: all input bits are '1'
+    localparam PIPELINE_WIDTH = $clog2(VECTOR_WIDTH);
 
     // PAD INPUT VECTOR
     wire [EXT_VECTOR_WIDTH-1:0] w_ExtendedVector;
@@ -59,30 +59,34 @@ module bit_cntr
     // Add three of the results from the previous stage in every stage.
     // The pipeline itself is an array of three input adder output registers
     // of appropriate sizing.
-    reg [PP_WIDTH-1:0] r_Pipeline [NO_OF_ADDERS-1:0];
+    reg [PIPELINE_WIDTH-1:0] r_Pipeline [EXT_VECTOR_WIDTH/GW3*(PIPELINE_DEPTH+1):0];
 
-    genvar jj;
+    genvar jj, kk;
     generate
-        for(jj = 0; jj < NO_OF_ADDERS; jj = jj + 1) begin
-            if(jj > (NO_OF_ADDERS-3**(PIPELINE_DEPTH)-1))
-            begin
-                always @ (posedge clk) begin
-                    r_Pipeline[jj] <=   w_GranuleSum[3*(jj-NO_OF_ADDERS+3**PIPELINE_DEPTH)] + 
-                                        w_GranuleSum[3*(jj-NO_OF_ADDERS+3**PIPELINE_DEPTH)+1] + 
-                                        w_GranuleSum[3*(jj-NO_OF_ADDERS+3**PIPELINE_DEPTH)+2];
-                end
+        for(jj = 0; jj < PIPELINE_DEPTH+1; jj = jj + 1) begin
+            if(jj == PIPELINE_DEPTH) begin
+                for(kk = 0; kk < 3**jj; kk = kk + 1) begin
+                    always @ (posedge clk)
+                    begin
+                        r_Pipeline[3**jj + kk] <= w_GranuleSum[3*kk]    +
+                                                w_GranuleSum[3*kk + 1]  +
+                                                w_GranuleSum[3*kk + 2];
+                    end
+                end 
             end
-            else
-            begin
-                always @ (posedge clk) begin
-                    r_Pipeline[jj] <=   r_Pipeline[3*jj+1] + 
-                                        r_Pipeline[3*jj+2] + 
-                                        r_Pipeline[3*jj+3];
-                end
+            else begin
+                for(kk = 0; kk < 3**jj; kk = kk + 1) begin
+                    always @ (posedge clk)
+                    begin
+                        r_Pipeline[3**jj + kk] <= r_Pipeline[3**(jj+1) + 3*kk]    +
+                                                r_Pipeline[3**(jj+1) + 3*kk + 1]  +
+                                                r_Pipeline[3**(jj+1) + 3*kk + 2];
+                    end
+                end 
             end
         end
     endgenerate
 
-    assign o_Sum = r_Pipeline[0];
+    assign o_Sum = r_Pipeline[1];
 
 endmodule

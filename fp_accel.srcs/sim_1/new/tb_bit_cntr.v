@@ -13,7 +13,6 @@ module tb_bit_cntr(
     localparam GRANULE_WIDTH = 6;
     localparam GW3 = 3*GRANULE_WIDTH;
     localparam PIPELINE_DEPTH = $clog2(VECTOR_WIDTH/GW3)/$clog2(3);
-    localparam NO_OF_ADDERS = 4;
 
     reg clk = 0;
     reg rst;
@@ -23,8 +22,7 @@ module tb_bit_cntr(
     bit_cntr
     #(
         .VECTOR_WIDTH(VECTOR_WIDTH),
-        .GRANULE_WIDTH(GRANULE_WIDTH),
-        .NO_OF_ADDERS(NO_OF_ADDERS)
+        .GRANULE_WIDTH(GRANULE_WIDTH)
     )
     uut(
         .clk(clk),

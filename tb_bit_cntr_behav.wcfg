@@ -12,12 +12,12 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="260.601 ns"></ZoomEndTime>
-      <Cursor1Time time="30.000 ns"></Cursor1Time>
+      <ZoomEndTime time="66.051 ns"></ZoomEndTime>
+      <Cursor1Time time="26.550 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="404"></NameColumnWidth>
-      <ValueColumnWidth column_width="154"></ValueColumnWidth>
+      <ValueColumnWidth column_width="136"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="7" />
    <wvobject fp_name="/tb_bit_cntr/clk" type="logic">
@@ -46,36 +46,50 @@
    <wvobject fp_name="/tb_bit_cntr/uut/w_GranuleSum" type="array">
       <obj_property name="ElementShortName">w_GranuleSum[8:0][2:0]</obj_property>
       <obj_property name="ObjectShortName">w_GranuleSum[8:0][2:0]</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/tb_bit_cntr/uut/sum" type="array">
-      <obj_property name="ElementShortName">sum[0:0]</obj_property>
-      <obj_property name="ObjectShortName">sum[0:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-   </wvobject>
-   <wvobject fp_name="/tb_bit_cntr/uut/pipeline" type="array">
-      <obj_property name="ElementShortName">pipeline[3:0][5:0]</obj_property>
-      <obj_property name="ObjectShortName">pipeline[3:0][5:0]</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      <wvobject fp_name="/tb_bit_cntr/uut/pipeline[3]" type="array">
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/uut/o_Sum" type="array">
+      <obj_property name="ElementShortName">o_Sum[6:0]</obj_property>
+      <obj_property name="ObjectShortName">o_Sum[6:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr/uut/r_Pipeline" type="array">
+      <obj_property name="ElementShortName">r_Pipeline[6:0][5:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Pipeline[6:0][5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/tb_bit_cntr/uut/r_Pipeline[6]" type="array">
+         <obj_property name="ElementShortName">[6][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[6][5:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_bit_cntr/uut/r_Pipeline[5]" type="array">
+         <obj_property name="ElementShortName">[5][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[5][5:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_bit_cntr/uut/r_Pipeline[4]" type="array">
+         <obj_property name="ElementShortName">[4][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[4][5:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/tb_bit_cntr/uut/r_Pipeline[3]" type="array">
          <obj_property name="ElementShortName">[3][5:0]</obj_property>
          <obj_property name="ObjectShortName">[3][5:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
-      <wvobject fp_name="/tb_bit_cntr/uut/pipeline[2]" type="array">
+      <wvobject fp_name="/tb_bit_cntr/uut/r_Pipeline[2]" type="array">
          <obj_property name="ElementShortName">[2][5:0]</obj_property>
          <obj_property name="ObjectShortName">[2][5:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
-      <wvobject fp_name="/tb_bit_cntr/uut/pipeline[1]" type="array">
+      <wvobject fp_name="/tb_bit_cntr/uut/r_Pipeline[1]" type="array">
          <obj_property name="ElementShortName">[1][5:0]</obj_property>
          <obj_property name="ObjectShortName">[1][5:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
-      <wvobject fp_name="/tb_bit_cntr/uut/pipeline[0]" type="array">
+      <wvobject fp_name="/tb_bit_cntr/uut/r_Pipeline[0]" type="array">
          <obj_property name="ElementShortName">[0][5:0]</obj_property>
          <obj_property name="ObjectShortName">[0][5:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
