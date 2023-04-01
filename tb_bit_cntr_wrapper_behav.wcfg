@@ -13,13 +13,13 @@
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
       <ZoomEndTime time="1,000.001 ns"></ZoomEndTime>
-      <Cursor1Time time="30.000 ns"></Cursor1Time>
+      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="404"></NameColumnWidth>
-      <ValueColumnWidth column_width="124"></ValueColumnWidth>
+      <ValueColumnWidth column_width="118"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="12" />
+   <WVObjectSize size="13" />
    <wvobject fp_name="/tb_bit_cntr_wrapper/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -51,8 +51,8 @@
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject fp_name="/tb_bit_cntr_wrapper/uut/r_DelayLastWordFF" type="array">
-      <obj_property name="ElementShortName">r_DelayLastWordFF[3:0]</obj_property>
-      <obj_property name="ObjectShortName">r_DelayLastWordFF[3:0]</obj_property>
+      <obj_property name="ElementShortName">r_DelayLastWordFF[4:0]</obj_property>
+      <obj_property name="ObjectShortName">r_DelayLastWordFF[4:0]</obj_property>
    </wvobject>
    <wvobject fp_name="/tb_bit_cntr_wrapper/uut/pipelined_counter/o_Sum" type="array">
       <obj_property name="ElementShortName">o_Sum[8:0]</obj_property>
@@ -87,5 +87,9 @@
       <obj_property name="ElementShortName">r_Pipeline[27:0][7:0]</obj_property>
       <obj_property name="ObjectShortName">r_Pipeline[27:0][7:0]</obj_property>
       <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_bit_cntr_wrapper/uut/pipelined_counter/w_GranuleSum" type="array">
+      <obj_property name="ElementShortName">w_GranuleSum[26:0][2:0]</obj_property>
+      <obj_property name="ObjectShortName">w_GranuleSum[26:0][2:0]</obj_property>
    </wvobject>
 </wave_config>
