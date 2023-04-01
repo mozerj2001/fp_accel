@@ -19,7 +19,6 @@ module bit_cntr
     );
 
 
-    // LOCAL CONSTANTS
     // how many bits per first stage adder?
     localparam GW3 = GRANULE_WIDTH*3;
     // how many r_Pipeline stages? ($clog3(VECTOR_WIDTH))
@@ -30,18 +29,20 @@ module bit_cntr
     // WORST CASE: all input bits are '1'
     localparam PIPELINE_WIDTH = $clog2(VECTOR_WIDTH);
 
+    /////////////////////////////////////////////////////////////////////////////////////
     // PAD INPUT VECTOR
     wire [EXT_VECTOR_WIDTH-1:0] w_ExtendedVector;
     assign w_ExtendedVector = {i_Vector, {(EXT_VECTOR_WIDTH-VECTOR_WIDTH){1'b0}}};
 
 
-    // PIPELINE PRE-STAGE
+    /////////////////////////////////////////////////////////////////////////////////////
+    // PIPELINE 0
     // Create sum of bits in every GRANULE_WIDTH slice of the current input 
     // vector.
     // Assign the result to the corresponding three bits of the 6BitSum
     // register. (3 is the maximum output width at this stage, as it is the
     // proper size for the largest granule that makes sense (6-bits wide).
-    wire [3**PIPELINE_DEPTH-1:0] w_GranuleSum[GW3/2-1:0];
+    wire [$clog2(GRANULE_WIDTH)-1:0] w_GranuleSum[EXT_VECTOR_WIDTH/GRANULE_WIDTH-1:0];
 
     genvar ii;
     generate
@@ -55,7 +56,8 @@ module bit_cntr
         end
     endgenerate
 
-    // PIPELINE STAGE 1-N
+    /////////////////////////////////////////////////////////////////////////////////////
+    // PIPELINE STAGE 1-to-N
     // Add three of the results from the previous stage in every stage.
     // The pipeline itself is an array of three input adder output registers
     // of appropriate sizing.
@@ -68,9 +70,13 @@ module bit_cntr
                 for(kk = 0; kk < 3**jj; kk = kk + 1) begin
                     always @ (posedge clk)
                     begin
-                        r_Pipeline[3**jj + kk] <= w_GranuleSum[3*kk]    +
-                                                w_GranuleSum[3*kk + 1]  +
-                                                w_GranuleSum[3*kk + 2];
+                        if(rst) begin
+                            r_Pipeline[3**jj + kk] <= 0;
+                        end else begin
+                            r_Pipeline[3**jj + kk] <= w_GranuleSum[3*kk]    +
+                                                    w_GranuleSum[3*kk + 1]  +
+                                                    w_GranuleSum[3*kk + 2];
+                        end
                     end
                 end 
             end
@@ -78,9 +84,13 @@ module bit_cntr
                 for(kk = 0; kk < 3**jj; kk = kk + 1) begin
                     always @ (posedge clk)
                     begin
-                        r_Pipeline[3**jj + kk] <= r_Pipeline[3**(jj+1) + 3*kk]    +
-                                                r_Pipeline[3**(jj+1) + 3*kk + 1]  +
-                                                r_Pipeline[3**(jj+1) + 3*kk + 2];
+                        if(rst) begin
+                            r_Pipeline[3**jj + kk] <= 0;
+                        end else begin
+                            r_Pipeline[3**jj + kk] <= r_Pipeline[3**(jj+1) + 3*kk]    +
+                                                    r_Pipeline[3**(jj+1) + 3*kk + 1]  +
+                                                    r_Pipeline[3**(jj+1) + 3*kk + 2];
+                        end
                     end
                 end 
             end
