@@ -10,3 +10,6 @@ fp_accel.sim/*
 
 # Ignore all temporary files on Windows.
 *~
+*.swp
+*.bak
+
