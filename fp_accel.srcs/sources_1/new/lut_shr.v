@@ -13,7 +13,7 @@ module lut_shr
         output wire q_msb, q_sel
     );
 
-    reg [WIDTH-1:0] shr = WIDTH'b0;
+    reg [WIDTH-1:0] shr = 0;
 
     always @ (posedge clk)
     begin
