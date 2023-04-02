@@ -61,7 +61,7 @@ module bit_cntr
     // Add three of the results from the previous stage in every stage.
     // The pipeline itself is an array of three input adder output registers
     // of appropriate sizing.
-    reg [PIPELINE_WIDTH-1:0] r_Pipeline [EXT_VECTOR_WIDTH/GW3*(PIPELINE_DEPTH+1):0];
+    reg [PIPELINE_WIDTH:0] r_Pipeline [EXT_VECTOR_WIDTH/GW3*(PIPELINE_DEPTH+1):0];
 
     genvar jj, kk;
     generate

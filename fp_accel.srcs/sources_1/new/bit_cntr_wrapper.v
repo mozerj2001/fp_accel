@@ -98,7 +98,7 @@ module bit_cntr_wrapper
         if(rst) begin
             r_Accumulator <= 16'b0;
         end
-        else if(r_DelayLastWordFF[DELAY+1]) begin
+        else if(r_DelayLastWordFF[DELAY]) begin
             r_Accumulator <= w_NewSum;
         end
         else if(r_DelayValidFF[DELAY]) begin
