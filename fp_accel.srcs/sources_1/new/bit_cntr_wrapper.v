@@ -42,10 +42,8 @@ module bit_cntr_wrapper
 
     /////////////////////////////////////////////////////////////////////////////////////
     // DELAY SIGNALS
-    // NOTE: LastWord is delayed for one more clk, because when it is 1, the
-    // new value should already be readable from the Accumulator.
-    reg r_DelayValidFF [DELAY:0];
-    reg r_DelayLastWordFF [DELAY+1:0];
+    reg r_DelayValidFF [DELAY+1:0];
+    reg r_DelayLastWordFF [DELAY:0];
 
     genvar ii;
     generate
@@ -79,13 +77,13 @@ module bit_cntr_wrapper
     always @ (posedge clk)
     begin
         if(rst) begin
-            r_DelayLastWordFF[DELAY+1] <= 1'b0;
+            r_DelayValidFF[DELAY+1] <= 1'b0;
         end else begin
-            r_DelayLastWordFF[DELAY+1] <= r_DelayLastWordFF[DELAY];
+            r_DelayValidFF[DELAY+1] <= r_DelayValidFF[DELAY];
         end
     end
 
-    assign o_SumValid = r_DelayValidFF[DELAY];
+    assign o_SumValid = r_DelayValidFF[DELAY+1];
     assign o_SumNew = r_DelayLastWordFF[DELAY];
 
 

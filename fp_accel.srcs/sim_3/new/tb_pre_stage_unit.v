@@ -23,7 +23,7 @@ module tb_pre_stage_unit(
     reg                            rst = 1;
     reg [BUS_WIDTH-1:0]            test_Vector;
     reg                            test_Valid;
-    wire [OUTPUT_VECTOR_WIDTH-1:0] o_Vector;
+    wire [BUS_WIDTH-1:0]           o_SubVector;
     wire [BIT_NO_OUTPUT_WIDTH-1:0] o_Cnt;
 
     pre_stage_unit#(
@@ -36,7 +36,7 @@ module tb_pre_stage_unit(
         .rst(rst),
         .i_Vector(test_Vector),
         .i_Valid(test_Valid),
-        .o_Vector(o_Vector),
+        .o_SubVector(o_SubVector),
         .o_Cnt(o_Cnt)
     );
 
@@ -57,6 +57,78 @@ module tb_pre_stage_unit(
         #(CLK_PERIOD * 10);
 
         test_Valid <= 1'b1;
+        test_Vector <= 128'h11111111111111111111111111111111;   // 32
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'hFFFFFFFF00000000FFFFFFFF00000000;   // 64
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h11111111111111111111111111111111;   // 32
+
+        // sum = 256
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h33333333333333333333333333333333;   // 64
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h77777777777777777777777777777777;   // 96
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h00000000000000000000000000000000;   // 0
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h00000000000000000000000000000000;   // 0
+
+        // sum = 160
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'hEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE;   // 96
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h55555555555555555555555555555555;   // 64
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h11111111111111111111111111111111;   // 32
+
+        // sum = 320
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'hF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0;   // 64
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'hE070E070E070E070E070E070E070E070;   // 48
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h12341234123412341234123412341234;   // 40
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h11111111111111111111111111111111;   // 32
+
+        // sum = 184
+        
+        #CLK_PERIOD;
+
         test_Vector <= 128'h00000000000000000000000000000000;   // 0
 
         #CLK_PERIOD;
@@ -110,11 +182,26 @@ module tb_pre_stage_unit(
         // sum = 320
 
         #CLK_PERIOD;
+
+        test_Vector <= 128'hF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0;   // 64
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'hE070E070E070E070E070E070E070E070;   // 48
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h12341234123412341234123412341234;   // 40
+
+        #CLK_PERIOD;
+
+        test_Vector <= 128'h11111111111111111111111111111111;   // 32
+
+        // sum = 184
+        //
+        #CLK_PERIOD;
         test_Valid <= 1'b0;
     end
-
-
-
 
 
 endmodule

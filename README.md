@@ -30,5 +30,17 @@
 		   o_SumValid - a valid calculation is currently ongoing
 		   o_SumNew - current o_Sum value is the complete sum of a multiple i_Vector long vector
 		   
+		   
 [5] lut_ram: LUT RAM module for extreme width and very shallow depth
+
 [6] lut_shr: LUT shiftregister module for storing vectors in addressable shiftregisters
+
+[7] pre_stage_unit: Instantiates a bit counter, outputs the input vector's CNT value.
+					Delays the input vector with a shiftregister so that the vector appears
+					on the output parallel to its CNT value.
+	*in*: i_Vector - input data
+		  i_Valid - current input is valid and should be fed into the bit_cntr_wrapper module
+	*out*: o_SubVector - one of the input vectors corresponding to the current o_Cnt output, changes
+						every clock cycle
+		   o_Cnt - number of '1's in the input vector series (currently being emitted on o_SubVector
+		   o_CntNew - first sub vector of new CNT on o_Cnt can be read from o_SubVector
