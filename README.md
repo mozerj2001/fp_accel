@@ -1,7 +1,8 @@
 *2023 BME MIT - Hardware Accelerator for calculating Tanimoto distance*
 
 **MODULES:**
-[1] bit_cntr: A pipelined module that outputs the number of '1' bits in its input vector. 
+
+**[1] bit_cntr:** A pipelined module that outputs the number of '1' bits in its input vector. 
 			To save resources, all adders in the modules have three inputs instead of two. 
 			This means the input vector needs to be padded, so that it has 3^N times three granules of the configured size. 
 			Summing the bits of each granule, then summing the results in groups of three is the first stage of the pipeline. 
@@ -13,13 +14,13 @@
 
 
 
-[2] bit_adder: Counts '1's in the input vector. Only contains comb logic, uses blocking statements, 
+**[2] bit_adder:** Counts '1's in the input vector. Only contains comb logic, uses blocking statements, 
 			therefore propagation times are important to consider at instantiation.
 
 	*in*: i_Vector - input data
 	*out*: o_Sum - number of '1' bits in the input data vector
 	
-[3] bit_cntr_wrapper: Wrapper module instantiating the bit_cntr module, with an accumulator register in case
+**[3] bit_cntr_wrapper:** Wrapper module instantiating the bit_cntr module, with an accumulator register in case
 					the input vector is multiple times as wide as the bus width.
 	
 	*in*: i_Vector - input data
@@ -31,13 +32,14 @@
 		   o_SumNew - current o_Sum value is the complete sum of a multiple i_Vector long vector
 		   
 		   
-[5] lut_ram: LUT RAM module for extreme width and very shallow depth
+**[4] lut_ram:** LUT RAM module for extreme width and very shallow depth
 
-[6] lut_shr: LUT shiftregister module for storing vectors in addressable shiftregisters
+**[5] lut_shr:** LUT shiftregister module for storing vectors in addressable shiftregisters
 
-[7] pre_stage_unit: Instantiates a bit counter, outputs the input vector's CNT value.
+**[6] pre_stage_unit:** Instantiates a bit counter, outputs the input vector's CNT value.
 					Delays the input vector with a shiftregister so that the vector appears
 					on the output parallel to its CNT value.
+					
 	*in*: i_Vector - input data
 		  i_Valid - current input is valid and should be fed into the bit_cntr_wrapper module
 	*out*: o_SubVector - one of the input vectors corresponding to the current o_Cnt output, changes
