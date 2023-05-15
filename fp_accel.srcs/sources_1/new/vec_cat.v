@@ -16,7 +16,8 @@
 module vec_cat
     #(
         BUS_WIDTH = 512,
-        VECT_WIDTH = 920
+        VECT_WIDTH = 920,
+        CAT_REG_NO = 8          // how many times the bus width is the input shiftreg
     )
     (
         input wire clk,
@@ -27,114 +28,87 @@ module vec_cat
         output wire o_Valid                     // o_Vector is valid
     );
 
-    localparam IDX_HIGH_WIDTH = $clog2(BUS_WIDTH) + 1;  // addresses up to the MSB of r_InnerVector
-    localparam IDX_LOW_WIDTH = $clog2(BUS_WIDTH);       // never higher than half the r_InnerVector
-    localparam BIT_CNTR_WIDTH = $clog2(VECT_WIDTH);
-    localparam DELTA = BUS_WIDTH - (VECT_WIDTH-BUS_WIDTH);
+    localparam DELTA = BUS_WIDTH - (VECT_WIDTH-BUS_WIDTH);      // step distance in each iterateion
+    localparam IDX_PERMUATATIONS = BUS_WIDTH*CAT_REG_NO*2/DELTA;  // total no of possible output lower indexes
     
     localparam [0:0] FULL_V = 1'b0;
     localparam [0:0] PAD_V = 1'b1;
 
     /////////////////////////////////////////////////////////////////////////////////////
-    // VECTOR SHIFT --> store current and previous input vector
-    reg [2*BUS_WIDTH-1:0] r_InnerVector;
+    // VECTOR SHIFT --> store current and previous CAT_REG_NO numver of input vectors
+    reg [CAT_REG_NO*BUS_WIDTH-1:0] r_InnerVector;
 
-    always @ (posedge clk)
-    begin
-        if(i_Valid) begin
-            r_InnerVector[BUS_WIDTH-1:0] <= i_Vector;
-            r_InnerVector[2*BUS_WIDTH-1:BUS_WIDTH] <= r_InnerVector[BUS_WIDTH-1:0];
+    genvar ii;
+    generate
+        for(ii = 1; ii < CAT_REG_NO; ii = ii + 1) begin
+            if(ii == 1) begin
+                always @ (posedge clk) begin
+                    r_InnerVector[BUS_WIDTH-1:0] <= i_Vector;
+                end
+            end else begin
+                always @ (posedge clk) begin
+                    r_InnerVector[ii*BUS_WIDTH-1:(ii-1)*BUS_WIDTH] <= r_InnerVector[(ii-1)*BUS_WIDTH-1:(ii-2)*BUS_WIDTH];
+                end
+            end
         end
-    end
+    endgenerate
 
 
     /////////////////////////////////////////////////////////////////////////////////////
     // STATE MACHINE
     // --> state changes every clk as it is assumed that VECT_WIDTH < 2*BUS_WIDTH
     reg r_State;
+    reg [15:0] r_IterationCntr; // counts full vector emissions
 
     always @ (posedge clk)
     begin
         if(rst) begin
             r_State <= FULL_V;
+            r_IterationCntr <= 0;
         end else begin
             r_State <= ~r_State;
+            r_IterationCntr <= r_IterationCntr + 1;
         end
     end
-    
+
 
     /////////////////////////////////////////////////////////////////////////////////////
-    // INDEX REGISTERS --> select output vector from r_InnerVector
-    reg [IDX_HIGH_WIDTH-1:0] r_IdxHigh; // MSB of selected interval
-    reg [IDX_LOW_WIDTH-1:0] r_IdxLow;   // LSB of selected interval
-    reg [BIT_CNTR_WIDTH-1:0] r_BitCntr; // how many bits have been emitted as part of the current vector?
-
-    wire [IDX_HIGH_WIDTH-1:0] w_IdxHighNext;
-    assign w_IdxHighNext = (r_BitCntr == 0) ? (r_IdxHigh) : (w_IdxLowNext + BUS_WIDTH-1);
-
-    reg [IDX_LOW_WIDTH-1:0] w_IdxLowNext;
-    always @ (*)
-    begin
-        case(r_State)
-            FULL_V: begin
-                if((r_IdxLow + DELTA) <= BUS_WIDTH) begin
-                    w_IdxLowNext <= r_IdxLow + DELTA;
-                end else begin
-                    w_IdxLowNext <= r_IdxLow + DELTA - BUS_WIDTH;
-                end
-            end
-            PAD_V:
-                w_IdxLowNext <= r_IdxLow;
-            default:
-                w_IdxLowNext <= 0;
-        endcase
-    end
-
-    wire [BIT_CNTR_WIDTH-1:0] w_BitCntrNext;
-    assign w_BitCntrNext = r_BitCntr + (r_IdxHigh-r_IdxLow);
-    
-    wire [BIT_CNTR_WIDTH-1:0] w_BitsRemaining;
-    assign w_BitsRemaining = VECT_WIDTH - r_BitCntr;
+    // OUTPUT VECTOR ARRAY
+    // --> all possible index variations for the output vector need to be
+    // wired into a single multiplexer, then selected between with the r_State
+    // signal and the currently calculated indexes.
+    reg [2:0] r_ValidShr;        // delayed valid signal
+    reg [BUS_WIDTH-1:0] r_OutVectorArray[IDX_PERMUATATIONS-1:0];
 
     always @ (posedge clk)
     begin
-        if(rst) begin
-            r_IdxHigh = BUS_WIDTH-1;
-            r_IdxLow = 0;
-            r_BitCntr <= 0;
-        end else if(i_Valid) begin
-            r_IdxHigh = w_IdxHighNext;
-            r_IdxLow = w_IdxLowNext;
+        r_ValidShr[0] <= i_Valid;    
+        r_ValidShr[2:1] <= r_ValidShr[1:0];
+    end
 
-            if(w_BitCntrNext == VECT_WIDTH) begin
-                r_BitCntr <= 0;
-            end else begin
-                r_BitCntr <= w_BitCntrNext;
+    genvar jj;  // steps vector index
+    generate
+        for(jj = 0; jj < CAT_REG_NO*BUS_WIDTH; jj = jj + 1) begin
+            always @ (posedge clk)
+            begin
+                if(r_State == FULL_V) begin
+                    r_OutVectorArray[jj] <= r_InnerVector[jj*DELTA+BUS_WIDTH-1:jj*DELTA];
+                end else begin
+                    r_OutVectorArray[jj] <= {r_InnerVector[jj*DELTA+BUS_WIDTH-1:(jj+1)*DELTA], {DELTA{1'b0}}};
+                end
             end
         end
-    end
-    
+    endgenerate
+
 
     /////////////////////////////////////////////////////////////////////////////////////
-    // OUTPUT
-    //reg r_Valid;
-    //wire [VECT_WIDTH-(BUS_WIDTH-DELTA)-1:0] w_VectorOutMux[BUS_WIDTH-1:0];
-
-    //always @ (posedge clk)
-    //begin
-    //    r_Valid <= i_Valid;    
-    //end
-
-    //genvar ii;
-    //generate
-    //    for(ii = 0; ii < VECT_WIDTH-(BUS_WIDTH-DELTA); ii = ii + 1) begin
-    //        if(r_State == FULL_V) begin
-    //            w_VectorOutMux <= r_InnerVector[i+:BUS_WIDTH];
-    //        end else begin
-    //            w_VectorOutMux <= {r_InnerVector[i+:}
-    //        end
-    //    end
-    //endgenerate
+    // SELECT OUTPUT
+    // --> select the correct output from the r_OutVectorArray register array
+    assign o_Vector = r_OutVectorArray[r_IterationCntr];
+    assign o_Valid = r_ValidShr[2];
+    
 
 
-endmodule
+
+    
+    endmodule
