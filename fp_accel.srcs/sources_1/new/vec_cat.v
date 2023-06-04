@@ -16,7 +16,7 @@
 module vec_cat
     #(
         BUS_WIDTH = 512,
-        VECT_WIDTH = 920,
+        VECTOR_WIDTH = 920,
         CAT_REG_NO = 8          // how many times the bus width is the input shiftreg
     )
     (
@@ -28,7 +28,7 @@ module vec_cat
         output wire o_Valid                     // o_Vector is valid
     );
 
-    localparam DELTA = BUS_WIDTH - (VECT_WIDTH-BUS_WIDTH);      // step distance in each iterateion
+    localparam DELTA = BUS_WIDTH - (VECTOR_WIDTH-BUS_WIDTH);      // step distance in each iterateion
     localparam IDX_PERMUATATIONS = BUS_WIDTH*CAT_REG_NO*2/DELTA;  // total no of possible output lower indexes
     
     localparam [0:0] FULL_V = 1'b0;
@@ -47,7 +47,9 @@ module vec_cat
                 end
             end else begin
                 always @ (posedge clk) begin
-                    r_InnerVector[ii*BUS_WIDTH-1:(ii-1)*BUS_WIDTH] <= r_InnerVector[(ii-1)*BUS_WIDTH-1:(ii-2)*BUS_WIDTH];
+                    if(i_Valid) begin
+                        r_InnerVector[ii*BUS_WIDTH-1:(ii-1)*BUS_WIDTH] <= r_InnerVector[(ii-1)*BUS_WIDTH-1:(ii-2)*BUS_WIDTH];
+                    end
                 end
             end
         end
@@ -56,17 +58,28 @@ module vec_cat
 
     /////////////////////////////////////////////////////////////////////////////////////
     // STATE MACHINE
-    // --> state changes every clk as it is assumed that VECT_WIDTH < 2*BUS_WIDTH
+    // --> state changes every clk as it is assumed that VECTOR_WIDTH < 2*BUS_WIDTH
     reg r_State;
     reg [15:0] r_IterationCntr; // counts full vector emissions
 
     always @ (posedge clk)
     begin
         if(rst) begin
-            r_State <= FULL_V;
-            r_IterationCntr <= 0;
+            r_State <= PAD_V;
         end else begin
             r_State <= ~r_State;
+        end
+    end
+
+    always @ (posedge clk)
+    begin
+        if(rst) begin
+            r_IterationCntr <= 0;
+	end else if(r_IterationCntr == IDX_PERMUATATIONS-1) begin
+	    r_IterationCntr <= 0;
+        end else if(~(i_Valid)) begin
+            r_IterationCntr <= 0;
+        end else if(r_State == PAD_V) begin
             r_IterationCntr <= r_IterationCntr + 1;
         end
     end
@@ -88,12 +101,12 @@ module vec_cat
 
     genvar jj;  // steps vector index
     generate
-        for(jj = 0; jj < CAT_REG_NO*BUS_WIDTH; jj = jj + 1) begin
+        for(jj = 0; jj < CAT_REG_NO*BUS_WIDTH; jj = jj + 1) begin       // TODO: Upper range is very wasteful, needs to be fixed.
             always @ (posedge clk)
             begin
                 if(r_State == FULL_V) begin
                     r_OutVectorArray[jj] <= r_InnerVector[jj*DELTA+BUS_WIDTH-1:jj*DELTA];
-                end else begin
+                end else if(r_State == PAD_V) begin
                     r_OutVectorArray[jj] <= {r_InnerVector[jj*DELTA+BUS_WIDTH-1:(jj+1)*DELTA], {DELTA{1'b0}}};
                 end
             end
@@ -104,7 +117,7 @@ module vec_cat
     /////////////////////////////////////////////////////////////////////////////////////
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
-    assign o_Vector = r_OutVectorArray[r_IterationCntr];
+    assign o_Vector = r_OutVectorArray[r_IterationCntr-1];
     assign o_Valid = r_ValidShr[2];
     
 

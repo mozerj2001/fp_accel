@@ -6,7 +6,7 @@ module tb_vec_cat(
     );
 
     localparam BUS_WIDTH = 20;
-    localparam VECT_WIDTH = 35;
+    localparam VECTOR_WIDTH = 35;
     localparam CAT_REG_NO = 4;
 
     localparam CLK_PERIOD = 10;
@@ -22,7 +22,7 @@ module tb_vec_cat(
     vec_cat
     #(
         .BUS_WIDTH(BUS_WIDTH),
-        .VECT_WIDTH(VECT_WIDTH),
+        .VECTOR_WIDTH(VECTOR_WIDTH),
         .CAT_REG_NO(CAT_REG_NO)
     ) uut(
     .clk(clk),
@@ -58,7 +58,7 @@ module tb_vec_cat(
         #CLK_PERIOD;
         vector <= 20'b11111111111111111111;
         #CLK_PERIOD;
-        valid <= 1'b0;
+        //valid <= 1'b0;
     end
 
 
