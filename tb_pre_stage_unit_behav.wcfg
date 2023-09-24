@@ -11,84 +11,86 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="166.666 ns"></ZoomStartTime>
-      <ZoomEndTime time="278.381 ns"></ZoomEndTime>
-      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
+      <ZoomStartTime time="112.734 ns"></ZoomStartTime>
+      <ZoomEndTime time="184.935 ns"></ZoomEndTime>
+      <Cursor1Time time="204.934 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="290"></NameColumnWidth>
-      <ValueColumnWidth column_width="282"></ValueColumnWidth>
+      <ValueColumnWidth column_width="278"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="14" />
-   <wvobject fp_name="/tb_pre_stage_unit/clk" type="logic">
+   <wvobject type="logic" fp_name="/tb_pre_stage_unit/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/rst" type="logic">
+   <wvobject type="logic" fp_name="/tb_pre_stage_unit/rst">
       <obj_property name="ElementShortName">rst</obj_property>
       <obj_property name="ObjectShortName">rst</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/test_Vector" type="array">
+   <wvobject type="array" fp_name="/tb_pre_stage_unit/test_Vector">
       <obj_property name="ElementShortName">test_Vector[127:0]</obj_property>
       <obj_property name="ObjectShortName">test_Vector[127:0]</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/test_Valid" type="logic">
+   <wvobject type="logic" fp_name="/tb_pre_stage_unit/test_Valid">
       <obj_property name="ElementShortName">test_Valid</obj_property>
       <obj_property name="ObjectShortName">test_Valid</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/w_LastWordOfVector" type="logic">
+   <wvobject type="logic" fp_name="/tb_pre_stage_unit/uut/w_LastWordOfVector">
       <obj_property name="ElementShortName">w_LastWordOfVector</obj_property>
       <obj_property name="ObjectShortName">w_LastWordOfVector</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/r_WordCntr" type="array">
+   <wvobject type="array" fp_name="/tb_pre_stage_unit/uut/r_WordCntr">
       <obj_property name="ElementShortName">r_WordCntr[3:0]</obj_property>
       <obj_property name="ObjectShortName">r_WordCntr[3:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/r_WordShr" type="array">
-      <obj_property name="ElementShortName">r_WordShr[3:0]</obj_property>
-      <obj_property name="ObjectShortName">r_WordShr[3:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/w_Sum" type="array">
+   <wvobject type="array" fp_name="/tb_pre_stage_unit/uut/w_Sum">
       <obj_property name="ElementShortName">w_Sum[8:0]</obj_property>
       <obj_property name="ObjectShortName">w_Sum[8:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/w_SumValid" type="logic">
+   <wvobject type="logic" fp_name="/tb_pre_stage_unit/uut/w_SumValid">
       <obj_property name="ElementShortName">w_SumValid</obj_property>
       <obj_property name="ObjectShortName">w_SumValid</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/w_SumNew" type="logic">
+   <wvobject type="logic" fp_name="/tb_pre_stage_unit/uut/w_SumNew">
       <obj_property name="ElementShortName">w_SumNew</obj_property>
       <obj_property name="ObjectShortName">w_SumNew</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/w_DelayedSubVector" type="array">
+   <wvobject type="array" fp_name="/tb_pre_stage_unit/uut/w_DelayedSubVector">
       <obj_property name="ElementShortName">w_DelayedSubVector[127:0]</obj_property>
       <obj_property name="ObjectShortName">w_DelayedSubVector[127:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/o_CntNew" type="logic">
+   <wvobject type="logic" fp_name="/tb_pre_stage_unit/uut/o_CntNew">
       <obj_property name="ElementShortName">o_CntNew</obj_property>
       <obj_property name="ObjectShortName">o_CntNew</obj_property>
       <obj_property name="CustomSignalColor">#FFFF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/o_Cnt" type="array">
+   <wvobject type="array" fp_name="/tb_pre_stage_unit/o_Cnt">
       <obj_property name="ElementShortName">o_Cnt[8:0]</obj_property>
       <obj_property name="ObjectShortName">o_Cnt[8:0]</obj_property>
       <obj_property name="CustomSignalColor">#FFFF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_pre_stage_unit/uut/o_SubVector" type="array">
+   <wvobject type="array" fp_name="/tb_pre_stage_unit/uut/o_SubVector">
       <obj_property name="ElementShortName">o_SubVector[127:0]</obj_property>
       <obj_property name="ObjectShortName">o_SubVector[127:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_pre_stage_unit/uut/o_Valid">
+      <obj_property name="ElementShortName">o_Valid</obj_property>
+      <obj_property name="ObjectShortName">o_Valid</obj_property>
       <obj_property name="CustomSignalColor">#FFFF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>

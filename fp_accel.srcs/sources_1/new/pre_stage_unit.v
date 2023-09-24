@@ -11,16 +11,16 @@
 // and SUB_VECTOR_NO (how many input vectors make up a full vector).
 //
 //
-//                       --------        -------
-//                       |      |        | SHR |
-//     VECTOR  ########>>| CNT1 |######>>| CNT |######>> CNT_A
-//               #       |      |        |  A  |
-//               #       --------        -------
-//               #               -------                  
-//               #               |     |                  
-//               ##############>>| SHR |##############>> VECTOR_A
-//                               |     |         
-//                               -------         
+//                       --------     
+//                       |      |     
+//     VECTOR  ########>>| CNT1 |###########>> CNT_A
+//               #       |      |     
+//               #       --------     
+//               #       -------                  
+//               #       |     |                  
+//               ########| SHR |############>> VECTOR_A
+//                       |     |         
+//                       -------         
 //          
 //           
 
@@ -30,7 +30,6 @@ module pre_stage_unit
         BUS_WIDTH = 512,
         SUB_VECTOR_NO = 4,
         GRANULE_WIDTH = 6,
-        SHR_DEPTH = 4,          // how many w_SumValid pulses the CNT-vector pairs are delayed after the CNT calculation
 
         //
         OUTPUT_VECTOR_WIDTH = BUS_WIDTH*SUB_VECTOR_NO,
@@ -42,6 +41,7 @@ module pre_stage_unit
         input wire [BUS_WIDTH-1:0]              i_Vector,
         input wire                              i_Valid,
         output wire [BUS_WIDTH-1:0]             o_SubVector,
+	output wire				o_Valid,
         output wire [BIT_NO_OUTPUT_WIDTH-1:0]   o_Cnt,
         output wire                             o_CntNew
     );
@@ -98,14 +98,14 @@ module pre_stage_unit
 
     /////////////////////////////////////////////////////////////////////////////////////
     // SHIFTREGISTER
-    // --> delay input vector until the corresponding sum is calculated
+    // --> delay input vector as well as valid signal until the corresponding sum is calculated
     wire [BUS_WIDTH-1:0] w_DelayedSubVector;
 
     genvar jj;
     generate
         for(jj = 0; jj < BUS_WIDTH; jj = jj + 1) begin
-            lut_shr#(
-                .WIDTH(DELAY + SHR_DEPTH*4)
+            lut_shr #(
+                .WIDTH(DELAY)
             ) 
             vector_shr(
                 .clk(clk),
@@ -118,55 +118,23 @@ module pre_stage_unit
         end
     endgenerate
 
-    wire [BIT_NO_OUTPUT_WIDTH-1:0] w_DelayedCnt;
+    lut_shr #(
+	.WIDTH(DELAY)
+    ) valid_shr (
+	.clk		(clk),
+	.sh_en		(clk),
+	.din		(i_Valid),
+	.addr		(),
+	.q_msb		(o_Valid),
+	.q_sel		()
+    );
 
-    genvar kk;
-    generate
-        for(kk = 0; kk < BIT_NO_OUTPUT_WIDTH; kk = kk + 1) begin
-            lut_shr#(
-                .WIDTH(SHR_DEPTH)
-            )
-            cnt_shr(
-                .clk(clk),
-                .sh_en(w_SumNew),
-                .din(w_Sum[kk]),
-                .addr(),
-                .q_msb(w_DelayedCnt[kk]),
-                .q_sel()
-            );
-        end
-    endgenerate
-
-    reg r_DelayedSumNew [SHR_DEPTH:0];
-
-    genvar ll;
-    generate
-        for(ll = 0; ll <= SHR_DEPTH; ll = ll + 1) begin
-            if(ll == 0) begin
-                always @ (posedge clk) begin
-                    if(rst) begin
-                        r_DelayedSumNew[ll] <= 1'b0;
-                    end else begin
-                        r_DelayedSumNew[ll] <= w_SumNew;
-                    end
-                end
-            end else begin
-                always @ (posedge clk) begin
-                    if(rst) begin
-                        r_DelayedSumNew[ll] <= 1'b0;
-                    end else begin
-                        r_DelayedSumNew[ll] <= r_DelayedSumNew[ll-1];
-                    end
-                end
-            end
-        end
-    endgenerate
 
     /////////////////////////////////////////////////////////////////////////////////////
     // ASSIGN OUTPUTS
-    assign o_Cnt = w_DelayedCnt;
+    assign o_Cnt = w_Sum;
     assign o_SubVector = w_DelayedSubVector;
-    assign o_CntNew = r_DelayedSumNew[SHR_DEPTH];
+    assign o_CntNew = w_SumNew;
     
 
 endmodule
