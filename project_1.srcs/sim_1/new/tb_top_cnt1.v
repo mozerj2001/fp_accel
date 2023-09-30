@@ -1,13 +1,15 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module tb_vec_cat(
+module tb_top_cnt1(
 
     );
 
     localparam BUS_WIDTH = 20;
     localparam VECTOR_WIDTH = 35;
-    localparam CAT_REG_NO = 4;
+    localparam SUB_VECTOR_NO = 2;
+    localparam GRANULE_WIDTH = 6;
+    localparam SHR_DEPTH = 4;
 
     localparam CLK_PERIOD = 10;
     localparam HALF_CLK_PERIOD = CLK_PERIOD/2;
@@ -16,21 +18,34 @@ module tb_vec_cat(
     reg rst = 1'b1;
     reg [BUS_WIDTH-1:0] vector;
     reg valid = 1'b0;
-    wire [BUS_WIDTH-1:0] cat_vector;
-    wire cat_valid;
+    reg AB_sel;
+    reg do_calc;
 
-    vec_cat
+    wire [$clog2(VECTOR_WIDTH)-1:0] cnt_A;
+    wire [$clog2(VECTOR_WIDTH)-1:0] cnt_B;
+    wire [$clog2(VECTOR_WIDTH)-1:0] cnt_AB;
+    wire valid_out;
+
+
+    top_cnt1
     #(
         .BUS_WIDTH(BUS_WIDTH),
         .VECTOR_WIDTH(VECTOR_WIDTH),
-        .CAT_REG_NO(CAT_REG_NO)
+        .SUB_VECTOR_NO(SUB_VECTOR_NO),
+	.GRANULE_WIDTH(GRANULE_WIDTH),
+	.SHR_DEPTH(SHR_DEPTH)
     ) uut(
     .clk(clk),
     .rst(rst),
     .i_Vector(vector),
     .i_Valid(valid),
-    .o_Vector(cat_vector),
-    .o_Valid(cat_valid)
+    .i_AB_Sel(AB_sel),
+    .i_Do_Calc(do_calc),
+    .o_CntA(cnt_A),
+    .o_CntB(cnt_B),
+    .o_CntAnB(cnt_AB),
+    .o_Valid(valid_out)
+
     );
 
     always begin 

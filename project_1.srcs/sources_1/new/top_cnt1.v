@@ -35,13 +35,13 @@ module top_cnt1
     vec_cat #(
     	.BUS_WIDTH(BUS_WIDTH),
 	.VECTOR_WIDTH(VECTOR_WIDTH),
-	.CAT_REG_NO(SUB_VECTOR_NO*SHR_DEPTH)	// TEMPORARY SOLUTION!!!
+	.CAT_REG_NO(SUB_VECTOR_NO*SHR_DEPTH)	// TODO: TEMPORARY SOLUTION, IMPLEMENT READ, INSTEAD OF PUSH!
     ) u_vec_cat_0 (
     	.clk		(clk),
 	.rst		(rst),
 	.i_Vector	(i_Vector),
 	.i_Valid	(i_Valid),
-	.o_Vcetor	(w_Catted_Vector),
+	.o_Vector	(w_Catted_Vector),
 	.o_Valid	(w_Catted_Valid)
     );
 
@@ -93,35 +93,8 @@ module top_cnt1
 	    for(ii = 1; ii < SHR_DEPTH; ii = ii + 1) begin
 		r_Vector_Array_B[ii] <= r_Vector_Array_B[ii-1];
 	    end
+	end
     end
-
-
-    //wire [$clog2(SHR_DEPTH)-1:0] 	w_Shr_Addr;
-
-    //genvar ii;
-    //generate
-    //    for(ii = 0; ii < BUS_WIDTH; ii = ii + 1) begin
-    //	    lut_shr #(
-    //	    	.WIDTH(SHR_DEPTH)
-    //	    ) u_shr_Vec_A (
-    //	        .clk		(clk),
-    //	        .sh_en		(w_Shift_A),
-    //	        .din		(w_Cnted_Vector[ii]),
-    //    	.addr		(w_Shr_Addr),
-    //    	.q_sel		(w_Shr_A_Vec_Out)
-    //	    );
-
-    //	    lut_shr #(
-    //	    	.WIDTH(SHR_DEPTH)
-    //	    ) u_shr_Vec_B (
-    //	        .clk		(clk),
-    //	        .sh_en		(w_Shift_B),
-    //	        .din		(w_Cnted_Vector[ii]),
-    //    	.addr		(w_Shr_Addr),
-    //    	.q_sel		(w_Shr_B_Vec_Out)
-    //	    );
-    //    end
-    //endgenerate
 
 
     // CNT SHIFTREGISTERS
@@ -152,34 +125,8 @@ module top_cnt1
 	    for(jj = 1; jj < SHR_DEPTH; jj = jj + 1) begin
 		r_Cnt_Array_B[jj] <= r_Cnt_Array_B[jj-1];
 	    end
+	end
     end
-
-    //wire [$clog2(SHR_DEPTH)-1:0] 	w_Shr_Addr;
-
-    //genvar jj;
-    //generate
-    //    for(jj = 0; jj < BUS_WIDTH; jj = jj + 1) begin
-    //	    lut_shr #(
-    //	    	.WIDTH(SHR_DEPTH)
-    //	    ) u_shr_Cnt_A (
-    //	        .clk		(clk),
-    //	        .sh_en		(w_Shift_A),
-    //	        .din		(w_Cnt),
-    //    	.addr		(w_Shr_Addr),
-    //    	.q_sel		(w_Shr_A_Vec_Out)
-    //	    );
-
-    //	    lut_shr #(
-    //	    	.WIDTH(SHR_DEPTH)
-    //	    ) u_shr_Cnt_B (
-    //	        .clk		(clk),
-    //	        .sh_en		(w_Shift_B),
-    //	        .din		(w_Cnt),
-    //    	.addr		(w_Shr_Addr),
-    //    	.q_sel		(w_Shr_B_Vec_Out)
-    //	    );
-    //    end
-    //endgenerate
 
 
     // CNT1 A&B
@@ -208,28 +155,6 @@ module top_cnt1
     // CNT OUT DELAY SHIFTREGISTER
     // CNT values read from the shiftregisters need to be delayed until the
     // corresponding CNT(A&B) is calculated, then emitted.
-
-
-    // A&B CALC COUNTER
-    // Counter that addresses the shiftregisters storing vectors and CNT
-    // values.
-    reg [$clog2(SHR_DEPTH)-1:0] 	r_Addr_Cntr;
-
-    always @ (posedge clk)
-    begin
-	if(rst) begin
-	    r_Addr_Cntr <= 0;
-	end else if(!i_Do_Calc) begin
-	    r_Addr_Cntr <= 0;
-	end else begin
-	    r_Addr_Cntr <= r_Addr_Cntr + 1;
-	end
-    end
-
-    assign w_Shr_Addr = r_Addr_Cntr;
-
-
-
 
 
 endmodule
