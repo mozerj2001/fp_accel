@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+`include "./bit_cntr.v"
+
 module bit_cntr_wrapper
     #(
         parameter VECTOR_WIDTH = 920,
