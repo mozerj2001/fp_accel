@@ -68,7 +68,6 @@ module tb_vec_cat(
     end
 
     // FILL FIFO
-
     initial begin
         #50;
         f_write <= 1'b1;
@@ -104,7 +103,6 @@ module tb_vec_cat(
         f_din <= 20'b11111111111111111111;
         f_write <= 1'b0;
         #CLK_PERIOD;
-        //valid <= 1'b0;
     end
 
 

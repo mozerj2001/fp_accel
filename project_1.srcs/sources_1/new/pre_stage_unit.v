@@ -1,6 +1,9 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+`include "./bit_cntr_wrapper.v"
+`include "./lut_shr.v"
+
 //
 // This module implements the first stage of the pharmacophore fingerprint
 // comparison hardware accelerator. The number of high bits in the input
@@ -41,7 +44,7 @@ module pre_stage_unit
         input wire [BUS_WIDTH-1:0]              i_Vector,
         input wire                              i_Valid,
         output wire [BUS_WIDTH-1:0]             o_SubVector,
-	output wire				o_Valid,
+	    output wire				                o_Valid,
         output wire [BIT_NO_OUTPUT_WIDTH-1:0]   o_Cnt,
         output wire                             o_CntNew
     );
@@ -69,7 +72,7 @@ module pre_stage_unit
         end
     end
 
-    assign w_LastWordOfVector = (r_WordCntr == (WORD_CNTR_WIDTH-1));
+    assign w_LastWordOfVector = (r_WordCntr == SUB_VECTOR_NO-1);
 
     /////////////////////////////////////////////////////////////////////////////////////
     // BIT COUNTER MODULE
@@ -132,9 +135,9 @@ module pre_stage_unit
 
     /////////////////////////////////////////////////////////////////////////////////////
     // ASSIGN OUTPUTS
-    assign o_Cnt = w_Sum;
-    assign o_SubVector = w_DelayedSubVector;
-    assign o_CntNew = w_SumNew;
+    assign o_Cnt        = w_Sum;
+    assign o_SubVector  = w_DelayedSubVector;
+    assign o_CntNew     = w_SumNew;
     
 
 endmodule
