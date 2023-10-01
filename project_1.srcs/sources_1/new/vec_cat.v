@@ -141,10 +141,8 @@ module vec_cat
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
     assign o_Vector = r_OutVectorArray[r_IterationCntr-1];
-    assign o_Valid = r_ValidShr[2];
-    assign o_Read       = i_Valid && ~w_PauseIterCntr;
-
-
+    assign o_Valid  = r_ValidShr[1];
+    assign o_Read   = i_Valid && ~w_PauseIterCntr;
 
     
     endmodule

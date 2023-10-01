@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+`include "../../sources_1/new/pre_stage_unit.v"
+
 // Testbench for the pre-stage unit.
 
 module tb_pre_stage_unit(
