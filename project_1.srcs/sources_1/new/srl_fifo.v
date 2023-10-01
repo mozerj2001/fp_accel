@@ -1,40 +1,21 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 03/30/2023 04:49:36 PM
-// Design Name: 
-// Module Name: srl_fifo
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
+`default_nettype none
 
 module srl_fifo
 #(
     parameter          WIDTH = 8,
     parameter          DEPTH = 32 
 )(
-    input              clk,
-    input              rst,
+    input wire              clk,
+    input wire              rst,
     
-    input              wr,
-    input [WIDTH-1:0]  d,
-    output             full,
+    input wire              wr,
+    input wire [WIDTH-1:0]  d,
+    output wire             full,
     
-    input              rd,
-    output [WIDTH-1:0] q,
-    output             empty
+    input wire              rd,
+    output wire [WIDTH-1:0] q,
+    output wire             empty
 );
 
 localparam CNT_W = $clog2(DEPTH);
