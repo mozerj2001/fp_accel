@@ -50,7 +50,7 @@ module pre_stage_unit
     );
 
     localparam WORD_CNTR_WIDTH = 4;
-    localparam DELAY = $clog2(BUS_WIDTH/(GRANULE_WIDTH*3))/$clog2(3) + 4; // clk# of the CNT calculation
+    localparam DELAY = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
     localparam BIT_CNTR_OUT_WIDTH = $clog2(OUTPUT_VECTOR_WIDTH);
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ module pre_stage_unit
     always @ (posedge clk)
     begin
         if(rst) begin
-            r_WordCntr <= {WORD_CNTR_WIDTH{1'b1}};
+            r_WordCntr <= 0;
         end else if(w_LastWordOfVector) begin
             r_WordCntr <= 0;
         end else if(i_Valid) begin
@@ -122,15 +122,15 @@ module pre_stage_unit
     endgenerate
 
     lut_shr #(
-	.WIDTH(DELAY)
+	    .WIDTH(DELAY)
     ) valid_shr (
-	.clk		(clk),
-	.sh_en		(clk),
-	.din		(i_Valid),
-	.addr		(),
-	.q_msb		(o_Valid),
-	.q_sel		()
-    );
+	    .clk		(clk),
+	    .sh_en		(clk),
+	    .din		(i_Valid),
+	    .addr		(),
+	    .q_msb		(o_Valid),
+	    .q_sel		()
+        );
 
 
     /////////////////////////////////////////////////////////////////////////////////////

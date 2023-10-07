@@ -23,12 +23,13 @@ module bit_cntr_wrapper
 
     // number of clk cycles between vector entry and sum appearing on the
     // bit_cntr o_Sum output
-    localparam DELAY = $clog2(VECTOR_WIDTH/(GRANULE_WIDTH*3))/$clog2(3) + 2;
+    localparam DELAY = $rtoi($ceil($log10($itor(VECTOR_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0)));
 
     /////////////////////////////////////////////////////////////////////////////////////
     // BIT COUNTER 
     // --> count bits in the input vector
     wire [$clog2(VECTOR_WIDTH):0] w_NewSum;
+
     bit_cntr
     #(
         .VECTOR_WIDTH(VECTOR_WIDTH), 
@@ -44,12 +45,12 @@ module bit_cntr_wrapper
 
     /////////////////////////////////////////////////////////////////////////////////////
     // DELAY SIGNALS
-    reg r_DelayValidFF [DELAY+1:0];
-    reg r_DelayLastWordFF [DELAY:0];
+    reg r_DelayValidFF [DELAY-1:0];
+    reg r_DelayLastWordFF [DELAY-1:0];
 
     genvar ii;
     generate
-        for(ii = 0; ii <= DELAY; ii = ii + 1) begin
+        for(ii = 0; ii <= DELAY-1; ii = ii + 1) begin
             if(ii == 0) begin
                 always @ (posedge clk) begin
                     if(rst) begin
@@ -76,17 +77,8 @@ module bit_cntr_wrapper
         end
     endgenerate
 
-    always @ (posedge clk)
-    begin
-        if(rst) begin
-            r_DelayValidFF[DELAY+1] <= 1'b0;
-        end else begin
-            r_DelayValidFF[DELAY+1] <= r_DelayValidFF[DELAY];
-        end
-    end
-
-    assign o_SumValid = r_DelayValidFF[DELAY+1];
-    assign o_SumNew = r_DelayLastWordFF[DELAY];
+    assign o_SumValid   = r_DelayValidFF[DELAY-1];
+    assign o_SumNew     = r_DelayLastWordFF[DELAY-1];
 
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -96,12 +88,12 @@ module bit_cntr_wrapper
     always @ (posedge clk)
     begin
         if(rst) begin
-            r_Accumulator <= 16'b0;
+            r_Accumulator <= 0;
         end
-        else if(r_DelayLastWordFF[DELAY]) begin
+        else if(r_DelayLastWordFF[DELAY-1]) begin
             r_Accumulator <= w_NewSum;
         end
-        else if(r_DelayValidFF[DELAY]) begin
+        else if(r_DelayValidFF[DELAY-1]) begin
             r_Accumulator <= r_Accumulator + w_NewSum;
         end
     end

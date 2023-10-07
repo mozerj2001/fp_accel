@@ -66,10 +66,6 @@ module tb_top_cnt1(
         .i_Vector               (f_dout),
         .i_Valid                (~f_empty),
         .i_LoadNewRefVectors    (load_new_ref),
-        .o_CntA                 (cnt_A),
-        .o_CntB                 (cnt_B),
-        .o_Cnt_AnB              (cnt_AB),
-        .o_Valid                (valid_out),
         .o_Read                 (f_read)
     );
 
@@ -113,6 +109,16 @@ module tb_top_cnt1(
         f_din <= 20'b10101010101010101010;
         #CLK_PERIOD;
         f_din <= 20'b11111111111111111111;
+        #CLK_PERIOD;
+        f_din <= 20'b11111111111111100110;
+        #CLK_PERIOD;
+        f_din <= 20'b01100110011001100110;
+        #CLK_PERIOD;
+        f_din <= 20'b01100110011111111111;
+        #CLK_PERIOD;
+        f_din <= 20'b11111111111111111111;
+        #CLK_PERIOD;
+        f_din <= 20'b11111010101010101010;
         f_write <= 1'b0;
         #CLK_PERIOD;
     end
