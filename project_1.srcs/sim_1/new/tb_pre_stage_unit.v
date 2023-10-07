@@ -15,7 +15,7 @@ module tb_pre_stage_unit(
     localparam T_RESET = 30;
 
     localparam BUS_WIDTH = 128;
-    localparam SUB_VECTOR_NO = 4;
+    localparam SUB_VECTOR_NO = 2;
     localparam GRANULE_WIDTH = 6;
     localparam OUTPUT_VECTOR_WIDTH = BUS_WIDTH*SUB_VECTOR_NO;
     localparam BIT_NO_OUTPUT_WIDTH = $clog2(OUTPUT_VECTOR_WIDTH);
@@ -60,146 +60,99 @@ module tb_pre_stage_unit(
 
         test_Valid <= 1'b1;
         test_Vector <= 128'h11111111111111111111111111111111;   // 32
-
         #CLK_PERIOD;
-
         test_Vector <= 128'hFFFFFFFF00000000FFFFFFFF00000000;   // 64
-
         #CLK_PERIOD;
+        // sum = 96
 
         test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
-
         #CLK_PERIOD;
-
         test_Vector <= 128'h11111111111111111111111111111111;   // 32
-
-        // sum = 256
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'h33333333333333333333333333333333;   // 64
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'h77777777777777777777777777777777;   // 96
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'h00000000000000000000000000000000;   // 0
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'h00000000000000000000000000000000;   // 0
-
         // sum = 160
 
         #CLK_PERIOD;
-
-        test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
+        test_Vector <= 128'h33333333333333333333333333333333;   // 64
+        #CLK_PERIOD;
+        test_Vector <= 128'h77777777777777777777777777777777;   // 96
+        // sum = 160
 
         #CLK_PERIOD;
-
-        test_Vector <= 128'hEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE;   // 96
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'h55555555555555555555555555555555;   // 64
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-
-        // sum = 320
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'hF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0;   // 64
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'hE070E070E070E070E070E070E070E070;   // 48
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'h12341234123412341234123412341234;   // 40
-
-        #CLK_PERIOD;
-
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-
-        // sum = 184
-        
-        #CLK_PERIOD;
-
         test_Vector <= 128'h00000000000000000000000000000000;   // 0
+        #CLK_PERIOD;
+        test_Vector <= 128'h00000000000000000000000000000000;   // 0
+        // sum = 0
 
         #CLK_PERIOD;
-
-        test_Vector <= 128'hFFFFFFFF00000000FFFFFFFF00000000;   // 64
-
-        #CLK_PERIOD;
-
         test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
-
         #CLK_PERIOD;
-
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-
+        test_Vector <= 128'hEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE;   // 96
         // sum = 224
 
         #CLK_PERIOD;
-
-        test_Vector <= 128'h33333333333333333333333333333333;   // 64
+        test_Vector <= 128'h55555555555555555555555555555555;   // 64
+        #CLK_PERIOD;
+        test_Vector <= 128'h11111111111111111111111111111111;   // 32
+        // sum = 96
 
         #CLK_PERIOD;
-
-        test_Vector <= 128'h77777777777777777777777777777777;   // 96
+        test_Vector <= 128'hF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0;   // 64
+        #CLK_PERIOD;
+        test_Vector <= 128'hE070E070E070E070E070E070E070E070;   // 48
+        // sum = 112
 
         #CLK_PERIOD;
-
+        test_Vector <= 128'h12341234123412341234123412341234;   // 40
+        #CLK_PERIOD;
+        test_Vector <= 128'h11111111111111111111111111111111;   // 32
+        // sum = 72
+        
+        #CLK_PERIOD;
         test_Vector <= 128'h00000000000000000000000000000000;   // 0
+        #CLK_PERIOD;
+        test_Vector <= 128'hFFFFFFFF00000000FFFFFFFF00000000;   // 64
+        // sum = 64
 
         #CLK_PERIOD;
-
-        test_Vector <= 128'h00000000000000000000000000000000;   // 0
-
+        test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
+        #CLK_PERIOD;
+        test_Vector <= 128'h11111111111111111111111111111111;   // 32
         // sum = 160
 
         #CLK_PERIOD;
+        test_Vector <= 128'h33333333333333333333333333333333;   // 64
+        #CLK_PERIOD;
+        test_Vector <= 128'h77777777777777777777777777777777;   // 96
+        // sum = 160
 
+        #CLK_PERIOD;
+        test_Vector <= 128'h00000000000000000000000000000000;   // 0
+        #CLK_PERIOD;
+        test_Vector <= 128'h00000000000000000000000000000000;   // 0
+        // sum = 0
+
+        #CLK_PERIOD;
         test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
-
         #CLK_PERIOD;
-
         test_Vector <= 128'hEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE;   // 96
+        // sum = 224
 
         #CLK_PERIOD;
-
         test_Vector <= 128'h55555555555555555555555555555555;   // 64
-
         #CLK_PERIOD;
-
         test_Vector <= 128'h11111111111111111111111111111111;   // 32
-
-        // sum = 320
+        // sum = 96
 
         #CLK_PERIOD;
-
         test_Vector <= 128'hF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0;   // 64
-
         #CLK_PERIOD;
-
         test_Vector <= 128'hE070E070E070E070E070E070E070E070;   // 48
+        // sum = 112
 
         #CLK_PERIOD;
-
         test_Vector <= 128'h12341234123412341234123412341234;   // 40
-
         #CLK_PERIOD;
-
         test_Vector <= 128'h11111111111111111111111111111111;   // 32
-
-        // sum = 184
+        // sum = 72
         //
         #CLK_PERIOD;
         test_Valid <= 1'b0;

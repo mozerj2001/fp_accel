@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+`include "../../sources_1/new/bit_cntr_wrapper.v"
+
 module tb_bit_cntr_wrapper(
 
     );
@@ -65,9 +67,13 @@ module tb_bit_cntr_wrapper(
         #CLK_PERIOD;
 
         test_Vector <= 160'hFFFFFFFF00000000FFFFFFFF00000000FFFFFFFF;   // 96
+        test_LastWordOfVector <= 1'b1;
+
+        // sum = 96
 
         #CLK_PERIOD;
 
+        test_LastWordOfVector <= 1'b0;
         test_Vector <= 160'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 160
 
         #CLK_PERIOD;
@@ -75,7 +81,7 @@ module tb_bit_cntr_wrapper(
         test_LastWordOfVector <= 1'b1;
         test_Vector <= 160'h1111111111111111111111111111111111111111;   // 40
 
-        // sum = 296
+        // sum = 200
 
         #CLK_PERIOD;
 
@@ -85,9 +91,13 @@ module tb_bit_cntr_wrapper(
         #CLK_PERIOD;
 
         test_Vector <= 160'h7777777777777777777777777777777777777777;   // 120
+        test_LastWordOfVector <= 1'b1;
+
+        // sum = 200
 
         #CLK_PERIOD;
 
+        test_LastWordOfVector <= 1'b0;
         test_Vector <= 160'h0000000000000000000000000000000000000000;   // 0
 
         #CLK_PERIOD;
@@ -95,7 +105,7 @@ module tb_bit_cntr_wrapper(
         test_LastWordOfVector <= 1'b1;
         test_Vector <= 160'h0000000000000000000000000000000000000000;   // 0
 
-        // sum = 200
+        // sum = 0
 
         #CLK_PERIOD;
 
@@ -105,9 +115,13 @@ module tb_bit_cntr_wrapper(
         #CLK_PERIOD;
 
         test_Vector <= 160'hEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE;   // 120
+        test_LastWordOfVector <= 1'b1;
+
+        // sum = 280
 
         #CLK_PERIOD;
 
+        test_LastWordOfVector <= 1'b0;
         test_Vector <= 160'h5555555555555555555555555555555555555555;   // 80
 
         #CLK_PERIOD;
@@ -115,7 +129,7 @@ module tb_bit_cntr_wrapper(
         test_LastWordOfVector <= 1'b1;
         test_Vector <= 160'h1111111111111111111111111111111111111111;   // 40
 
-        // sum = 400
+        // sum = 120
 
         #CLK_PERIOD;
         test_LastWordOfVector <= 1'b0;

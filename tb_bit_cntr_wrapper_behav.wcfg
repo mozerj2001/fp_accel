@@ -11,85 +11,95 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,000.001 ns"></ZoomEndTime>
-      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
+      <ZoomStartTime time="239.580 ns"></ZoomStartTime>
+      <ZoomEndTime time="339.481 ns"></ZoomEndTime>
+      <Cursor1Time time="273.380 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="404"></NameColumnWidth>
-      <ValueColumnWidth column_width="118"></ValueColumnWidth>
+      <ValueColumnWidth column_width="114"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="13" />
-   <wvobject fp_name="/tb_bit_cntr_wrapper/clk" type="logic">
+   <WVObjectSize size="14" />
+   <wvobject type="logic" fp_name="/tb_bit_cntr_wrapper/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/rst" type="logic">
+   <wvobject type="logic" fp_name="/tb_bit_cntr_wrapper/rst">
       <obj_property name="ElementShortName">rst</obj_property>
       <obj_property name="ObjectShortName">rst</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/test_Vector" type="array">
+   <wvobject type="array" fp_name="/tb_bit_cntr_wrapper/test_Vector">
       <obj_property name="ElementShortName">test_Vector[159:0]</obj_property>
       <obj_property name="ObjectShortName">test_Vector[159:0]</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/test_Valid" type="logic">
+   <wvobject type="logic" fp_name="/tb_bit_cntr_wrapper/test_Valid">
       <obj_property name="ElementShortName">test_Valid</obj_property>
       <obj_property name="ObjectShortName">test_Valid</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/test_LastWordOfVector" type="logic">
+   <wvobject type="logic" fp_name="/tb_bit_cntr_wrapper/test_LastWordOfVector">
       <obj_property name="ElementShortName">test_LastWordOfVector</obj_property>
       <obj_property name="ObjectShortName">test_LastWordOfVector</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/uut/r_DelayLastWordFF" type="array">
-      <obj_property name="ElementShortName">r_DelayLastWordFF[4:0]</obj_property>
-      <obj_property name="ObjectShortName">r_DelayLastWordFF[4:0]</obj_property>
+   <wvobject type="array" fp_name="/tb_bit_cntr_wrapper/uut/pipelined_counter/i_Vector">
+      <obj_property name="ElementShortName">i_Vector[159:0]</obj_property>
+      <obj_property name="ObjectShortName">i_Vector[159:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/uut/pipelined_counter/o_Sum" type="array">
+   <wvobject type="array" fp_name="/tb_bit_cntr_wrapper/uut/pipelined_counter/o_Sum">
       <obj_property name="ElementShortName">o_Sum[8:0]</obj_property>
       <obj_property name="ObjectShortName">o_Sum[8:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/uut/r_Accumulator" type="array">
+   <wvobject type="array" fp_name="/tb_bit_cntr_wrapper/uut/w_NewSum">
+      <obj_property name="ElementShortName">w_NewSum[8:0]</obj_property>
+      <obj_property name="ObjectShortName">w_NewSum[8:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_bit_cntr_wrapper/uut/r_DelayValidFF">
+      <obj_property name="ElementShortName">r_DelayValidFF[4:0]</obj_property>
+      <obj_property name="ObjectShortName">r_DelayValidFF[4:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_bit_cntr_wrapper/uut/r_DelayLastWordFF">
+      <obj_property name="ElementShortName">r_DelayLastWordFF[4:0]</obj_property>
+      <obj_property name="ObjectShortName">r_DelayLastWordFF[4:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_bit_cntr_wrapper/uut/r_Accumulator">
       <obj_property name="ElementShortName">r_Accumulator[15:0]</obj_property>
       <obj_property name="ObjectShortName">r_Accumulator[15:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/test_Sum" type="array">
-      <obj_property name="ElementShortName">test_Sum[15:0]</obj_property>
-      <obj_property name="ObjectShortName">test_Sum[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
+   <wvobject type="array" fp_name="/tb_bit_cntr_wrapper/uut/o_Sum">
+      <obj_property name="ElementShortName">o_Sum[15:0]</obj_property>
+      <obj_property name="ObjectShortName">o_Sum[15:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/test_SumValid" type="logic">
-      <obj_property name="ElementShortName">test_SumValid</obj_property>
-      <obj_property name="ObjectShortName">test_SumValid</obj_property>
       <obj_property name="CustomSignalColor">#FFFF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/test_SumNew" type="logic">
-      <obj_property name="ElementShortName">test_SumNew</obj_property>
-      <obj_property name="ObjectShortName">test_SumNew</obj_property>
+   <wvobject type="logic" fp_name="/tb_bit_cntr_wrapper/uut/o_SumValid">
+      <obj_property name="ElementShortName">o_SumValid</obj_property>
+      <obj_property name="ObjectShortName">o_SumValid</obj_property>
       <obj_property name="CustomSignalColor">#FFFF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/uut/pipelined_counter/r_Pipeline" type="array">
-      <obj_property name="ElementShortName">r_Pipeline[27:0][7:0]</obj_property>
-      <obj_property name="ObjectShortName">r_Pipeline[27:0][7:0]</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-   </wvobject>
-   <wvobject fp_name="/tb_bit_cntr_wrapper/uut/pipelined_counter/w_GranuleSum" type="array">
-      <obj_property name="ElementShortName">w_GranuleSum[26:0][2:0]</obj_property>
-      <obj_property name="ObjectShortName">w_GranuleSum[26:0][2:0]</obj_property>
+   <wvobject type="logic" fp_name="/tb_bit_cntr_wrapper/uut/o_SumNew">
+      <obj_property name="ElementShortName">o_SumNew</obj_property>
+      <obj_property name="ObjectShortName">o_SumNew</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
 </wave_config>
