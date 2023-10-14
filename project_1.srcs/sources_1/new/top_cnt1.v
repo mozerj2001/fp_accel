@@ -27,7 +27,7 @@ module top_cnt1
     localparam LOAD_REF = 1'b0;
     localparam COMPARE  = 1'b1;
 
-    localparam DELAY = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0)));
+    localparam DELAY = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
 
     // SUB VECTOR COUNTER
     // Counts sub-vectors incoming from the input pre_stage_unit.
@@ -273,7 +273,6 @@ module top_cnt1
     // CNT OUT DELAY SHIFTREGISTER
     // CNT values read from the shiftregisters need to be delayed until the
     // corresponding CNT(A&B) is calculated, then emitted.
-    // Using LUT SHR module instead of manually writing 3D reg array...
     reg [CNT_WIDTH-1:0] r_CntDelayedOut_A [SHR_DEPTH-1:0][DELAY:0];
     reg [CNT_WIDTH-1:0] r_CntDelayedOut_B [SHR_DEPTH-1:0][DELAY:0];
 
@@ -286,7 +285,7 @@ module top_cnt1
                     always @ (posedge clk)
                     begin
                         if(w_PreStageOut_ValidIn[nn]) begin
-                            r_CntDelayedOut_A[nn][oo] <= r_Cnt_Array_A[nn];
+                            r_CntDelayedOut_A[nn][oo] <= r_Cnt_Array_A[nn];     // required in case new ref vectors are loaded on the fly
                             r_CntDelayedOut_B[nn][oo] <= r_Cnt_Array_B[nn];
                         end
                     end
@@ -294,7 +293,7 @@ module top_cnt1
                     always @ (posedge clk)
                     begin
                         if(w_PreStageOut_ValidIn[nn]) begin
-                            r_CntDelayedOut_A[nn][oo] <= r_CntDelayedOut_A[nn][oo-1];
+                            r_CntDelayedOut_A[nn][oo] <= r_CntDelayedOut_A[nn][oo-1];     // required in case new ref vectors are loaded on the fly
                             r_CntDelayedOut_B[nn][oo] <= r_CntDelayedOut_B[nn][oo-1];
                         end
                     end
@@ -303,5 +302,11 @@ module top_cnt1
         end
     endgenerate
 
+
+    // COMPARE MODULES
+    // CNT(A)+CNT(B)-CNT(A&B) is the calculated dissimilarity
+    // metric. It is compared against a threshold to decide if two
+    // fingerprints are similar enough. Output will be collected with
+    // a FIFO-tree.
 
 endmodule
