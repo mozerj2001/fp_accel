@@ -11,6 +11,8 @@ module tb_top_cnt1(
     localparam SUB_VECTOR_NO    = 2;
     localparam GRANULE_WIDTH    = 6;
     localparam SHR_DEPTH        = 4;
+    localparam CNT_WIDTH        = $clog2(VECTOR_WIDTH);
+
 
     localparam CLK_PERIOD       = 10;
     localparam HALF_CLK_PERIOD  = CLK_PERIOD/2;
@@ -18,12 +20,10 @@ module tb_top_cnt1(
     reg clk                     = 1'b0;
     reg rst                     = 1'b1;
     reg [BUS_WIDTH-1:0] vector;
-    reg load_new_ref            = 0;
-
-    wire [$clog2(VECTOR_WIDTH)-1:0] cnt_A;
-    wire [$clog2(VECTOR_WIDTH)-1:0] cnt_B;
-    wire [$clog2(VECTOR_WIDTH)-1:0] cnt_AB;
-    wire valid_out;
+    reg load_new_ref                = 0;
+    reg wr_threshold                = 0;
+    reg [CNT_WIDTH-1:0] threshold   = 18;
+    wire comp_rdy;
 
 
     // FIFO SIGNALS
@@ -65,6 +65,8 @@ module tb_top_cnt1(
         .rst                    (rst),
         .i_Vector               (f_dout),
         .i_Valid                (~f_empty),
+        .i_WrThreshold          (wr_threshold),
+        .i_Threshold            (threshold),
         .i_LoadNewRefVectors    (load_new_ref),
         .o_Read                 (f_read)
     );
@@ -77,9 +79,13 @@ module tb_top_cnt1(
 
     // FILL FIFO
     initial begin
-        #50;
-        f_write <= 1'b1;
+        #100;
         rst <= 1'b0;
+        wr_threshold <= 1'b1;
+        #CLK_PERIOD;
+        wr_threshold <= 1'b0;
+        #500;
+        f_write <= 1'b1;
         f_din <= 20'b11111111111111111111;
         #CLK_PERIOD;
         f_din <= 20'b11111111111111100110;

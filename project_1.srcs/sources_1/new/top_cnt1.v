@@ -19,7 +19,11 @@ module top_cnt1
         input wire                  i_Valid,
         input wire                  i_LoadNewRefVectors,    // 0: shift A, 1: shift B
         //
-        output wire                 o_Read
+        input wire                  i_WrThreshold,
+        input wire [CNT_WIDTH-1:0]  i_Threshold,
+        //
+        output wire                 o_Read,
+        output wire                 o_ComparatorReady       // comparator not setting up new threshold
     );
 
     localparam SUB_VEC_CNTR_WIDTH = 16; //$clog2(SUB_VECTOR_NO*SHR_DEPTH);
@@ -34,6 +38,7 @@ module top_cnt1
     // Assuming there are two sub-vectors per vector, its LSB
     // is the select signal for the output multiplexers.
     reg [SUB_VEC_CNTR_WIDTH-1:0] r_SubVecCntr;
+    wire w_Cnt_SubVector_Valid;
 
     always @ (posedge clk)
     begin
@@ -69,6 +74,7 @@ module top_cnt1
     // CNT1 values.
     wire [BUS_WIDTH-1:0]    w_Catted_Vector;
     wire                    w_Catted_Valid;
+
     vec_cat #(
         .BUS_WIDTH(BUS_WIDTH),
         .VECTOR_WIDTH(VECTOR_WIDTH)
@@ -87,7 +93,6 @@ module top_cnt1
     // Calculates input vector weight.
     wire [BUS_WIDTH-1:0]    w_Cnted_Vector;
     wire [CNT_WIDTH-1:0]    w_Cnt;
-    wire                    w_Cnt_SubVector_Valid;
     wire                    w_Cnt_New;
     pre_stage_unit #(
         .BUS_WIDTH(BUS_WIDTH),
@@ -308,5 +313,29 @@ module top_cnt1
     // metric. It is compared against a threshold to decide if two
     // fingerprints are similar enough. Output will be collected with
     // a FIFO-tree.
+    wire [SHR_DEPTH-1:0] w_CompareDout;
+
+    genvar cc;
+    generate
+        for(cc = 0; cc < SHR_DEPTH; cc = cc + 1) begin
+            comparator_wrapper#(
+                .VECTOR_WIDTH   (VECTOR_WIDTH),
+                .BUS_WIDTH      (BUS_WIDTH)
+            ) u_comparator_wr (
+                .clk            (clk                            ),
+                .rst            (rst                            ),
+                .i_CntA         (r_CntDelayedOut_A[cc][DELAY]   ),
+                .i_CntB         (r_CntDelayedOut_B[cc][DELAY]   ),
+                .i_CntC         (w_Cnt_AnB[cc]                  ),
+                .i_WrThreshold  (i_WrThreshold                  ),
+                .i_Threshold    (i_Threshold                    ),
+                .o_Ready        (o_ComparatorReady              ),
+                .o_Dout         (w_CompareDout[cc]              )
+            );
+        end
+    endgenerate
+
+
+
 
 endmodule
