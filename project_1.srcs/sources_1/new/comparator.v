@@ -28,7 +28,6 @@ module comparator
         input wire                  i_Din,
         input wire                  i_WrEn,
         output wire                 o_Dout          // 0: over threshold, 1: under threshold
-        
     );
 
     // Similarity calc
