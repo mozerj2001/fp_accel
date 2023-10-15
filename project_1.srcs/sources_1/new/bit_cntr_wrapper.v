@@ -5,9 +5,9 @@
 
 module bit_cntr_wrapper
     #(
-        parameter VECTOR_WIDTH = 920,
+        parameter VECTOR_WIDTH  = 920,
         parameter GRANULE_WIDTH = 6,
-        parameter OUTPUT_WIDTH = 16
+        parameter OUTPUT_WIDTH  = 16
     )
     (
         input wire                      clk,
@@ -32,21 +32,20 @@ module bit_cntr_wrapper
 
     bit_cntr
     #(
-        .VECTOR_WIDTH(VECTOR_WIDTH), 
-        .GRANULE_WIDTH(GRANULE_WIDTH)
-    )
-    pipelined_counter(
-        .clk(clk),
-        .rst(rst),
-        .i_Vector(i_Vector),
+        .VECTOR_WIDTH   (VECTOR_WIDTH   ), 
+        .GRANULE_WIDTH  (GRANULE_WIDTH  )
+    ) pipelined_counter (
+        .clk            (clk            ),
+        .rst            (rst            ),
+        .i_Vector       (i_Vector       ),
 
-        .o_Sum(w_NewSum) 
+        .o_Sum          (w_NewSum       ) 
     );
 
     /////////////////////////////////////////////////////////////////////////////////////
     // DELAY SIGNALS
-    reg r_DelayValidFF [DELAY-1:0];
-    reg r_DelayLastWordFF [DELAY-1:0];
+    reg r_DelayValidFF      [DELAY-1:0];
+    reg r_DelayLastWordFF   [DELAY-1:0];
 
     genvar ii;
     generate
@@ -54,11 +53,11 @@ module bit_cntr_wrapper
             if(ii == 0) begin
                 always @ (posedge clk) begin
                     if(rst) begin
-                        r_DelayValidFF[ii] <= 1'b0;
-                        r_DelayLastWordFF[ii] <= 1'b0;
+                        r_DelayValidFF[ii]      <= 1'b0;
+                        r_DelayLastWordFF[ii]   <= 1'b0;
                     end else begin
-                        r_DelayValidFF[ii] <= i_Valid;
-                        r_DelayLastWordFF[ii] <= i_LastWordOfVector;        
+                        r_DelayValidFF[ii]      <= i_Valid;
+                        r_DelayLastWordFF[ii]   <= i_LastWordOfVector;        
                     end
                 end
             end
@@ -66,19 +65,19 @@ module bit_cntr_wrapper
             begin
                 always @ (posedge clk) begin
                     if(rst) begin
-                        r_DelayValidFF[ii] <= 1'b0;
-                        r_DelayLastWordFF[ii] <= 1'b0;
+                        r_DelayValidFF[ii]      <= 1'b0;
+                        r_DelayLastWordFF[ii]   <= 1'b0;
                     end else begin
-                        r_DelayValidFF[ii] <= r_DelayValidFF[ii-1];
-                        r_DelayLastWordFF[ii] <= r_DelayLastWordFF[ii-1];        
+                        r_DelayValidFF[ii]      <= r_DelayValidFF[ii-1];
+                        r_DelayLastWordFF[ii]   <= r_DelayLastWordFF[ii-1];        
                     end
                 end
             end
         end
     endgenerate
 
-    assign o_SumValid   = r_DelayValidFF[DELAY-1];
-    assign o_SumNew     = r_DelayLastWordFF[DELAY-1];
+    assign o_SumValid   = r_DelayValidFF    [DELAY-1];
+    assign o_SumNew     = r_DelayLastWordFF [DELAY-1];
 
 
     /////////////////////////////////////////////////////////////////////////////////////

@@ -30,9 +30,9 @@
 
 module pre_stage_unit
     #(
-        BUS_WIDTH = 512,
-        SUB_VECTOR_NO = 4,
-        GRANULE_WIDTH = 6,
+        BUS_WIDTH           = 512,
+        SUB_VECTOR_NO       = 4,
+        GRANULE_WIDTH       = 6,
 
         //
         OUTPUT_VECTOR_WIDTH = BUS_WIDTH*SUB_VECTOR_NO,
@@ -49,9 +49,9 @@ module pre_stage_unit
         output wire                             o_CntNew
     );
 
-    localparam WORD_CNTR_WIDTH = 4;
-    localparam DELAY = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
-    localparam BIT_CNTR_OUT_WIDTH = $clog2(OUTPUT_VECTOR_WIDTH);
+    localparam WORD_CNTR_WIDTH      = 4;
+    localparam DELAY                = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
+    localparam BIT_CNTR_OUT_WIDTH   = $clog2(OUTPUT_VECTOR_WIDTH);
 
     /////////////////////////////////////////////////////////////////////////////////////
     // DATA WORD COUNTER
@@ -82,20 +82,20 @@ module pre_stage_unit
 
     bit_cntr_wrapper
     #(
-        .VECTOR_WIDTH(BUS_WIDTH), 
-        .GRANULE_WIDTH(GRANULE_WIDTH),
-        .OUTPUT_WIDTH(BIT_CNTR_OUT_WIDTH)
+        .VECTOR_WIDTH       (BUS_WIDTH          ), 
+        .GRANULE_WIDTH      (GRANULE_WIDTH      ),
+        .OUTPUT_WIDTH       (BIT_CNTR_OUT_WIDTH )
     )
     bit_counter(
-        .clk(clk),
-        .rst(rst),
-        .i_Vector(i_Vector),
-        .i_Valid(i_Valid),
-        .i_LastWordOfVector(w_LastWordOfVector),
+        .clk                (clk                ),
+        .rst                (rst                ),
+        .i_Vector           (i_Vector           ),
+        .i_Valid            (i_Valid            ),
+        .i_LastWordOfVector (w_LastWordOfVector ),
 
-        .o_Sum(w_Sum),
-        .o_SumValid(w_SumValid),
-        .o_SumNew(w_SumNew)        // o_Sum can be read
+        .o_Sum              (w_Sum              ),
+        .o_SumValid         (w_SumValid         ),
+        .o_SumNew           (w_SumNew           )        // o_Sum can be read
     );
 
 
@@ -108,28 +108,27 @@ module pre_stage_unit
     generate
         for(jj = 0; jj < BUS_WIDTH; jj = jj + 1) begin
             lut_shr #(
-                .WIDTH(DELAY)
-            ) 
-            vector_shr(
-                .clk(clk),
-                .sh_en(i_Valid),
-                .din(i_Vector[jj]),
-                .addr(),
-                .q_msb(w_DelayedSubVector[jj]),
-                .q_sel()
+                .WIDTH  (DELAY                  )
+            ) vector_shr (
+                .clk    (clk                    ),
+                .sh_en  (i_Valid                ),
+                .din    (i_Vector[jj]           ),
+                .addr   (                       ),
+                .q_msb  (w_DelayedSubVector[jj] ),
+                .q_sel  (                       )
             );
         end
     endgenerate
 
     lut_shr #(
-	    .WIDTH(DELAY)
+	    .WIDTH      (DELAY      )
     ) valid_shr (
-	    .clk		(clk),
-	    .sh_en		(clk),
-	    .din		(i_Valid),
-	    .addr		(),
-	    .q_msb		(o_Valid),
-	    .q_sel		()
+	    .clk		(clk        ),
+	    .sh_en		(clk        ),
+	    .din		(i_Valid    ),
+	    .addr		(           ),
+	    .q_msb		(o_Valid    ),
+	    .q_sel		(           )
         );
 
 
