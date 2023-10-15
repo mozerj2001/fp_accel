@@ -8,6 +8,7 @@
 // & compared_vector vector, then calculates CNT(ref)+CNT(comp)-CNT(ref&comp)
 // and compares it agains a threshold. Vector IDs under a threshold are
 // similar enough, so their ID is propagated through a FIFO-tree.
+// (ID is the position in the database, so vec_cat counts input vectors.)
 // (FIFO-tree and ID passing is TODO!)
 
 module top_cnt1
@@ -17,6 +18,7 @@ module top_cnt1
         SUB_VECTOR_NO       = 2,        // how many sub-vectors are in a full vector
         GRANULE_WIDTH       = 6,        // width of the first CNT1 tree stage, 6 on Xilinx FPGA
         SHR_DEPTH           = 4,        // how many vectors this module is able to store
+        VEC_ID_WIDTH        = 8,
         //
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
     )(
@@ -79,16 +81,19 @@ module top_cnt1
     // CNT1 values.
     wire [BUS_WIDTH-1:0]    w_Catted_Vector;
     wire                    w_Catted_Valid;
+    wire [VEC_ID_WIDTH-1:0] w_CatOut_VecID;
 
     vec_cat #(
         .BUS_WIDTH      (BUS_WIDTH      ),
-        .VECTOR_WIDTH   (VECTOR_WIDTH   )
+        .VECTOR_WIDTH   (VECTOR_WIDTH   ),
+        .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) u_vec_cat_0 (
         .clk            (clk            ),
         .rst            (rst            ),
         .i_Vector       (i_Vector       ),
         .i_Valid        (i_Valid        ),
         .o_Vector       (w_Catted_Vector),
+        .o_VecID        (w_CatOut_VecID ),
         .o_Valid        (w_Catted_Valid ),
         .o_Read         (o_Read         )
     );
@@ -226,6 +231,84 @@ module top_cnt1
             end
         end
     end
+
+    // ID SHIFTREGISTERS
+    // Identical to CNT shiftregisters, they store the ID of each vector.
+    // SHR0: Compensate the delay of the input pre_stage_unit.  [DELAY]
+    // SHR1: Store alongside the CNT value and sub_vectors.     [SHR_DEPTH]
+    // SHR2: Compensate output pre_stage_unit and comparison.   [DELAY+2]
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_0   [DELAY-1:0];
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_1_A [SHR_DEPTH-1:0];
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_1_B [SHR_DEPTH-1:0];
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_A [SHR_DEPTH-1:0][DELAY+2:0];
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_B [SHR_DEPTH-1:0][DELAY+2:0];
+
+    genvar dd;
+    generate
+        for(dd = 0; dd < DELAY; dd = dd + 1) begin
+            always @ (posedge clk)
+            begin
+                if(dd == 0) begin
+                    r_ShrID_0[dd] <= w_CatOut_VecID;
+                end else begin
+                    r_ShrID_0[dd] <= r_ShrID_0[dd-1];
+                end
+            end
+        end
+    endgenerate
+
+    genvar ee;
+    generate
+        for(ee = 0; ee < SHR_DEPTH; ee = ee + 1) begin
+            always @ (posedge clk)
+            begin
+                if(ee == 0) begin
+                    if(w_Cnt_New) begin
+                        if(r_State == LOAD_REF) begin
+                            r_ShrID_1_A[ee] <= r_ShrID_0[DELAY-1];
+                        end else begin
+                            r_ShrID_1_B[ee] <= r_ShrID_0[DELAY-1];
+                        end
+                    end
+                end else begin
+                    if(w_Cnt_New) begin
+                        if(r_State == LOAD_REF) begin
+                            r_ShrID_1_A[ee] <= r_ShrID_1_A[ee-1];
+                        end else begin
+                            r_ShrID_1_B[ee] <= r_ShrID_1_B[ee-1];
+                        end
+                    end
+                end
+            end
+        end
+    endgenerate
+
+    genvar ff;
+    genvar gg;
+    generate
+        for(ff = 0; ff < SHR_DEPTH; ff = ff + 1) begin
+            for(gg = 0; gg <= DELAY+2; gg = gg + 1) begin
+                if(gg == 0) begin
+                    always @ (posedge clk)
+                    begin
+                        if(w_PreStageOut_ValidIn[ff]) begin
+                            r_ShrID_2_A[ff][gg] <= r_ShrID_1_A[ff];
+                            r_ShrID_2_B[ff][gg] <= r_ShrID_1_B[ff];
+                        end
+                    end
+                end else begin
+                    always @ (posedge clk)
+                    begin
+                        if(w_PreStageOut_ValidIn[ff]) begin
+                            r_ShrID_2_A[ff][gg] <= r_ShrID_2_A[ff][gg-1];
+                            r_ShrID_2_B[ff][gg] <= r_ShrID_2_B[ff][gg-1];
+                        end
+                    end
+                end
+            end
+        end
+    endgenerate
+
 
 
     // STAGE OUT MUX
