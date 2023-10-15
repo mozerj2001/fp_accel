@@ -4,7 +4,8 @@
 module srl_fifo
 #(
     parameter          WIDTH = 8,
-    parameter          DEPTH = 32 
+    parameter          DEPTH = 32,
+    parameter          CNT_W = $clog2(DEPTH)
 )(
     input wire              clk,
     input wire              rst,
@@ -15,12 +16,27 @@ module srl_fifo
     
     input wire              rd,
     output wire [WIDTH-1:0] q,
+    output wire [CNT_W:0]   item_no,
     output wire             empty
 );
 
-localparam CNT_W = $clog2(DEPTH);
-
 integer i;
+
+reg [CNT_W:0] item_cntr;
+always @ (posedge clk)
+begin
+    if(rst) begin
+        item_cntr <= 0;
+    end else if(wr && rd) begin
+        item_cntr <= item_cntr;
+    end else if(wr && (~full_ff)) begin
+        item_cntr <= item_cntr + 1;
+    end else if(rd && (~cntr[CNT_W])) begin
+        item_cntr <= item_cntr - 1;
+    end else begin
+        item_cntr <= item_cntr;
+    end
+end
 
 reg [WIDTH-1:0] data[DEPTH-1:0];
 always @ (posedge clk)
@@ -46,9 +62,10 @@ else if (wr & ~rd & cntr==(DEPTH-2))
 else if  (~wr & rd)
     full_ff <= 1'b0;
 
-assign q     = data[cntr[CNT_W-1:0]];
-assign empty = cntr[CNT_W];
-assign full  = full_ff;
+assign q        = data[cntr[CNT_W-1:0]];
+assign empty    = cntr[CNT_W];
+assign full     = full_ff;
+assign item_no  = item_cntr;
 
 
 
