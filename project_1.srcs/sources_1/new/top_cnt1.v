@@ -2,14 +2,21 @@
 `default_nettype none
 
 // VECTOR WEIGHT CALCULATOR TOP MODULE
+// Reads SubVectors from a FIFO, stores ref vectors and their calculated
+// weight in an array of shiftregisters. Shifts other incoming vectors
+// beside the ref vectors, calculates the weight of every ref_vector
+// & compared_vector vector, then calculates CNT(ref)+CNT(comp)-CNT(ref&comp)
+// and compares it agains a threshold. Vector IDs under a threshold are
+// similar enough, so their ID is propagated through a FIFO-tree.
+// (FIFO-tree and ID passing is TODO!)
 
 module top_cnt1
     #(
-        BUS_WIDTH           = 512,    // system bus data width
+        BUS_WIDTH           = 512,      // system bus data width
         VECTOR_WIDTH        = 920,
-        SUB_VECTOR_NO       = 2,    // how many sub-vectors are in a full vector
-        GRANULE_WIDTH       = 6,    // width of the first CNT1 tree stage, 6 on Xilinx FPGA
-        SHR_DEPTH           = 4,    // how many vectors this module is able to store
+        SUB_VECTOR_NO       = 2,        // how many sub-vectors are in a full vector
+        GRANULE_WIDTH       = 6,        // width of the first CNT1 tree stage, 6 on Xilinx FPGA
+        SHR_DEPTH           = 4,        // how many vectors this module is able to store
         //
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
     )(
@@ -26,12 +33,10 @@ module top_cnt1
         output wire                 o_ComparatorReady       // comparator not setting up new threshold
     );
 
-    localparam SUB_VEC_CNTR_WIDTH = 16; //$clog2(SUB_VECTOR_NO*SHR_DEPTH);
-
-    localparam LOAD_REF = 1'b0;
-    localparam COMPARE  = 1'b1;
-
-    localparam DELAY = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
+    localparam SUB_VEC_CNTR_WIDTH   = 16;   //$clog2(SUB_VECTOR_NO*SHR_DEPTH);
+    localparam LOAD_REF             = 1'b0;
+    localparam COMPARE              = 1'b1;
+    localparam DELAY                = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
 
     // SUB VECTOR COUNTER
     // Counts sub-vectors incoming from the input pre_stage_unit.
@@ -76,16 +81,16 @@ module top_cnt1
     wire                    w_Catted_Valid;
 
     vec_cat #(
-        .BUS_WIDTH(BUS_WIDTH),
-        .VECTOR_WIDTH(VECTOR_WIDTH)
+        .BUS_WIDTH      (BUS_WIDTH      ),
+        .VECTOR_WIDTH   (VECTOR_WIDTH   )
     ) u_vec_cat_0 (
-        .clk        (clk),
-        .rst        (rst),
-        .i_Vector   (i_Vector),
-        .i_Valid    (i_Valid),
-        .o_Vector   (w_Catted_Vector),
-        .o_Valid    (w_Catted_Valid),
-        .o_Read     (o_Read)
+        .clk            (clk            ),
+        .rst            (rst            ),
+        .i_Vector       (i_Vector       ),
+        .i_Valid        (i_Valid        ),
+        .o_Vector       (w_Catted_Vector),
+        .o_Valid        (w_Catted_Valid ),
+        .o_Read         (o_Read         )
     );
 
 
@@ -95,18 +100,18 @@ module top_cnt1
     wire [CNT_WIDTH-1:0]    w_Cnt;
     wire                    w_Cnt_New;
     pre_stage_unit #(
-        .BUS_WIDTH(BUS_WIDTH),
-        .SUB_VECTOR_NO(SUB_VECTOR_NO),
-        .GRANULE_WIDTH(GRANULE_WIDTH)
+        .BUS_WIDTH      (BUS_WIDTH              ),
+        .SUB_VECTOR_NO  (SUB_VECTOR_NO          ),
+        .GRANULE_WIDTH  (GRANULE_WIDTH          )
     ) u_cnt1_in (
-        .clk            (clk),
-        .rst            (rst),
-        .i_Vector       (w_Catted_Vector),
-        .i_Valid        (w_Catted_Valid),
-        .o_SubVector    (w_Cnted_Vector),
-        .o_Valid        (w_Cnt_SubVector_Valid),
-        .o_Cnt          (w_Cnt),
-        .o_CntNew       (w_Cnt_New)
+        .clk            (clk                    ),
+        .rst            (rst                    ),
+        .i_Vector       (w_Catted_Vector        ),
+        .i_Valid        (w_Catted_Valid         ),
+        .o_SubVector    (w_Cnted_Vector         ),
+        .o_Valid        (w_Cnt_SubVector_Valid  ),
+        .o_Cnt          (w_Cnt                  ),
+        .o_CntNew       (w_Cnt_New              )
     );
 
 
@@ -159,9 +164,9 @@ module top_cnt1
     wire w_Shift_B;
     assign w_Shift_B = w_Cnt_SubVector_Valid && (r_State == COMPARE);
 
-    reg [BUS_WIDTH-1:0]         r_Vector_Array_A[SHR_DEPTH*SUB_VECTOR_NO-1:0];
-    reg [BUS_WIDTH-1:0]         r_Vector_Array_B[SHR_DEPTH*SUB_VECTOR_NO-1:0];
-    reg [BUS_WIDTH-1:0]         r_Vector_Array_B_Del[SHR_DEPTH-1:0];
+    reg [BUS_WIDTH-1:0] r_Vector_Array_A    [SHR_DEPTH*SUB_VECTOR_NO-1:0];
+    reg [BUS_WIDTH-1:0] r_Vector_Array_B    [SHR_DEPTH*SUB_VECTOR_NO-1:0];
+    reg [BUS_WIDTH-1:0] r_Vector_Array_B_Del[SHR_DEPTH-1:0];
 
     integer ii;
     always @ (posedge clk)
@@ -239,8 +244,8 @@ module top_cnt1
     genvar mm;
     generate
         for(mm = 0; mm < SHR_DEPTH; mm = mm + 1) begin
-            assign w_OutPreStageIn_AnB[mm] = (~r_SubVecCntr[0]) ?  (r_Vector_Array_A[2*mm+1] & r_Vector_Array_B[2*mm+1]) : 
-                                                                (r_Vector_Array_A[2*mm] & r_Vector_Array_B_Del[mm]);
+            assign w_OutPreStageIn_AnB[mm] = (~r_SubVecCntr[0]) ?   (r_Vector_Array_A[2*mm+1] & r_Vector_Array_B[2*mm+1]) : 
+                                                                    (r_Vector_Array_A[2*mm] & r_Vector_Array_B_Del[mm]);
         end
     endgenerate
 
@@ -258,18 +263,18 @@ module top_cnt1
     generate
     for(kk = 0; kk < SHR_DEPTH; kk = kk + 1) begin
         pre_stage_unit #(
-            .BUS_WIDTH(BUS_WIDTH),
-            .SUB_VECTOR_NO(SUB_VECTOR_NO),
-            .GRANULE_WIDTH(GRANULE_WIDTH)
+            .BUS_WIDTH      (BUS_WIDTH                  ),
+            .SUB_VECTOR_NO  (SUB_VECTOR_NO              ),
+            .GRANULE_WIDTH  (GRANULE_WIDTH              )
         ) u_cnt1_out (
-            .clk            (clk),
-            .rst            (rst),
-            .i_Vector       (w_OutPreStageIn_AnB[kk]),
-            .i_Valid        (w_PreStageOut_ValidIn[kk]),
-            .o_SubVector    (),
-            .o_Valid        (w_PreStageOut_Valid[kk]),
-            .o_Cnt          (w_Cnt_AnB[kk]),
-            .o_CntNew       (w_CntOutNew_AnB[kk])
+            .clk            (clk                        ),
+            .rst            (rst                        ),
+            .i_Vector       (w_OutPreStageIn_AnB[kk]    ),
+            .i_Valid        (w_PreStageOut_ValidIn[kk]  ),
+            .o_SubVector    (                           ),
+            .o_Valid        (w_PreStageOut_Valid[kk]    ),
+            .o_Cnt          (w_Cnt_AnB[kk]              ),
+            .o_CntNew       (w_CntOutNew_AnB[kk]        )
         );
     end
     endgenerate

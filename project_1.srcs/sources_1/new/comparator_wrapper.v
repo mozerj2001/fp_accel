@@ -82,19 +82,19 @@ module comparator_wrapper
     assign w_CompDin = (r_State == LOAD_RAM_0) ? 1'b1 : 1'b0;
 
     comparator #(
-        .VECTOR_WIDTH   (VECTOR_WIDTH),
-        .BUS_WIDTH      (BUS_WIDTH)
+        .VECTOR_WIDTH   (VECTOR_WIDTH           ),
+        .BUS_WIDTH      (BUS_WIDTH              )
     ) u_comparator (
-        .clk            (clk),
-        .rst            (rst),
-        .i_CntA         (i_CntA),
-        .i_CntB         (i_CntB),
-        .i_CntC         (i_CntC),
-        .i_RAM_Setup    (r_State != COMPARE),
-        .i_Addr         (r_AddrCntr),
-        .i_Din          (w_CompDin),
-        .i_WrEn         (r_State != COMPARE),
-        .o_Dout         (o_Dout)
+        .clk            (clk                    ),
+        .rst            (rst                    ),
+        .i_CntA         (i_CntA                 ),
+        .i_CntB         (i_CntB                 ),
+        .i_CntC         (i_CntC                 ),
+        .i_RAM_Setup    (r_State != COMPARE     ),
+        .i_Addr         (r_AddrCntr             ),
+        .i_Din          (w_CompDin              ),
+        .i_WrEn         (r_State != COMPARE     ),
+        .o_Dout         (o_Dout                 )
     );
 
 

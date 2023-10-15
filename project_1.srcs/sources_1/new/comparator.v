@@ -45,20 +45,20 @@ module comparator
     // RAM storing Y/N values based on the configured threshold
     wire [ADDR_WIDTH-1:0] w_Addr;
     wire [ADDR_WIDTH-1:0] w_AddrSaturated;          // saturate address for better waveform visibility in non-valid cycles
-    assign w_Addr = i_RAM_Setup ? i_Addr : r_Sum;
-    assign w_AddrSaturated = (w_Addr > VECTOR_WIDTH) ? VECTOR_WIDTH : w_Addr;
+    assign w_Addr           = i_RAM_Setup ? i_Addr : r_Sum;
+    assign w_AddrSaturated  = (w_Addr > VECTOR_WIDTH) ? VECTOR_WIDTH : w_Addr;
 
     block_ram_rd_1st
     #(
-        .DEPTH  (VECTOR_WIDTH+1),
-        .WIDH   (1)
+        .DEPTH  (VECTOR_WIDTH+1 ),
+        .WIDH   (1              )
     ) u_result_ram (
-        .clk    (clk),
-        .we     (i_WrEn),
-        .en     (1),
+        .clk    (clk            ),
+        .we     (i_WrEn         ),
+        .en     (1              ),
         .addr   (w_AddrSaturated),
-        .din    (i_Din),
-        .dout   (o_Dout)
+        .din    (i_Din          ),
+        .dout   (o_Dout         )
     );
 
 

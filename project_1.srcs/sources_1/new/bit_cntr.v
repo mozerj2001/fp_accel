@@ -9,27 +9,27 @@
 
 module bit_cntr
     #(
-        parameter VECTOR_WIDTH = 920,           // how wide the input vector is
+        parameter VECTOR_WIDTH  = 920,           // how wide the input vector is
         parameter GRANULE_WIDTH = 6             // how many bits are summed in stage 1
     )
     (
-        input wire                      clk,
-        input wire                      rst,
-        input wire [VECTOR_WIDTH-1:0]   i_Vector,
+        input wire                              clk,
+        input wire                              rst,
+        input wire [VECTOR_WIDTH-1:0]           i_Vector,
 
-        output wire [$clog2(VECTOR_WIDTH):0] o_Sum 
+        output wire [$clog2(VECTOR_WIDTH):0]    o_Sum 
     );
 
 
     // how many bits per first stage adder?
-    localparam GW3 = GRANULE_WIDTH*3;
+    localparam GW3              = GRANULE_WIDTH*3;
     // how many r_Pipeline stages? ($clog3(VECTOR_WIDTH))
-    localparam PIPELINE_DEPTH = $clog2(VECTOR_WIDTH/GW3)/$clog2(3)+1;
+    localparam PIPELINE_DEPTH   = $clog2(VECTOR_WIDTH/GW3)/$clog2(3)+1;
     // how wide is the padded vector?
     localparam EXT_VECTOR_WIDTH = 3**(PIPELINE_DEPTH) * GW3;
     // how wide is the output of the three-input adders at each r_Pipeline stage?
     // WORST CASE: all input bits are '1'
-    localparam PIPELINE_WIDTH = $clog2(VECTOR_WIDTH);
+    localparam PIPELINE_WIDTH   = $clog2(VECTOR_WIDTH);
 
     /////////////////////////////////////////////////////////////////////////////////////
     // PAD INPUT VECTOR
@@ -49,11 +49,11 @@ module bit_cntr
     genvar ii;
     generate
         for(ii = 0; ii < (EXT_VECTOR_WIDTH/GRANULE_WIDTH); ii =ii + 1) begin
-            bit_adder
-            #(  .VECTOR_WIDTH(GRANULE_WIDTH) )
-            first_stage_adder(
-                .i_Vector(w_ExtendedVector[ii*GRANULE_WIDTH+:GRANULE_WIDTH]),
-                .o_Sum(w_GranuleSum[ii])
+            bit_adder#(
+                .VECTOR_WIDTH   (GRANULE_WIDTH                                      )
+            ) first_stage_adder (
+                .i_Vector       (w_ExtendedVector[ii*GRANULE_WIDTH+:GRANULE_WIDTH]  ),
+                .o_Sum          (w_GranuleSum[ii]                                   )
             );
         end
     endgenerate

@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_top_cnt1_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_top_cnt1" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="690.614 ns"></ZoomStartTime>
+      <ZoomEndTime time="709.415 ns"></ZoomEndTime>
+      <Cursor1Time time="890.414 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="104"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="34" />
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/i_Threshold">
+      <obj_property name="ElementShortName">i_Threshold[5:0]</obj_property>
+      <obj_property name="ObjectShortName">i_Threshold[5:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/i_WrThreshold">
+      <obj_property name="ElementShortName">i_WrThreshold</obj_property>
+      <obj_property name="ObjectShortName">i_WrThreshold</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_Vector_Array_A">
+      <obj_property name="ElementShortName">r_Vector_Array_A[7:0][19:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Vector_Array_A[7:0][19:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_Vector_Array_B">
+      <obj_property name="ElementShortName">r_Vector_Array_B[7:0][19:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Vector_Array_B[7:0][19:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_Vector_Array_B_Del">
+      <obj_property name="ElementShortName">r_Vector_Array_B_Del[3:0][19:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Vector_Array_B_Del[3:0][19:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_Cnt_Array_A">
+      <obj_property name="ElementShortName">r_Cnt_Array_A[3:0][5:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Cnt_Array_A[3:0][5:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_Cnt_Array_B">
+      <obj_property name="ElementShortName">r_Cnt_Array_B[3:0][5:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Cnt_Array_B[3:0][5:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/r_State">
+      <obj_property name="ElementShortName">r_State</obj_property>
+      <obj_property name="ObjectShortName">r_State</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_State_Shr">
+      <obj_property name="ElementShortName">r_State_Shr[3:0]</obj_property>
+      <obj_property name="ObjectShortName">r_State_Shr[3:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_SubVecCntr">
+      <obj_property name="ElementShortName">r_SubVecCntr[15:0]</obj_property>
+      <obj_property name="ObjectShortName">r_SubVecCntr[15:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_Valid_Shr">
+      <obj_property name="ElementShortName">r_Valid_Shr[3:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Valid_Shr[3:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/w_OutPreStageIn_AnB">
+      <obj_property name="ElementShortName">w_OutPreStageIn_AnB[3:0][19:0]</obj_property>
+      <obj_property name="ObjectShortName">w_OutPreStageIn_AnB[3:0][19:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/w_PreStageOut_ValidIn">
+      <obj_property name="ElementShortName">w_PreStageOut_ValidIn[3:0]</obj_property>
+      <obj_property name="ObjectShortName">w_PreStageOut_ValidIn[3:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/w_PreStageOut_Valid">
+      <obj_property name="ElementShortName">w_PreStageOut_Valid[3:0]</obj_property>
+      <obj_property name="ObjectShortName">w_PreStageOut_Valid[3:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/w_CntOutNew_AnB">
+      <obj_property name="ElementShortName">w_CntOutNew_AnB[3:0]</obj_property>
+      <obj_property name="ObjectShortName">w_CntOutNew_AnB[3:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/w_Cnt_AnB">
+      <obj_property name="ElementShortName">w_Cnt_AnB[3:0][5:0]</obj_property>
+      <obj_property name="ObjectShortName">w_Cnt_AnB[3:0][5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_B">
+      <obj_property name="ElementShortName">r_CntDelayedOut_B[3:0][3:0][5:0]</obj_property>
+      <obj_property name="ObjectShortName">r_CntDelayedOut_B[3:0][3:0][5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_B[3]">
+         <obj_property name="ElementShortName">[3][3:0][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][3:0][5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_B[2]">
+         <obj_property name="ElementShortName">[2][3:0][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][3:0][5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_B[1]">
+         <obj_property name="ElementShortName">[1][3:0][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][3:0][5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_B[0]">
+         <obj_property name="ElementShortName">[0][3:0][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][3:0][5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_A">
+      <obj_property name="ElementShortName">r_CntDelayedOut_A[3:0][3:0][5:0]</obj_property>
+      <obj_property name="ObjectShortName">r_CntDelayedOut_A[3:0][3:0][5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_A[3]">
+         <obj_property name="ElementShortName">[3][3:0][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][3:0][5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_A[2]">
+         <obj_property name="ElementShortName">[2][3:0][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][3:0][5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_A[1]">
+         <obj_property name="ElementShortName">[1][3:0][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][3:0][5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_top_cnt1/uut/r_CntDelayedOut_A[0]">
+         <obj_property name="ElementShortName">[0][3:0][5:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][3:0][5:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/o_ComparatorReady">
+      <obj_property name="ElementShortName">o_ComparatorReady</obj_property>
+      <obj_property name="ObjectShortName">o_ComparatorReady</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/w_CompareDout">
+      <obj_property name="ElementShortName">w_CompareDout[3:0]</obj_property>
+      <obj_property name="ObjectShortName">w_CompareDout[3:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <wvobject type="logic" fp_name="/tb_top_cnt1/uut/w_CompareDout[3]">
+         <obj_property name="ElementShortName">[3]</obj_property>
+         <obj_property name="ObjectShortName">[3]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_top_cnt1/uut/w_CompareDout[2]">
+         <obj_property name="ElementShortName">[2]</obj_property>
+         <obj_property name="ObjectShortName">[2]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_top_cnt1/uut/w_CompareDout[1]">
+         <obj_property name="ElementShortName">[1]</obj_property>
+         <obj_property name="ObjectShortName">[1]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_top_cnt1/uut/w_CompareDout[0]">
+         <obj_property name="ElementShortName">[0]</obj_property>
+         <obj_property name="ObjectShortName">[0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /rst">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /i_CntA">
+      <obj_property name="ElementShortName">i_CntA[5:0]</obj_property>
+      <obj_property name="ObjectShortName">i_CntA[5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /i_CntB">
+      <obj_property name="ElementShortName">i_CntB[5:0]</obj_property>
+      <obj_property name="ObjectShortName">i_CntB[5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /i_CntC">
+      <obj_property name="ElementShortName">i_CntC[5:0]</obj_property>
+      <obj_property name="ObjectShortName">i_CntC[5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /i_WrThreshold">
+      <obj_property name="ElementShortName">i_WrThreshold</obj_property>
+      <obj_property name="ObjectShortName">i_WrThreshold</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /i_Threshold">
+      <obj_property name="ElementShortName">i_Threshold[5:0]</obj_property>
+      <obj_property name="ObjectShortName">i_Threshold[5:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /o_Ready">
+      <obj_property name="ElementShortName">o_Ready</obj_property>
+      <obj_property name="ObjectShortName">o_Ready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /o_Dout">
+      <obj_property name="ElementShortName">o_Dout</obj_property>
+      <obj_property name="ObjectShortName">o_Dout</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /u_comparator/r_Sum">
+      <obj_property name="ElementShortName">r_Sum[5:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Sum[5:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /r_Threshold">
+      <obj_property name="ElementShortName">r_Threshold[5:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Threshold[5:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /r_State">
+      <obj_property name="ElementShortName">r_State[1:0]</obj_property>
+      <obj_property name="ObjectShortName">r_State[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /r_AddrCntr">
+      <obj_property name="ElementShortName">r_AddrCntr[5:0]</obj_property>
+      <obj_property name="ObjectShortName">r_AddrCntr[5:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top_cnt1/uut/\genblk5[0].u_comparator_wr /w_CompDin">
+      <obj_property name="ElementShortName">w_CompDin</obj_property>
+      <obj_property name="ObjectShortName">w_CompDin</obj_property>
+   </wvobject>
+</wave_config>

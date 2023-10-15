@@ -10,7 +10,6 @@ module bit_adder
     )
     (
         input wire [VECTOR_WIDTH-1:0]           i_Vector,
-
         output reg [VECTOR_WIDTH/2-1:0]         o_Sum
     );
 

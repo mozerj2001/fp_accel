@@ -15,17 +15,17 @@
 
 module vec_cat
     #(
-        BUS_WIDTH = 512,
-        VECTOR_WIDTH = 920
+        BUS_WIDTH       = 512,
+        VECTOR_WIDTH    = 920
     )
     (
-        input wire clk,
-        input wire rst,
-        input wire [BUS_WIDTH-1:0] i_Vector,    // continuous stream of unseparated vectors
-        input wire i_Valid,                     // external FIFO not empty
-        output wire [BUS_WIDTH-1:0] o_Vector,   // stream of separated vectors, only one vector per output word
-        output wire o_Valid,                    // o_Vector is valid
-	    output wire o_Read			            // signal that no new vector can be processed in the next cycle
+        input wire                  clk,
+        input wire                  rst,
+        input wire [BUS_WIDTH-1:0]  i_Vector,       // continuous stream of unseparated vectors
+        input wire                  i_Valid,        // external FIFO not empty
+        output wire [BUS_WIDTH-1:0] o_Vector,       // stream of separated vectors, only one vector per output word
+        output wire                 o_Valid,        // o_Vector is valid
+	    output wire                 o_Read          // signal that no new vector can be processed in the next cycle
     );
 
     localparam CAT_REG_NO		    = 2;
