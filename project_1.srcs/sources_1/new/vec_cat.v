@@ -16,16 +16,18 @@
 module vec_cat
     #(
         BUS_WIDTH       = 512,
-        VECTOR_WIDTH    = 920
+        VECTOR_WIDTH    = 920,
+        VEC_ID_WIDTH    = 8
     )
     (
-        input wire                  clk,
-        input wire                  rst,
-        input wire [BUS_WIDTH-1:0]  i_Vector,       // continuous stream of unseparated vectors
-        input wire                  i_Valid,        // external FIFO not empty
-        output wire [BUS_WIDTH-1:0] o_Vector,       // stream of separated vectors, only one vector per output word
-        output wire                 o_Valid,        // o_Vector is valid
-	    output wire                 o_Read          // signal that no new vector can be processed in the next cycle
+        input wire                      clk,
+        input wire                      rst,
+        input wire [BUS_WIDTH-1:0]      i_Vector,       // continuous stream of unseparated vectors
+        input wire                      i_Valid,        // external FIFO not empty
+        output wire [BUS_WIDTH-1:0]     o_Vector,       // stream of separated vectors, only one vector per output word
+        output wire [VEC_ID_WIDTH-1:0]  o_VecID,
+        output wire                     o_Valid,        // o_Vector is valid
+	    output wire                     o_Read          // signal that no new vector can be processed in the next cycle
     );
 
     localparam CAT_REG_NO		    = 2;
@@ -65,9 +67,10 @@ module vec_cat
     /////////////////////////////////////////////////////////////////////////////////////
     // STATE MACHINE
     // --> state changes every clk as it is assumed that VECTOR_WIDTH < 2*BUS_WIDTH
-    reg         r_State;
-    reg [15:0]  r_IterationCntr; // counts full vector emissions
-    reg         r_RstIterCntr;
+    reg                     r_State;
+    reg [VEC_ID_WIDTH-1:0]  r_IterationCntr;    // counts full vector emissions
+    reg [VEC_ID_WIDTH-1:0]  r_IDCntr;           // counts full vector emissions, does not reset on i_Valid == 0 --> Vector ID
+    reg                     r_RstIterCntr;
 
     wire w_PauseIterCntr;
     assign w_PauseIterCntr = (r_State == PAD_V) && (r_IterationCntr*DELTA == BUS_WIDTH);
@@ -100,10 +103,20 @@ module vec_cat
             r_IterationCntr <= 1;
 	    end else if(w_PauseIterCntr) begin
 	        r_IterationCntr <= r_IterationCntr;
+            r_IDCntr        <= r_IDCntr;
         end else if(~(i_Valid)) begin
             r_IterationCntr <= 0;
         end else if(r_State == PAD_V) begin
             r_IterationCntr <= r_IterationCntr + 1;
+        end
+    end
+
+    always @ (posedge clk)
+    begin
+        if(rst) begin
+            r_IDCntr <= 0;
+        end else if((r_State == FULL_V) && i_Valid) begin
+            r_IDCntr <= r_IDCntr + 1;
         end
     end
 
@@ -113,12 +126,12 @@ module vec_cat
     // --> all possible index variations for the output vector need to be
     // wired into a single multiplexer, then selected between with the r_State
     // signal and the currently calculated indexes.
-    reg [2:0] r_ValidShr;        // delayed valid signal
+    reg [2:0]           r_ValidShr;        // delayed valid signal
     reg [BUS_WIDTH-1:0] r_OutVectorArray[IDX_PERMUATATIONS-1:0];
 
     always @ (posedge clk)
     begin
-        r_ValidShr[0] <= i_Valid;    
+        r_ValidShr[0]   <= i_Valid;    
         r_ValidShr[2:1] <= r_ValidShr[1:0];
     end
 
@@ -141,6 +154,7 @@ module vec_cat
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
     assign o_Vector = r_OutVectorArray[r_IterationCntr-1];
+    assign o_VecID  = r_IDCntr;
     assign o_Valid  = r_ValidShr[1];
     assign o_Read   = i_Valid && ~w_PauseIterCntr;
 

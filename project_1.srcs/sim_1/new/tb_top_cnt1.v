@@ -84,7 +84,7 @@ module tb_top_cnt1(
         wr_threshold <= 1'b1;
         #CLK_PERIOD;
         wr_threshold <= 1'b0;
-        #500;
+        #300;
         f_write <= 1'b1;
         f_din <= 20'b11111111111111111111;
         #CLK_PERIOD;
