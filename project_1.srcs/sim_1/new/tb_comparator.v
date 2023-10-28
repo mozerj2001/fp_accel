@@ -27,28 +27,32 @@ module tb_comparator(
     reg [CNT_WIDTH-1:0] cnt_b = 0;
     reg [CNT_WIDTH-1:0] cnt_c = 0;
 
-    reg [CNT_WIDTH-1:0] threshold       = 0;
-    reg                 wr_threshold    = 0;
+    reg [CNT_WIDTH-1:0] threshold       = 30;
+    reg [CNT_WIDTH:0]   wr_threshold    = 0;
 
     wire dout;
 
     // testbench state machine
     reg state = LOAD_RAM;
 
+    srl_fifo#(
+    ) u_ext_fifo (
+    );
+
 
     // DUT
     comparator_wrapper #(
-        .VECTOR_WIDTH   (VECTOR_WIDTH),
-        .BUS_WIDTH      (BUS_WIDTH)
+        .VECTOR_WIDTH   (VECTOR_WIDTH   ),
+        .BUS_WIDTH      (BUS_WIDTH      )
     ) u_dut (
-        .clk            (clk),
-        .rst            (rst),
-        .i_CntA         (cnt_a),
-        .i_CntB         (cnt_b),
-        .i_CntC         (cnt_c),
-        .i_WrThreshold  (wr_threshold),
-        .i_Threshold    (threshold),
-        .o_Dout         (dout)
+        .clk            (clk            ),
+        .rst            (rst            ),
+        .i_CntA         (cnt_a          ),
+        .i_CntB         (cnt_b          ),
+        .i_CntC         (cnt_c          ),
+        .i_WrThreshold  (wr_threshold   ),
+        .i_Threshold    (threshold      ),
+        .o_Dout         (dout           )
     );
 
     // clk gen

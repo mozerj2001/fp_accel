@@ -28,30 +28,56 @@ module tb_comparator_wrapper(
     reg [CNT_WIDTH-1:0] cnt_b = 0;
     reg [CNT_WIDTH-1:0] cnt_c = 0;
 
-    reg [CNT_WIDTH-1:0] threshold       = 23;
-    reg                 wr_threshold    = 0;
+    wire [CNT_WIDTH+1:0]    threshold;
+    reg                     wr_threshold    = 0;
 
     wire ready;
+    wire rd_threshold;
     wire dout;
 
     // testbench state machine
     reg state = LOAD_RAM;
 
+    // store threshold values
+    reg                 f_wr    = 0;
+    reg [CNT_WIDTH:0]   f_din   = 20;
+
+    wire f_full;
+    wire f_q;
+    wire f_item_no;
+    wire f_empty;
+
+    srl_fifo #(
+        .WIDTH  (CNT_WIDTH+1        ),
+        .DEPTH  (2*VECTOR_WIDTH-1   )
+    ) u_fifo (
+        .clk        (clk            ),
+        .rst        (rst            ),
+        .wr         (f_wr           ),
+        .d          (f_din          ),
+        .full       (f_full         ),
+        .rd         (rd_threshold   ),
+        .q          (threshold      ),
+        .item_no    (f_item_no      ),
+        .empty      (f_empty        )
+    );
+
 
     // DUT
     comparator_wrapper #(
-        .VECTOR_WIDTH   (VECTOR_WIDTH),
-        .BUS_WIDTH      (BUS_WIDTH)
+        .VECTOR_WIDTH   (VECTOR_WIDTH   ),
+        .BUS_WIDTH      (BUS_WIDTH      )
     ) u_dut (
-        .clk            (clk),
-        .rst            (rst),
-        .i_CntA         (cnt_a),
-        .i_CntB         (cnt_b),
-        .i_CntC         (cnt_c),
-        .i_WrThreshold  (wr_threshold),
-        .i_Threshold    (threshold),
-        .o_Ready        (ready),
-        .o_Dout         (dout)          // 1: over threshold, 0: under threshold
+        .clk            (clk            ),
+        .rst            (rst            ),
+        .i_CntA         (cnt_a          ),
+        .i_CntB         (cnt_b          ),
+        .i_CntC         (cnt_c          ),
+        .i_WrThreshold  (wr_threshold   ),
+        .i_Threshold    (threshold      ),
+        .o_Ready        (ready          ),
+        .o_ReadThreshold(rd_threshold   ),
+        .o_Dout         (dout           )          // 1: over threshold, 0: under threshold
     );
 
     // clk gen
@@ -61,14 +87,23 @@ module tb_comparator_wrapper(
     end
 
 
+    // load FIFO
     initial begin
         #50;
+        f_wr <= 1'b1;
+        #(CLK_PERIOD*2*VECTOR_WIDTH);
+        f_wr <= 1'b0;
+    end
+
+
+    initial begin
+        #10;
         rst <= 1'b0;
+        #500;
         wr_threshold <= 1'b1;
         #CLK_PERIOD;
         wr_threshold <= 1'b0;
         #550;
-        threshold <= 11;
         wr_threshold <= 1'b1;
         #CLK_PERIOD;
         wr_threshold <= 1'b0;
@@ -76,7 +111,7 @@ module tb_comparator_wrapper(
 
 
     initial begin
-        #500;
+        #2000;
         #CLK_PERIOD;
         cnt_a = 33;
         cnt_b = 17;

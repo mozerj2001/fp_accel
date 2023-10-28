@@ -22,44 +22,75 @@ module comparator
         input wire [CNT_WIDTH-1:0]  i_CntB,
         input wire [CNT_WIDTH-1:0]  i_CntC,
         input wire                  i_RAM_Setup,    // Mux i_Addr onto the addr input of the RAM module
+        input wire                  i_Valid,
 
         // RAM I/O
         input wire [ADDR_WIDTH-1:0] i_Addr,
-        input wire                  i_Din,
+        input wire [CNT_WIDTH:0]    i_Din,
         input wire                  i_WrEn,
         output wire                 o_Dout          // 0: over threshold, 1: under threshold
     );
 
+    // Valid delay
+    reg r_Valid;
+    
+    always @ (posedge clk)
+    begin
+        if(rst) begin
+            r_Valid <= 0;
+        end else begin
+            r_Valid <= i_Valid;
+        end
+    end
+
     // Similarity calc
-    reg [CNT_WIDTH-1:0] r_Sum;
+    reg [CNT_WIDTH:0]   r_Sum;
 
     always @ (posedge clk)
     begin
         if(rst) begin
-            r_Sum <= 0;
+            r_Sum   <= 0;
         end else begin
-            r_Sum <= i_CntA + i_CntB - i_CntC;
+            r_Sum   <= i_CntA + i_CntB;
         end
     end
 
     // RAM storing Y/N values based on the configured threshold
-    wire [ADDR_WIDTH-1:0] w_Addr;
-    wire [ADDR_WIDTH-1:0] w_AddrSaturated;          // saturate address for better waveform visibility in non-valid cycles
-    assign w_Addr           = i_RAM_Setup ? i_Addr : r_Sum;
-    assign w_AddrSaturated  = (w_Addr > VECTOR_WIDTH) ? VECTOR_WIDTH : w_Addr;
+    wire [ADDR_WIDTH-1:0]   w_Addr;
+    wire [ADDR_WIDTH-1:0]   w_AddrSaturated;          // saturate address for better waveform visibility in non-valid cycles
+    wire [CNT_WIDTH-1:0]    w_DoutRAM;
+    assign w_Addr = i_RAM_Setup ? i_Addr : i_CntC;
+
 
     block_ram_rd_1st
     #(
-        .DEPTH  (VECTOR_WIDTH+1 ),
-        .WIDH   (1              )
+        .DEPTH  (VECTOR_WIDTH+1     ),
+        .WIDTH  (CNT_WIDTH          )
     ) u_result_ram (
-        .clk    (clk            ),
-        .we     (i_WrEn         ),
-        .en     (1              ),
-        .addr   (w_AddrSaturated),
-        .din    (i_Din          ),
-        .dout   (o_Dout         )
+        .clk    (clk                ),
+        .we     (i_WrEn             ),
+        .en     (1                  ),
+        .addr   (w_Addr             ),
+        .din    (i_Din              ),
+        .dout   (w_DoutRAM          )
     );
+
+
+    // OUTPUT
+    reg w_Dout;
+
+    always @ (*)
+    begin
+        if(~r_Valid) begin
+            w_Dout = 1'b0;
+        end else if(w_DoutRAM <= r_Sum) begin
+            w_Dout = 1'b1;
+        end else begin
+            w_Dout = 1'b0;
+        end
+    end
+
+    assign o_Dout = w_Dout;
 
 
 endmodule

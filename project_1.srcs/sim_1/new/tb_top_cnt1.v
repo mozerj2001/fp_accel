@@ -22,11 +22,11 @@ module tb_top_cnt1(
     reg [BUS_WIDTH-1:0] vector;
     reg load_new_ref                = 0;
     reg wr_threshold                = 0;
-    reg [CNT_WIDTH-1:0] threshold   = 18;
-    wire comp_rdy;
+    wire cmp_rdy;
+    wire th_read;
 
 
-    // FIFO SIGNALS
+    // TEST FIFO SIGNALS
     reg f_write                 = 1'b0;
     reg [BUS_WIDTH-1:0] f_din   = 20'b0;
     wire f_read;
@@ -41,34 +41,62 @@ module tb_top_cnt1(
         .WIDTH(BUS_WIDTH),
         .DEPTH(VECTOR_WIDTH)
     ) test_fifo (
-        .clk    (clk),
-        .rst    (rst),
+        .clk    (clk    ),
+        .rst    (rst    ),
         .wr     (f_write),
-        .d      (f_din),
-        .full   (f_full),
-        .rd     (f_read),
-        .q      (f_dout),
+        .d      (f_din  ),
+        .full   (f_full ),
+        .rd     (f_read ),
+        .q      (f_dout ),
         .empty  (f_empty)
+    );
+
+
+    // TEST FIFO SIGNALS
+    reg th_write                 = 1'b0;
+    reg [CNT_WIDTH-1:0] th_din   = 50;
+    wire th_read;
+    wire [CNT_WIDTH-1:0] th_dout;
+    wire th_full;
+    wire th_empty;
+
+
+    // THRESHOLD FIFO
+    srl_fifo
+    #(
+        .WIDTH  (CNT_WIDTH      ),
+        .DEPTH  (2*VECTOR_WIDTH )
+    ) threshold_fifo (
+        .clk    (clk            ),
+        .rst    (rst            ),
+        .wr     (th_write       ),
+        .d      (th_din         ),
+        .full   (th_full        ),
+        .rd     (th_read        ),
+        .q      (th_dout        ),
+        .empty  (th_empty       )
     );
 
 
     // DUT
     top_cnt1
     #(
-        .BUS_WIDTH(BUS_WIDTH),
-        .VECTOR_WIDTH(VECTOR_WIDTH),
-        .SUB_VECTOR_NO(SUB_VECTOR_NO),
-        .GRANULE_WIDTH(GRANULE_WIDTH),
-        .SHR_DEPTH(SHR_DEPTH)
+        .BUS_WIDTH      (BUS_WIDTH      ),
+        .VECTOR_WIDTH   (VECTOR_WIDTH   ),
+        .SUB_VECTOR_NO  (SUB_VECTOR_NO  ),
+        .GRANULE_WIDTH  (GRANULE_WIDTH  ),
+        .SHR_DEPTH      (SHR_DEPTH      )
     ) uut (
-        .clk                    (clk),
-        .rst                    (rst),
-        .i_Vector               (f_dout),
-        .i_Valid                (~f_empty),
-        .i_WrThreshold          (wr_threshold),
-        .i_Threshold            (threshold),
-        .i_LoadNewRefVectors    (load_new_ref),
-        .o_Read                 (f_read)
+        .clk                    (clk            ),
+        .rst                    (rst            ),
+        .i_Vector               (f_dout         ),
+        .i_Valid                (~f_empty       ),
+        .i_WrThreshold          (wr_threshold   ),
+        .i_Threshold            (th_dout        ),
+        .i_LoadNewRefVectors    (load_new_ref   ),
+        .o_Read                 (f_read         ),
+        .o_ReadThreshold        (th_read        ),
+        .o_ComparatorReady      (cmp_rdy        )
     );
 
     always begin 
@@ -77,14 +105,17 @@ module tb_top_cnt1(
     end
 
 
-    // FILL FIFO
+    // FILL FIFOS
     initial begin
         #100;
         rst <= 1'b0;
+        th_write <= 1'b1;
+        #(CLK_PERIOD*2*VECTOR_WIDTH);
+        th_write <= 1'b0;
         wr_threshold <= 1'b1;
         #CLK_PERIOD;
         wr_threshold <= 1'b0;
-        #300;
+        #500;
         f_write <= 1'b1;
         f_din <= 20'b11111111111111111111;
         #CLK_PERIOD;

@@ -22,46 +22,33 @@ module comparator_wrapper
         input wire [CNT_WIDTH-1:0]  i_CntA,
         input wire [CNT_WIDTH-1:0]  i_CntB,
         input wire [CNT_WIDTH-1:0]  i_CntC,
-        input wire                  i_WrThreshold,  // Mux i_Addr onto the addr input of the RAM module
+        input wire                  i_WrThreshold,      // Mux i_Addr onto the addr input of the RAM module
         input wire [CNT_WIDTH-1:0]  i_Threshold,
+        input wire                  i_Valid,
         output wire                 o_Ready,
-        output wire                 o_Dout          // 1: over threshold, 0: under threshold
+        output wire                 o_ReadThreshold,    // read threshold values from external FIFO
+        output wire                 o_Dout              // 1: over threshold, 0: under threshold
     );
 
-    localparam LOAD_RAM_0   = 2'b00;
-    localparam LOAD_RAM_1   = 2'b01;
-    localparam COMPARE      = 2'b10;
-
-    // THRESHOLD REG
-    // Register in which the threshold is stored when i_WrThreshold is
-    // asserted.
-    reg [CNT_WIDTH-1:0] r_Threshold;
-
-    always @ (posedge clk)
-    begin
-        if(i_WrThreshold) begin
-            r_Threshold <= i_Threshold;
-        end
-    end
+    localparam LOAD_RAM = 1'b0;
+    localparam COMPARE  = 1'b1;
 
 
     // STATE MACHINE
     // LOAD RAM: Load RAM with an address counter. (din: 1s or 0s)
     // COMPARE: Calculate CntA+CntB-CntC. o_Dout is 1 when under
     // the threshold, 0 when over the threshold.
-    reg [1:0] r_State;
-    reg [CNT_WIDTH-1:0] r_AddrCntr;
+    reg                     r_State;
+    reg [2*CNT_WIDTH-1:0]   r_AddrCntr;
 
     always @ (posedge clk)
     begin
         if(rst) begin
             r_State <= COMPARE;
         end else if((r_State == COMPARE) && i_WrThreshold) begin
-            r_State <= LOAD_RAM_0;
-        end else if(r_AddrCntr == VECTOR_WIDTH) begin
+            r_State <= LOAD_RAM;
+        end else if(r_AddrCntr == 2*VECTOR_WIDTH-1) begin
             r_State <= COMPARE;
-        end else if(r_AddrCntr == r_Threshold) begin
-            r_State <= LOAD_RAM_1;
         end
     end
 
@@ -72,14 +59,14 @@ module comparator_wrapper
             r_AddrCntr <= 0;
         end else if(i_WrThreshold && (r_State == COMPARE)) begin
             r_AddrCntr <= 0;
-        end else if(r_State != COMPARE) begin
+        end else if(r_State == LOAD_RAM) begin
             r_AddrCntr <= r_AddrCntr + 1;
         end
     end
 
     // COMPARATOR
     wire w_CompDin;
-    assign w_CompDin = (r_State == LOAD_RAM_0) ? 1'b1 : 1'b0;
+    assign w_CompDin = (r_State == LOAD_RAM) ? 1'b1 : 1'b0;
 
     comparator #(
         .VECTOR_WIDTH   (VECTOR_WIDTH           ),
@@ -90,15 +77,17 @@ module comparator_wrapper
         .i_CntA         (i_CntA                 ),
         .i_CntB         (i_CntB                 ),
         .i_CntC         (i_CntC                 ),
-        .i_RAM_Setup    (r_State != COMPARE     ),
+        .i_RAM_Setup    (r_State == LOAD_RAM    ),
+        .i_Valid        (i_Valid                ),
         .i_Addr         (r_AddrCntr             ),
-        .i_Din          (w_CompDin              ),
-        .i_WrEn         (r_State != COMPARE     ),
+        .i_Din          (i_Threshold            ),
+        .i_WrEn         (r_State == LOAD_RAM    ),
         .o_Dout         (o_Dout                 )
     );
 
 
-    assign o_Ready = (r_State == COMPARE);
+    assign o_ReadThreshold  = (r_State == LOAD_RAM);
+    assign o_Ready          = (r_State == COMPARE);
 
 
 endmodule
