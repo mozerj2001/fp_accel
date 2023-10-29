@@ -11,6 +11,7 @@ module tb_top_cnt1(
     localparam SUB_VECTOR_NO    = 2;
     localparam GRANULE_WIDTH    = 6;
     localparam SHR_DEPTH        = 4;
+    localparam VEC_ID_WIDTH     = 8;
     localparam CNT_WIDTH        = $clog2(VECTOR_WIDTH);
 
 
@@ -20,8 +21,8 @@ module tb_top_cnt1(
     reg clk                     = 1'b0;
     reg rst                     = 1'b1;
     reg [BUS_WIDTH-1:0] vector;
-    reg load_new_ref                = 0;
-    reg wr_threshold                = 0;
+    reg load_new_ref            = 0;
+    reg wr_threshold            = 0;
     wire cmp_rdy;
     wire th_read;
 
@@ -79,13 +80,20 @@ module tb_top_cnt1(
 
 
     // DUT
+    wire                        id_pair_read;
+    wire [2*VEC_ID_WIDTH-1:0]   id_pair_out;
+    wire                        id_pair_ready;
+
+    assign id_pair_read = id_pair_ready;
+
     top_cnt1
     #(
         .BUS_WIDTH      (BUS_WIDTH      ),
         .VECTOR_WIDTH   (VECTOR_WIDTH   ),
         .SUB_VECTOR_NO  (SUB_VECTOR_NO  ),
         .GRANULE_WIDTH  (GRANULE_WIDTH  ),
-        .SHR_DEPTH      (SHR_DEPTH      )
+        .SHR_DEPTH      (SHR_DEPTH      ),
+        .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) uut (
         .clk                    (clk            ),
         .rst                    (rst            ),
@@ -94,9 +102,12 @@ module tb_top_cnt1(
         .i_WrThreshold          (wr_threshold   ),
         .i_Threshold            (th_dout        ),
         .i_LoadNewRefVectors    (load_new_ref   ),
+        .i_IDPair_Read          (id_pair_read   ),
         .o_Read                 (f_read         ),
         .o_ReadThreshold        (th_read        ),
-        .o_ComparatorReady      (cmp_rdy        )
+        .o_ComparatorReady      (cmp_rdy        ),
+        .o_IDPair_Ready         (id_pair_ready  ),
+        .o_IDPair_Out           (id_pair_out    )
     );
 
     always begin 
@@ -159,6 +170,17 @@ module tb_top_cnt1(
         f_write <= 1'b0;
         #CLK_PERIOD;
     end
+
+    // 0 - 11111111111111111111111111111111111
+    // 1 - 00110011001100110011001100110011001
+    // 2 - 11111111111111111111111111111111111
+    // 3 - 01010101010101010101010101010101010
+    // 4 - 11111111111111111111111111111111111
+    // 5 - 00110011001100110011001100110011001
+    // 6 - 11111111111111111111111111111111111
+    // 7 - 01010101010101010101010101010101010
+    // 8 - 11111111111111111111111111111111111
+    // 9 - 00110011001100110011001100110011001
 
 
 
