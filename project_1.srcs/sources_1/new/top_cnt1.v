@@ -9,7 +9,6 @@
 // and compares it agains a threshold. Vector IDs under a threshold are
 // similar enough, so their ID is propagated through a FIFO-tree.
 // (ID is the position in the database, so vec_cat counts input vectors.)
-// (FIFO-tree and ID passing is TODO!)
 
 module top_cnt1
     #(
@@ -22,18 +21,22 @@ module top_cnt1
         //
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
     )(
-        input wire                  clk,
-        input wire                  rst,
-        input wire [BUS_WIDTH-1:0]  i_Vector,
-        input wire                  i_Valid,
-        input wire                  i_LoadNewRefVectors,    // 0: shift A, 1: shift B
+        input wire                          clk,
+        input wire                          rst,
+        input wire [BUS_WIDTH-1:0]          i_Vector,
+        input wire                          i_Valid,
+        input wire                          i_LoadNewRefVectors,    // 0: shift A, 1: shift B
         //
-        input wire                  i_WrThreshold,
-        input wire [CNT_WIDTH-1:0]  i_Threshold,
+        input wire                          i_WrThreshold,
+        input wire [CNT_WIDTH-1:0]          i_Threshold,
         //
-        output wire                 o_Read,
-        output wire                 o_ReadThreshold,
-        output wire                 o_ComparatorReady       // comparator not setting up new threshold
+        input wire                          i_IDPair_Read,
+        //
+        output wire                         o_Read,
+        output wire                         o_ReadThreshold,
+        output wire                         o_ComparatorReady,      // comparator not setting up new threshold
+        output wire                         o_IDPair_Ready,
+        output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out
     );
 
     localparam SUB_VEC_CNTR_WIDTH   = 16;   //$clog2(SUB_VECTOR_NO*SHR_DEPTH);
@@ -430,36 +433,52 @@ module top_cnt1
     localparam FIFO_DATA_COUNT_WIDTH    = $clog2(FIFO_DATA_WIDTH);
     localparam FIFO_TREE_DEPTH          = $clog2(SHR_DEPTH) + 1;
 
-    wire                                w_fifo_almost_empty [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_almost_full  [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_data_valid   [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_dbiterr      [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire [FIFO_DATA_WIDTH-1:0]          w_fifo_dout         [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_empty        [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_full         [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_overflow     [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_prog_empty   [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_prog_full    [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire [FIFO_DATA_COUNT_WIDTH-1:0]    w_fifo_rd_data_count[FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_rd_rst_busy  [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_sbiterr      [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_underflow    [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_wr_ack       [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_wr_data_count[FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire [FIFO_DATA_COUNT_WIDTH-1:0]    w_fifo_wr_rst_busy  [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire [FIFO_DATA_WIDTH-1:0]          w_fifo_din          [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_injectdbiterr[FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_injectsbiterr[FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    reg                                 w_fifo_rd_en        [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_rst          [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_sleep        [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_wr_clk       [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
-    wire                                w_fifo_wr_en        [FIFO_TREE_DEPTH-1:0][SHR_DEPTH-1:0];
+    // CNT1 outputs are valid for 2 clk long --> FIFO write clock is half of
+    // clk
+    reg r_fifo_wr_clk;
+    
+    always @ (posedge clk)
+    begin
+        if(rst) begin
+            r_fifo_wr_clk <= 1'b0;
+        end else begin
+            r_fifo_wr_clk <= ~r_fifo_wr_clk;
+        end
+    end
+
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_almost_empty                                 ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_almost_full                                  ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_data_valid                                   ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_dbiterr                                      ;
+    wire [FIFO_DATA_WIDTH-1:0]              w_fifo_dout         [FIFO_TREE_DEPTH*SHR_DEPTH-1:0] ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_empty                                        ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_full                                         ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_overflow                                     ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_prog_empty                                   ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_prog_full                                    ;
+    wire [FIFO_DATA_COUNT_WIDTH-1:0]        w_fifo_rd_data_count[FIFO_TREE_DEPTH*SHR_DEPTH-1:0] ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_rd_rst_busy                                  ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_sbiterr                                      ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_underflow                                    ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_wr_ack                                       ;
+    wire [FIFO_DATA_COUNT_WIDTH-1:0]        w_fifo_wr_data_count[FIFO_TREE_DEPTH*SHR_DEPTH-1:0] ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_wr_rst_busy                                  ;
+    wire [FIFO_DATA_WIDTH-1:0]              w_fifo_din          [FIFO_TREE_DEPTH*SHR_DEPTH-1:0] ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_injectdbiterr                                ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_injectsbiterr                                ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_rd_en                                        ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_rst                                          ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_sleep                                        ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_wr_clk                                       ;
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_wr_en                                        ;
+                                        
+    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_FifoDin_Sel                                       ;
 
     genvar tt, uu;
     generate
         for(tt = 0; tt < FIFO_TREE_DEPTH; tt = tt + 1) begin
             for(uu = 0; uu < SHR_DEPTH; uu = uu + 1) begin
+                localparam LOCAL_DEPTH = SHR_DEPTH/(2**(FIFO_TREE_DEPTH-1-tt));
                 // xpm_fifo_sync: Synchronous FIFO
                 // Xilinx Parameterized Macro, version 2023.2
                 xpm_fifo_sync #(
@@ -467,73 +486,74 @@ module top_cnt1
                    .DOUT_RESET_VALUE    ("0"                    ),
                    .ECC_MODE            ("no_ecc"               ),
                    .FIFO_MEMORY_TYPE    ("auto"                 ),
-                   .FIFO_READ_LATENCY   (1                      ),
+                   .FIFO_READ_LATENCY   (0                      ),
                    .FIFO_WRITE_DEPTH    (32                     ),
                    .FULL_RESET_VALUE    (0                      ),
                    .PROG_EMPTY_THRESH   (10                     ),
                    .PROG_FULL_THRESH    (12                     ),  // must be high enough so that data in the pipeline still fits
                    .RD_DATA_COUNT_WIDTH (FIFO_DATA_COUNT_WIDTH  ),
                    .READ_DATA_WIDTH     (FIFO_DATA_WIDTH        ),
-                   .READ_MODE           ("std"                  ),
+                   .READ_MODE           ("fwft"                 ),
                    .SIM_ASSERT_CHK      (0                      ),
                    .USE_ADV_FEATURES    ("0707"                 ),
                    .WAKEUP_TIME         (0                      ),
                    .WRITE_DATA_WIDTH    (FIFO_DATA_WIDTH        ),
-                   .WR_DATA_COUNT_WIDTH (1                      )
+                   .WR_DATA_COUNT_WIDTH (FIFO_DATA_COUNT_WIDTH  )
                 )
                 u_fifo_tree_fifo (
-                   .almost_empty     (w_fifo_almost_empty   [tt][uu]),
-                   .almost_full      (w_fifo_almost_full    [tt][uu]),
-                   .data_valid       (w_fifo_data_valid     [tt][uu]),
-                   .dbiterr          (w_fifo_dbiterr        [tt][uu]),
-                   .dout             (w_fifo_dout           [tt][uu]),
-                   .empty            (w_fifo_empty          [tt][uu]),
-                   .full             (w_fifo_full           [tt][uu]),
-                   .overflow         (w_fifo_overflow       [tt][uu]),
-                   .prog_empty       (w_fifo_prog_empty     [tt][uu]),
-                   .prog_full        (w_fifo_prog_full      [tt][uu]),
-                   .rd_data_count    (w_fifo_rd_data_count  [tt][uu]),
-                   .rd_rst_busy      (w_fifo_rd_rst_busy    [tt][uu]),
-                   .sbiterr          (w_fifo_sbiterr        [tt][uu]),
-                   .underflow        (w_fifo_underflow      [tt][uu]),
-                   .wr_ack           (w_fifo_wr_ack         [tt][uu]),
-                   .wr_data_count    (w_fifo_wr_data_count  [tt][uu]),
-                   .wr_rst_busy      (w_fifo_wr_rst_busy    [tt][uu]),
-                   .din              (w_fifo_din            [tt][uu]),
-                   .injectdbiterr    (w_fifo_injectdbiterr  [tt][uu]),
-                   .injectsbiterr    (w_fifo_injectsbiterr  [tt][uu]),
-                   .rd_en            (w_fifo_rd_en          [tt][uu]),
-                   .rst              (w_fifo_rst            [tt][uu]),
-                   .sleep            (w_fifo_sleep          [tt][uu]),
-                   .wr_clk           (w_fifo_wr_clk         [tt][uu]),
-                   .wr_en            (w_fifo_wr_en          [tt][uu])
+                   .almost_empty     (w_fifo_almost_empty   [2**tt + uu]),
+                   .almost_full      (w_fifo_almost_full    [2**tt + uu]),
+                   .data_valid       (w_fifo_data_valid     [2**tt + uu]),
+                   .dbiterr          (w_fifo_dbiterr        [2**tt + uu]),
+                   .dout             (w_fifo_dout           [2**tt + uu]),
+                   .empty            (w_fifo_empty          [2**tt + uu]),
+                   .full             (w_fifo_full           [2**tt + uu]),
+                   .overflow         (w_fifo_overflow       [2**tt + uu]),
+                   .prog_empty       (w_fifo_prog_empty     [2**tt + uu]),
+                   .prog_full        (w_fifo_prog_full      [2**tt + uu]),
+                   .rd_data_count    (w_fifo_rd_data_count  [2**tt + uu]),
+                   .rd_rst_busy      (w_fifo_rd_rst_busy    [2**tt + uu]),
+                   .sbiterr          (w_fifo_sbiterr        [2**tt + uu]),
+                   .underflow        (w_fifo_underflow      [2**tt + uu]),
+                   .wr_ack           (w_fifo_wr_ack         [2**tt + uu]),
+                   .wr_data_count    (w_fifo_wr_data_count  [2**tt + uu]),
+                   .wr_rst_busy      (w_fifo_wr_rst_busy    [2**tt + uu]),
+                   .din              (w_fifo_din            [2**tt + uu]),
+                   .injectdbiterr    (w_fifo_injectdbiterr  [2**tt + uu]),
+                   .injectsbiterr    (w_fifo_injectsbiterr  [2**tt + uu]),
+                   .rd_en            (w_fifo_rd_en          [2**tt + uu]),
+                   .rst              (w_fifo_rst            [2**tt + uu]),
+                   .sleep            (w_fifo_sleep          [2**tt + uu]),
+                   .wr_clk           (w_fifo_wr_clk         [2**tt + uu]),
+                   .wr_en            (w_fifo_wr_en          [2**tt + uu])
                 ); // End of xpm_fifo_sync_inst instantiation
 
-                assign w_fifo_wr_clk[tt][uu] = clk;
-                assign w_fifo_rst   [tt][uu] = rst;
+                assign w_fifo_wr_clk[2**tt + uu] = r_fifo_wr_clk;
+                assign w_fifo_rst   [2**tt + uu] = rst;
 
                 // Pipeline output to first layer of FIFOs (compatible vector
                 // IDs are conacatenated as output)
-                if(tt == 0) begin
-                    assign w_fifo_din   [tt][uu] = {r_ShrID_2_A[uu][DELAY+1], r_ShrID_2_B[uu][DELAY+1]};
-                    assign w_fifo_wr_en [tt][uu] = w_CompareDout[uu];
-                end
-
                 // Upper levels of the FIFO tree take input from FIFOs on
                 // previous levels, priorizing FIFOs that are closer to being
                 // full.
-                if(/*tt != FIFO_TREE_DEPTH-1*/ 1) begin
-                    always @ (*)
-                    begin
-                        w_fifo_rd_en[tt][uu] <= 1'b1;
-                    end
+                if(tt == FIFO_TREE_DEPTH-1) begin           // CNT1 output to lowest FIFO-level
+                    assign w_fifo_din   [2**tt + uu]        = {r_ShrID_2_A[uu][DELAY+1], r_ShrID_2_B[uu][DELAY+1]};
+                    assign w_fifo_wr_en [2**tt + uu]        = w_CompareDout[uu];
+                end else if(uu < LOCAL_DEPTH) begin         // other FIFO levels
+                    assign w_FifoDin_Sel[2**tt + uu]        = (w_fifo_rd_data_count[2**(tt+1) + 2*uu] > w_fifo_rd_data_count[2**(tt+1) + 2*uu+1]) ? 1'b1 : 1'b0;
+                    assign w_fifo_din   [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? w_fifo_dout[2**(tt+1) + 2*uu] : w_fifo_dout[2**(tt+1) + 2*uu+1];
+                    assign w_fifo_wr_en [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_empty[2**(tt+1) + 2*uu] : ~w_fifo_empty[2**(tt+1) + 2*uu+1];
+                    assign w_fifo_rd_en [2**(tt+1) + 2*uu]  = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_full[2**tt + uu] : 1'b0;
+                    assign w_fifo_rd_en [2**(tt+1) + 2*uu+1]= w_FifoDin_Sel[2**tt + uu] ? 1'b0 : ~w_fifo_full[2**tt + uu];
                 end
             end
         end
     endgenerate
 
-
-
+    // Connect the root of the FIFO-tree with IO ports
+    assign o_IDPair_Out     = w_fifo_dout   [1];
+    assign o_IDPair_Ready   = ~w_fifo_empty [1];
+    assign w_fifo_rd_en[1]  = i_IDPair_Read;
 
 
 endmodule
