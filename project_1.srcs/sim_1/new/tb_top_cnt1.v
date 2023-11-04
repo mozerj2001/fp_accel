@@ -6,12 +6,12 @@ module tb_top_cnt1(
 
     );
 
-    localparam BUS_WIDTH        = 20;
-    localparam VECTOR_WIDTH     = 35;
+    localparam BUS_WIDTH        = 96;
+    localparam VECTOR_WIDTH     = 128;
     localparam SUB_VECTOR_NO    = 2;
     localparam GRANULE_WIDTH    = 6;
-    localparam SHR_DEPTH        = 4;
-    localparam VEC_ID_WIDTH     = 8;
+    localparam SHR_DEPTH        = 32;
+    localparam VEC_ID_WIDTH     = $clog2(VECTOR_WIDTH);
     localparam CNT_WIDTH        = $clog2(VECTOR_WIDTH);
 
 
@@ -24,7 +24,6 @@ module tb_top_cnt1(
     reg load_new_ref            = 0;
     reg wr_threshold            = 0;
     wire cmp_rdy;
-    wire th_read;
 
 
     // TEST FIFO SIGNALS
@@ -117,6 +116,28 @@ module tb_top_cnt1(
 
 
     // FILL FIFOS
+    integer fp_vec;
+    integer scan;
+    reg [BUS_WIDTH-1:0] vec;
+    initial begin
+        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/project_1.srcs/sources_1/new/test_vectors.dat", "r");
+        if(fp_vec == 0) begin
+            $display("File containing test vectors was not found...");
+            $finish;
+        end
+    end
+
+    always @ (posedge clk)
+    begin
+        if(~rst & f_write) begin
+            scan = $fscanf(fp_vec, "%h\n", vec);
+            if(!$feof(fp_vec)) begin
+                f_din <= vec;
+            end
+        end
+    end
+
+
     initial begin
         #100;
         rst <= 1'b0;
@@ -128,60 +149,11 @@ module tb_top_cnt1(
         wr_threshold <= 1'b0;
         #500;
         f_write <= 1'b1;
-        f_din <= 20'b11111111111111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111111111111100110;
-        #CLK_PERIOD;
-        f_din <= 20'b01100110011001100110;
-        #CLK_PERIOD;
-        f_din <= 20'b01100110011111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111111111111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111010101010101010;
-        #CLK_PERIOD;
-        f_din <= 20'b10101010101010101010;
-        #CLK_PERIOD;
-        f_din <= 20'b11111111111111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111111111111100110;
-        #CLK_PERIOD;
-        f_din <= 20'b01100110011001100110;
-        #CLK_PERIOD;
-        f_din <= 20'b01100110011111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111111111111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111010101010101010;
-        #CLK_PERIOD;
-        f_din <= 20'b10101010101010101010;
-        #CLK_PERIOD;
-        f_din <= 20'b11111111111111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111111111111100110;
-        #CLK_PERIOD;
-        f_din <= 20'b01100110011001100110;
-        #CLK_PERIOD;
-        f_din <= 20'b01100110011111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111111111111111111;
-        #CLK_PERIOD;
-        f_din <= 20'b11111010101010101010;
-        f_write <= 1'b0;
+        if($feof(fp_vec)) begin
+            f_write <= 1'b0;
+        end
         #CLK_PERIOD;
     end
-
-    // 0 - 11111111111111111111111111111111111
-    // 1 - 00110011001100110011001100110011001
-    // 2 - 11111111111111111111111111111111111
-    // 3 - 01010101010101010101010101010101010
-    // 4 - 11111111111111111111111111111111111
-    // 5 - 00110011001100110011001100110011001
-    // 6 - 11111111111111111111111111111111111
-    // 7 - 01010101010101010101010101010101010
-    // 8 - 11111111111111111111111111111111111
-    // 9 - 00110011001100110011001100110011001
-
 
 
 endmodule
