@@ -152,7 +152,10 @@ FINGERPRINT get_rand_fp(){
     unsigned int i;
     FINGERPRINT fp;
 
-    srand(time(NULL));
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    srand(ts.tv_nsec);
+
     for(i = 0; i < WORD_NO; i++){
         fp.vector[i] = (uint_fast32_t) rand();
     }
@@ -163,7 +166,36 @@ FINGERPRINT get_rand_fp(){
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int** out_arr){
+void gen_test_set(FINGERPRINT* A, unsigned int n_A, FINGERPRINT* B, unsigned int n_B, char* fname_ref, char* fname_cmp){
+    char* str;
+    unsigned int i;
+    FILE* f_ptr;
+
+    f_ptr = fopen(fname_ref, "w");
+
+    for(i = 0; i < n_A; i++){
+        A[i] = get_rand_fp();
+        hex_to_str(A[i].vector, &str);
+        fprintf(f_ptr, "%s\n", str);
+        free(str);
+    }
+
+    fclose(f_ptr);
+    f_ptr = fopen(fname_cmp, "w");
+
+    for(i = 0; i < n_B; i++){
+        B[i] = get_rand_fp();
+        hex_to_str(B[i].vector, &str);
+        fprintf(f_ptr, "%s\n", str);
+        free(str);
+    }
+
+    fclose(f_ptr);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int*** out_arr){
     unsigned int i, j;
     unsigned int numA = sizeof(A)/sizeof(FINGERPRINT);
     unsigned int numB = sizeof(B)/sizeof(FINGERPRINT);
@@ -173,13 +205,13 @@ unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsign
 
     for(i = 0; i < numA; i++){      // iterate through reference vectors
         for(j = 0; j < numB; j++){  // iterate through compare vectors
-            C = get_bitwise_and(A, B);
-            set_fp_weight(C);
+            C = get_bitwise_and(A[i], B[j]);
+            set_fp_weight(&C);
 
-            tnDissim = (A.weight + B.weight) / C.weight;
+            tnDissim = (A[i].weight + B[j].weight) / C.weight;
             if(tnDissim <= thresh){
-                out_arr[cntPair][0] = i;
-                out_arr[cntPair][1] = j;
+                (*out_arr)[cntPair][0] = i;
+                (*out_arr)[cntPair][1] = j;
                 cntPair++;
             }
         }
@@ -190,22 +222,23 @@ unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsign
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int** out_arr){
+unsigned int calc_tanimoto_verif(FINGERPRINT* A, FINGERPRINT* B, unsigned int* thresh, unsigned int*** out_arr){
     unsigned int i, j;
     unsigned int numA = sizeof(A)/sizeof(FINGERPRINT);
     unsigned int numB = sizeof(B)/sizeof(FINGERPRINT);
     unsigned int cntPair = 0;
+    unsigned int tnDissimVerif;
     FINGERPRINT C;
 
     for(i = 0; i < numA; i++){      // iterate through reference vectors
         for(j = 0; j < numB; j++){  // iterate through compare vectors
-            C = get_bitwise_and(A, B);
-            set_fp_weight(C);
+            C = get_bitwise_and(A[i], B[j]);
+            set_fp_weight(&C);
 
-            tnDissimVerif = A.weight + B.weight;
+            tnDissimVerif = A[i].weight + B[j].weight;
             if(tnDissimVerif <= thresh[C.weight]){
-                out_arr[cntPair][0] = i;
-                out_arr[cntPair][1] = j;
+                (*out_arr)[cntPair][0] = i;
+                (*out_arr)[cntPair][1] = j;
                 cntPair++;
             }
         }

@@ -3,6 +3,8 @@
 
 #define VECTOR_WIDTH 128
 #define WORD_NO VECTOR_WIDTH/32
+#define REF_VEC_NO 32
+#define CMP_VEC_NO 128
 
 
 // Binary vector structure, implementing a pharmacophore fingerprint.
@@ -87,6 +89,19 @@ FINGERPRINT get_bitwise_and(FINGERPRINT A, FINGERPRINT B);
 FINGERPRINT get_rand_fp();
 
 
+// PURPOSE: Generate a set of reference vectors and a set of compare vectors.
+//      The generated vectors are also saved to two .txt files.
+// INPUT:
+//  n_A: Number of reference fingerprints to be genereated.
+//  n_B: Number of compare fingerprints to be genereated.
+//  fname_ref: Filename, into which reference fingerprints will be stored.
+//  fname_cmp: Filename, into which compare fingerprints will be stored.
+// OUTPUT:
+//  A: Pointer to the array, in which refrence fingerprints will be stored.
+//  B: Pointer to the array, in which compare fingerprints will be stored.
+void gen_test_set(FINGERPRINT* A, unsigned int n_A, FINGERPRINT* B, unsigned int n_B, char* fname_ref, char* fname_cmp);
+
+
 // PURPOSE: Calculate Tanimoto dissimilarity between a set of reference
 //      fingerprints and an other set of fingerprints. If the dissimilarity
 //      of two vectors is under a certain threshold, the index of those
@@ -100,7 +115,7 @@ FINGERPRINT get_rand_fp();
 //      of which satisfy the threshold criterium. Assumed to be "large enough"
 //      for all found pairs to fit. (For execution speed's sake.)
 //  Return: Number of returned index-pairs.
-unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int** out_arr);
+unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int*** out_arr);
 
 
 // PURPOSE: Calculate a Tanimoto dissimilarity-like metric analogous to the
@@ -116,7 +131,7 @@ unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsign
 //      of which satisfy the threshold criterium. Assumed to be "large enough"
 //      for all found pairs to fit. (For execution speed's sake.)
 //  Return: Number of returned index-pairs.
-unsigned int calc_tanimoto_verif(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int** out_arr);
+unsigned int calc_tanimoto_verif(FINGERPRINT* A, FINGERPRINT* B, unsigned int* thresh, unsigned int*** out_arr);
 
 
 #endif
