@@ -8,26 +8,10 @@
 int main(void){
 
     unsigned int i, j;
-    FINGERPRINT* vec_arr;
-    FINGERPRINT tmp;
-    char* str;
+    FINGERPRINT A[REF_VEC_NO];
+    FINGERPRINT B[CMP_VEC_NO];
 
-    printf("WORD_NO = %d\n", WORD_NO);
-
-    read_vectors("test_ref.txt", &vec_arr);
-
-    for(i = 0; i < 4; i++){
-        set_fp_weight(&vec_arr[i]);
-    }
-
-    for(i = 0; i < 4; i++){
-        print_fingerprint(vec_arr[i]);
-    }
-
-    tmp = get_rand_fp();
-    print_fingerprint(tmp);
-
-    free(vec_arr);
+    gen_test_set(A, REF_VEC_NO, B, CMP_VEC_NO, "ref_vec.txt", "cmp_vec.txt");
 
     return 0;
 }
