@@ -30,15 +30,12 @@ module vec_cat
 	    output wire                     o_Read          // signal that no new vector can be processed in the next cycle
     );
 
-    localparam CAT_REG_NO		    = 2;
-
-    localparam DELTA 			    = BUS_WIDTH - (VECTOR_WIDTH-BUS_WIDTH); // step distance in each iterateion
-    localparam IDX_PERMUATATIONS 	= BUS_WIDTH*CAT_REG_NO*2/DELTA;  	    // total no of possible output lower indexes
+    localparam CAT_REG_NO		    = 2                                 ;   // min. 2
+    localparam DELTA 			    = 2*BUS_WIDTH - VECTOR_WIDTH        ;   // step distance in each iterateion
+    localparam IDX_REG_WIDTH        = $clog2((CAT_REG_NO-1)*BUS_WIDTH)+1;
+    localparam FULL                 = 0                                 ;
+    localparam PAD                  = 1                                 ;
     
-    localparam [0:0] FULL_V 		= 1'b0;
-    localparam [0:0] PAD_V 		    = 1'b1;
-
-    localparam PAUSE_ITER 		    = BUS_WIDTH/DELTA;			            // no of iterations, after which no sub vector can be read for a clk
 
     /////////////////////////////////////////////////////////////////////////////////////
     // VECTOR SHIFT --> store current and previous CAT_REG_NO number of input vectors
@@ -49,13 +46,13 @@ module vec_cat
         for(ii = 1; ii <= CAT_REG_NO; ii = ii + 1) begin
             if(ii == 1) begin
                 always @ (posedge clk) begin
-                    if(i_Valid && ~w_PauseIterCntr) begin
+                    if(i_Valid && ~w_Overflow) begin
                         r_InnerVector[BUS_WIDTH-1:0] <= i_Vector;
                     end
                 end
             end else begin
                 always @ (posedge clk) begin
-                    if(i_Valid && ~w_PauseIterCntr) begin
+                    if(i_Valid && ~w_Overflow) begin
                         r_InnerVector[ii*BUS_WIDTH-1:(ii-1)*BUS_WIDTH] <= r_InnerVector[(ii-1)*BUS_WIDTH-1:(ii-2)*BUS_WIDTH];
                     end
                 end
@@ -65,21 +62,47 @@ module vec_cat
 
 
     /////////////////////////////////////////////////////////////////////////////////////
-    // STATE MACHINE
-    // --> state changes every clk as it is assumed that VECTOR_WIDTH < 2*BUS_WIDTH
-    reg                     r_State;
-    reg [VEC_ID_WIDTH-1:0]  r_IterationCntr;    // counts full vector emissions
-    reg [VEC_ID_WIDTH-1:0]  r_IDCntr;           // counts full vector emissions, does not reset on i_Valid == 0 --> Vector ID
-    reg                     r_RstIterCntr;
-
-    wire w_PauseIterCntr;
-    assign w_PauseIterCntr = (r_State == PAD_V) && (r_IterationCntr*DELTA == BUS_WIDTH);
+    // VALID DELAY SHIFT --> delay the i_Valid signal for scheduling and
+    // output valid
+    reg [2:0] r_ValidShr;
 
     always @ (posedge clk)
     begin
         if(rst) begin
-            r_State <= PAD_V;
-        end else if(i_Valid) begin
+            r_ValidShr <= 0;
+        end else begin
+            r_ValidShr[0] <= i_Valid;
+            r_ValidShr[1] <= r_ValidShr[0];
+            r_ValidShr[2] <= r_ValidShr[1];
+        end
+    end
+
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // PERMUTATION ARRAY --> wire array out of which concatenated output
+    // vectors will be selected by r_IdxReg
+    wire [BUS_WIDTH-1:0] w_PermArray [CAT_REG_NO*BUS_WIDTH-1:0];
+
+    genvar jj;
+    generate
+        for(jj = 0; jj <= (CAT_REG_NO-1)*BUS_WIDTH; jj = jj + 1) begin
+            assign w_PermArray[jj] = r_InnerVector[jj+BUS_WIDTH-1 -: BUS_WIDTH];
+        end
+    endgenerate
+
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // CREATE OUTPUT
+    reg [IDX_REG_WIDTH-1:0] r_IdxReg;
+    reg                     r_State;
+    wire                    w_Overflow;
+    assign w_Overflow = ((r_IdxReg + DELTA) > (CAT_REG_NO-1)*BUS_WIDTH) && (r_State == PAD);    // 1, when information from the next vector would be shifted out
+
+    always @ (posedge clk)
+    begin
+        if(rst) begin
+            r_State <= PAD;
+        end else begin
             r_State <= ~r_State;
         end
     end
@@ -87,76 +110,23 @@ module vec_cat
     always @ (posedge clk)
     begin
         if(rst) begin
-            r_RstIterCntr <= 0;
-        end else if(w_PauseIterCntr) begin
-            r_RstIterCntr <= 1;
-        end else begin
-            r_RstIterCntr <= 0;
+            r_IdxReg = 0;
+        end else if(r_State == PAD && ~w_Overflow && r_ValidShr[1]) begin
+            r_IdxReg = r_IdxReg + DELTA;
+        end else if(w_Overflow) begin
+            r_IdxReg = r_IdxReg - (BUS_WIDTH-DELTA);                            // no shift due to information loss --> step back
         end
     end
 
-    always @ (posedge clk)
-    begin
-        if(rst) begin
-            r_IterationCntr <= 0;
-        end else if(r_RstIterCntr) begin
-            r_IterationCntr <= 1;
-	    end else if(w_PauseIterCntr) begin
-	        r_IterationCntr <= r_IterationCntr;
-            r_IDCntr        <= r_IDCntr;
-        end else if(~(i_Valid)) begin
-            r_IterationCntr <= 0;
-        end else if(r_State == PAD_V) begin
-            r_IterationCntr <= r_IterationCntr + 1;
-        end
-    end
-
-    always @ (posedge clk)
-    begin
-        if(rst) begin
-            r_IDCntr <= 0;
-        end else if((r_State == FULL_V) && i_Valid) begin
-            r_IDCntr <= r_IDCntr + 1;
-        end
-    end
-
-
-    /////////////////////////////////////////////////////////////////////////////////////
-    // OUTPUT VECTOR ARRAY
-    // --> all possible index variations for the output vector need to be
-    // wired into a single multiplexer, then selected between with the r_State
-    // signal and the currently calculated indexes.
-    reg [2:0]           r_ValidShr;        // delayed valid signal
-    reg [BUS_WIDTH-1:0] r_OutVectorArray[IDX_PERMUATATIONS-1:0];
-
-    always @ (posedge clk)
-    begin
-        r_ValidShr[0]   <= i_Valid;    
-        r_ValidShr[2:1] <= r_ValidShr[1:0];
-    end
-
-    genvar jj;  // steps vector index
-    generate
-        for(jj = 0; jj < CAT_REG_NO*BUS_WIDTH; jj = jj + 1) begin
-            always @ (posedge clk)
-            begin
-                if(r_State == FULL_V) begin
-                    r_OutVectorArray[jj] <= r_InnerVector[jj*DELTA+BUS_WIDTH-1:jj*DELTA];
-                end else if(r_State == PAD_V) begin
-                    r_OutVectorArray[jj] <= {r_InnerVector[jj*DELTA+BUS_WIDTH-1:(jj+1)*DELTA], {DELTA{1'b0}}};
-                end
-            end
-        end
-    endgenerate
 
 
     /////////////////////////////////////////////////////////////////////////////////////
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
-    assign o_Vector = r_OutVectorArray[r_IterationCntr-1];
-    assign o_VecID  = r_IDCntr;
-    assign o_Valid  = r_ValidShr[1];
-    assign o_Read   = i_Valid && ~w_PauseIterCntr;
+    assign o_Vector = (r_State == FULL) ? w_PermArray[r_IdxReg] : {w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA], {DELTA{1'b0}}};
+    // assign o_VecID  = r_IDCntr;
+    assign o_Valid  = r_ValidShr[0];
+    assign o_Read   = i_Valid && ~w_Overflow;
 
     
     endmodule
