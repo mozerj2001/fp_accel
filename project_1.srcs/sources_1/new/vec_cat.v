@@ -119,12 +119,25 @@ module vec_cat
     end
 
 
+    /////////////////////////////////////////////////////////////////////////////////////
+    // CREATE VECTOR ID
+    reg [VEC_ID_WIDTH-1:0] r_IDCntr;
+
+    always @ (posedge clk)
+    begin
+        if(rst) begin
+            r_IDCntr <= {VEC_ID_WIDTH{1'b1}};
+        end else if(i_Valid && (r_State == PAD)) begin
+            r_IDCntr <= r_IDCntr + 1;
+        end
+    end
+
 
     /////////////////////////////////////////////////////////////////////////////////////
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
     assign o_Vector = (r_State == FULL) ? w_PermArray[r_IdxReg] : {w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA], {DELTA{1'b0}}};
-    // assign o_VecID  = r_IDCntr;
+    assign o_VecID  = r_IDCntr;
     assign o_Valid  = r_ValidShr[0];
     assign o_Read   = i_Valid && ~w_Overflow;
 
