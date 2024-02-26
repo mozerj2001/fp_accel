@@ -28,7 +28,7 @@ module tb_top_cnt1(
 
     // TEST FIFO SIGNALS
     reg f_write                 = 1'b0;
-    reg [BUS_WIDTH-1:0] f_din   = 20'b0;
+    reg [BUS_WIDTH-1:0] f_din   = {BUS_WIDTH{1'b0}};
     wire f_read;
     wire [BUS_WIDTH-1:0] f_dout;
     wire f_full;
@@ -38,17 +38,17 @@ module tb_top_cnt1(
     // TEST FIFO
     srl_fifo
     #(
-        .WIDTH(BUS_WIDTH),
-        .DEPTH(VECTOR_WIDTH)
+        .WIDTH  (BUS_WIDTH      ),
+        .DEPTH  (VECTOR_WIDTH   )
     ) test_fifo (
-        .clk    (clk    ),
-        .rst    (rst    ),
-        .wr     (f_write),
-        .d      (f_din  ),
-        .full   (f_full ),
-        .rd     (f_read ),
-        .q      (f_dout ),
-        .empty  (f_empty)
+        .clk    (clk            ),
+        .rst    (rst            ),
+        .wr     (f_write_d      ),
+        .d      (f_din          ),
+        .full   (f_full         ),
+        .rd     (f_read         ),
+        .q      (f_dout         ),
+        .empty  (f_empty        )
     );
 
 
@@ -124,6 +124,16 @@ module tb_top_cnt1(
         if(fp_vec == 0) begin
             $display("File containing test vectors was not found...");
             $finish;
+        end
+    end
+
+    reg f_write_d;
+    always @ (posedge clk)
+    begin
+        if(rst) begin
+            f_write_d <= 0;
+        end else begin
+            f_write_d <= f_write;
         end
     end
 

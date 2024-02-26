@@ -102,7 +102,7 @@ module vec_cat
     begin
         if(rst) begin
             r_State <= PAD;
-        end else begin
+        end else if(i_Valid) begin
             r_State <= ~r_State;
         end
     end
