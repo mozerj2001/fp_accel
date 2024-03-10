@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="1,894.950 ns"></ZoomStartTime>
-      <ZoomEndTime time="2,026.351 ns"></ZoomEndTime>
-      <Cursor1Time time="2,053.550 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="3,000.000 ns"></ZoomEndTime>
+      <Cursor1Time time="3,000.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="206"></NameColumnWidth>
+      <NameColumnWidth column_width="198"></NameColumnWidth>
       <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="17" />
+   <WVObjectSize size="19" />
    <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -60,19 +60,25 @@
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_comparator_wrapper/u_dut/i_Threshold">
-      <obj_property name="ElementShortName">i_Threshold[6:0]</obj_property>
-      <obj_property name="ObjectShortName">i_Threshold[6:0]</obj_property>
+      <obj_property name="ElementShortName">i_Threshold[5:0]</obj_property>
+      <obj_property name="ObjectShortName">i_Threshold[5:0]</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/i_Valid">
+      <obj_property name="ElementShortName">i_Valid</obj_property>
+      <obj_property name="ObjectShortName">i_Valid</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/r_State">
       <obj_property name="ElementShortName">r_State</obj_property>
       <obj_property name="ObjectShortName">r_State</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_comparator_wrapper/u_dut/r_AddrCntr">
-      <obj_property name="ElementShortName">r_AddrCntr[5:0]</obj_property>
-      <obj_property name="ObjectShortName">r_AddrCntr[5:0]</obj_property>
+      <obj_property name="ElementShortName">r_AddrCntr[11:0]</obj_property>
+      <obj_property name="ObjectShortName">r_AddrCntr[11:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/w_CompDin">
@@ -84,13 +90,9 @@
       <obj_property name="ObjectShortName">r_Sum[6:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_comparator_wrapper/u_dut/u_comparator/w_DoutRAM">
-      <obj_property name="ElementShortName">w_DoutRAM[5:0]</obj_property>
-      <obj_property name="ObjectShortName">w_DoutRAM[5:0]</obj_property>
-   </wvobject>
    <wvobject type="array" fp_name="/tb_comparator_wrapper/u_dut/u_comparator/w_Addr">
-      <obj_property name="ElementShortName">w_Addr[5:0]</obj_property>
-      <obj_property name="ObjectShortName">w_Addr[5:0]</obj_property>
+      <obj_property name="ElementShortName">w_Addr[6:0]</obj_property>
+      <obj_property name="ObjectShortName">w_Addr[6:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/o_Ready">
@@ -99,18 +101,28 @@
       <obj_property name="CustomSignalColor">#FFFF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/o_ReadThreshold">
-      <obj_property name="ElementShortName">o_ReadThreshold</obj_property>
-      <obj_property name="ObjectShortName">o_ReadThreshold</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/u_comparator/o_Dout">
-      <obj_property name="ElementShortName">o_Dout</obj_property>
-      <obj_property name="ObjectShortName">o_Dout</obj_property>
-   </wvobject>
    <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/o_Dout">
       <obj_property name="ElementShortName">o_Dout</obj_property>
       <obj_property name="ObjectShortName">o_Dout</obj_property>
       <obj_property name="CustomSignalColor">#FFFF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_comparator_wrapper/u_dut/u_comparator/r_Sum">
+      <obj_property name="ElementShortName">r_Sum[6:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Sum[6:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_comparator_wrapper/u_dut/u_comparator/w_Addr">
+      <obj_property name="ElementShortName">w_Addr[6:0]</obj_property>
+      <obj_property name="ObjectShortName">w_Addr[6:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/u_comparator/i_WrEn">
+      <obj_property name="ElementShortName">i_WrEn</obj_property>
+      <obj_property name="ObjectShortName">i_WrEn</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_comparator_wrapper/u_dut/o_Valid">
+      <obj_property name="ElementShortName">o_Valid</obj_property>
+      <obj_property name="ObjectShortName">o_Valid</obj_property>
    </wvobject>
 </wave_config>

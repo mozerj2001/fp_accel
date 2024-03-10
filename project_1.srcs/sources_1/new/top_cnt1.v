@@ -16,7 +16,7 @@ module top_cnt1
         VECTOR_WIDTH        = 920,
         SUB_VECTOR_NO       = 2,        // how many sub-vectors are in a full vector
         GRANULE_WIDTH       = 6,        // width of the first CNT1 tree stage, 6 on Xilinx FPGA
-        SHR_DEPTH           = 4,        // how many vectors this module is able to store
+        SHR_DEPTH           = 4,        // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 8,
         //
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
@@ -33,8 +33,7 @@ module top_cnt1
         input wire                          i_IDPair_Read,
         //
         output wire                         o_Read,
-        output wire                         o_ReadThreshold,
-        output wire                         o_ComparatorReady,      // comparator not setting up new threshold
+        output wire                         o_ComparatorsReady,     // comparators not setting up new threshold
         output wire                         o_IDPair_Ready,
         output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out
     );
@@ -42,7 +41,7 @@ module top_cnt1
     localparam SUB_VEC_CNTR_WIDTH   = 16;   //$clog2(SUB_VECTOR_NO*SHR_DEPTH);
     localparam LOAD_REF             = 1'b0;
     localparam COMPARE              = 1'b1;
-    localparam DELAY                = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
+    localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
 
     // SUB VECTOR COUNTER
     // Counts sub-vectors incoming from the input pre_stage_unit.
@@ -109,6 +108,7 @@ module top_cnt1
     wire [CNT_WIDTH-1:0]    w_Cnt;
     wire                    w_Cnt_New;
     pre_stage_unit #(
+        .VECTOR_WIDTH   (VECTOR_WIDTH           ),
         .BUS_WIDTH      (BUS_WIDTH              ),
         .SUB_VECTOR_NO  (SUB_VECTOR_NO          ),
         .GRANULE_WIDTH  (GRANULE_WIDTH          )
@@ -238,18 +238,19 @@ module top_cnt1
 
     // ID SHIFTREGISTERS
     // Identical to CNT shiftregisters, they store the ID of each vector.
-    // SHR0: Compensate the delay of the input pre_stage_unit.  [DELAY]
+    // SHR0: Compensate the delay of the input pre_stage_unit.  [CNT1_DELAY]
     // SHR1: Store alongside the CNT value and sub_vectors.     [SHR_DEPTH]
-    // SHR2: Compensate output pre_stage_unit and comparison.   [DELAY+2]
-    reg [VEC_ID_WIDTH-1:0]  r_ShrID_0   [DELAY-1:0];
+    // SHR2: Compensate output pre_stage_unit and comparison.   [CNT1_DELAY+2]
+    //  (CNT1 delay + 2 clk for comparator addition and RAM activity)
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_0   [CNT1_DELAY-1:0];
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_1_A [SHR_DEPTH-1:0];
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_1_B [SHR_DEPTH-1:0];
-    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_A [SHR_DEPTH-1:0][DELAY+2:0];
-    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_B [SHR_DEPTH-1:0][DELAY+2:0];
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_A [SHR_DEPTH-1:0][CNT1_DELAY+2:0];
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_B [SHR_DEPTH-1:0][CNT1_DELAY+2:0];
 
     genvar dd;
     generate
-        for(dd = 0; dd < DELAY; dd = dd + 1) begin
+        for(dd = 0; dd < CNT1_DELAY; dd = dd + 1) begin
             always @ (posedge clk)
             begin
                 if(dd == 0) begin
@@ -269,9 +270,9 @@ module top_cnt1
                 if(ee == 0) begin
                     if(w_Cnt_New) begin
                         if(r_State == LOAD_REF) begin
-                            r_ShrID_1_A[ee] <= r_ShrID_0[DELAY-1];
+                            r_ShrID_1_A[ee] <= r_ShrID_0[CNT1_DELAY-1];
                         end else begin
-                            r_ShrID_1_B[ee] <= r_ShrID_0[DELAY-1];
+                            r_ShrID_1_B[ee] <= r_ShrID_0[CNT1_DELAY-1];
                         end
                     end
                 end else begin
@@ -291,7 +292,7 @@ module top_cnt1
     genvar gg;
     generate
         for(ff = 0; ff < SHR_DEPTH; ff = ff + 1) begin
-            for(gg = 0; gg <= DELAY+2; gg = gg + 1) begin
+            for(gg = 0; gg <= CNT1_DELAY+2; gg = gg + 1) begin
                 if(gg == 0) begin
                     always @ (posedge clk)
                     begin
@@ -348,6 +349,7 @@ module top_cnt1
     generate
     for(kk = 0; kk < SHR_DEPTH; kk = kk + 1) begin
         pre_stage_unit #(
+            .VECTOR_WIDTH   (VECTOR_WIDTH               ),
             .BUS_WIDTH      (BUS_WIDTH                  ),
             .SUB_VECTOR_NO  (SUB_VECTOR_NO              ),
             .GRANULE_WIDTH  (GRANULE_WIDTH              )
@@ -365,17 +367,17 @@ module top_cnt1
     endgenerate
 
 
-    // CNT OUT DELAY SHIFTREGISTER
+    // CNT OUT CNT1_DELAY SHIFTREGISTER
     // CNT values read from the shiftregisters need to be delayed until the
     // corresponding CNT(A&B) is calculated, then emitted.
-    reg [CNT_WIDTH-1:0] r_CntDelayedOut_A [SHR_DEPTH-1:0][DELAY:0];
-    reg [CNT_WIDTH-1:0] r_CntDelayedOut_B [SHR_DEPTH-1:0][DELAY:0];
+    reg [CNT_WIDTH-1:0] r_CntDelayedOut_A [SHR_DEPTH-1:0][CNT1_DELAY:0];
+    reg [CNT_WIDTH-1:0] r_CntDelayedOut_B [SHR_DEPTH-1:0][CNT1_DELAY:0];
 
     genvar nn;
     genvar oo;
     generate
         for(nn = 0; nn < SHR_DEPTH; nn = nn + 1) begin
-            for(oo = 0; oo <= DELAY; oo = oo + 1) begin
+            for(oo = 0; oo <= CNT1_DELAY; oo = oo + 1) begin
                 if(oo == 0) begin
                     always @ (posedge clk)
                     begin
@@ -404,6 +406,8 @@ module top_cnt1
     // fingerprints are similar enough. Output will be collected with
     // a FIFO-tree.
     wire [SHR_DEPTH-1:0] w_CompareDout;
+    wire [SHR_DEPTH-1:0] w_CompareValid;
+    wire [SHR_DEPTH-1:0] w_ComparatorReady;
 
     genvar cc;
     generate
@@ -414,14 +418,14 @@ module top_cnt1
             ) u_comparator_wr (
                 .clk            (clk                            ),
                 .rst            (rst                            ),
-                .i_CntA         (r_CntDelayedOut_A[cc][DELAY]   ),
-                .i_CntB         (r_CntDelayedOut_B[cc][DELAY]   ),
+                .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY]   ),
+                .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY]   ),
                 .i_CntC         (w_Cnt_AnB[cc]                  ),
                 .i_WrThreshold  (i_WrThreshold                  ),
                 .i_Threshold    (i_Threshold                    ),
                 .i_Valid        (w_PreStageOut_Valid[cc]        ),
-                .o_Ready        (o_ComparatorReady              ),
-                .o_ReadThreshold(o_ReadThreshold                ),
+                .o_Valid        (w_CompareValid[cc]             ),
+                .o_Ready        (w_ComparatorReady[cc]          ),
                 .o_Dout         (w_CompareDout[cc]              )
             );
         end
@@ -537,8 +541,8 @@ module top_cnt1
                 // previous levels, priorizing FIFOs that are closer to being
                 // full.
                 if(tt == FIFO_TREE_DEPTH-1) begin           // CNT1 output to lowest FIFO-level
-                    assign w_fifo_din   [2**tt + uu]        = {r_ShrID_2_A[uu][DELAY+1], r_ShrID_2_B[uu][DELAY+1]};
-                    assign w_fifo_wr_en [2**tt + uu]        = w_CompareDout[uu];
+                    assign w_fifo_din   [2**tt + uu]        = {r_ShrID_2_A[uu][CNT1_DELAY+1], r_ShrID_2_B[uu][CNT1_DELAY+1]};
+                    assign w_fifo_wr_en [2**tt + uu]        = (w_CompareDout[uu] && w_CompareValid[uu]);
                 end else if(uu < LOCAL_DEPTH) begin         // other FIFO levels
                     assign w_FifoDin_Sel[2**tt + uu]        = (w_fifo_rd_data_count[2**(tt+1) + 2*uu] > w_fifo_rd_data_count[2**(tt+1) + 2*uu+1]) ? 1'b1 : 1'b0;
                     assign w_fifo_din   [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? w_fifo_dout[2**(tt+1) + 2*uu] : w_fifo_dout[2**(tt+1) + 2*uu+1];
@@ -551,9 +555,10 @@ module top_cnt1
     endgenerate
 
     // Connect the root of the FIFO-tree with IO ports
-    assign o_IDPair_Out     = w_fifo_dout   [1];
-    assign o_IDPair_Ready   = ~w_fifo_empty [1];
-    assign w_fifo_rd_en[1]  = i_IDPair_Read;
+    assign o_IDPair_Out         = w_fifo_dout   [1];
+    assign o_IDPair_Ready       = ~w_fifo_empty [1];
+    assign o_ComparatorsReady   = &w_ComparatorReady;
+    assign w_fifo_rd_en[1]      = i_IDPair_Read;
 
 
 endmodule
