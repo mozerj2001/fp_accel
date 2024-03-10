@@ -25,8 +25,8 @@ module comparator_wrapper
         input wire                  i_WrThreshold,      // Mux i_Addr onto the addr input of the RAM module
         input wire [CNT_WIDTH-1:0]  i_Threshold,
         input wire                  i_Valid,
+        output wire                 o_Valid,
         output wire                 o_Ready,
-        output wire                 o_ReadThreshold,    // read threshold values from external FIFO
         output wire                 o_Dout              // 1: over threshold, 0: under threshold
     );
 
@@ -39,7 +39,8 @@ module comparator_wrapper
     // COMPARE: Calculate CntA+CntB-CntC. o_Dout is 1 when under
     // the threshold, 0 when over the threshold.
     reg                     r_State;
-    reg [2*CNT_WIDTH-1:0]   r_AddrCntr;
+    reg [CNT_WIDTH-1:0]     r_AddrCntr;
+    reg [2*CNT_WIDTH-1:0]   r_Threshold;
 
     always @ (posedge clk)
     begin
@@ -47,6 +48,7 @@ module comparator_wrapper
             r_State <= COMPARE;
         end else if((r_State == COMPARE) && i_WrThreshold) begin
             r_State <= LOAD_RAM;
+            r_Threshold <= i_Threshold;
         end else if(r_AddrCntr == 2*VECTOR_WIDTH-1) begin
             r_State <= COMPARE;
         end
@@ -65,12 +67,12 @@ module comparator_wrapper
     end
 
     // COMPARATOR
+    //
     wire w_CompDin;
-    assign w_CompDin = (r_State == LOAD_RAM) ? 1'b1 : 1'b0;
+    assign w_CompDin = (r_AddrCntr <= r_Threshold) ? 1'b1 : 1'b0;
 
     comparator #(
-        .VECTOR_WIDTH   (VECTOR_WIDTH           ),
-        .BUS_WIDTH      (BUS_WIDTH              )
+        .VECTOR_WIDTH   (VECTOR_WIDTH           )
     ) u_comparator (
         .clk            (clk                    ),
         .rst            (rst                    ),
@@ -78,16 +80,26 @@ module comparator_wrapper
         .i_CntB         (i_CntB                 ),
         .i_CntC         (i_CntC                 ),
         .i_RAM_Setup    (r_State == LOAD_RAM    ),
-        .i_Valid        (i_Valid                ),
         .i_Addr         (r_AddrCntr             ),
-        .i_Din          (i_Threshold            ),
+        .i_Din          (w_CompDin              ),
         .i_WrEn         (r_State == LOAD_RAM    ),
         .o_Dout         (o_Dout                 )
     );
 
 
-    assign o_ReadThreshold  = (r_State == LOAD_RAM);
-    assign o_Ready          = (r_State == COMPARE);
+    reg [1:0] r_Valid;
+    always @ (posedge clk)
+    begin
+        if(rst) begin
+            r_Valid <= 2'b0;
+        end else begin
+            r_Valid[0] <= i_Valid;
+            r_Valid[1] <= r_Valid[0];
+        end
+    end
+
+    assign o_Valid = r_Valid[1];
+    assign o_Ready = (r_State == COMPARE);
 
 
 endmodule

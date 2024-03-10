@@ -25,6 +25,8 @@ module tb_top_cnt1(
     reg wr_threshold            = 0;
     wire cmp_rdy;
 
+    reg [CNT_WIDTH-1:0] threshold = 25;
+
 
     // TEST FIFO SIGNALS
     reg f_write                 = 1'b0;
@@ -52,32 +54,6 @@ module tb_top_cnt1(
     );
 
 
-    // TEST FIFO SIGNALS
-    reg th_write                 = 1'b0;
-    reg [CNT_WIDTH-1:0] th_din   = 50;
-    wire th_read;
-    wire [CNT_WIDTH-1:0] th_dout;
-    wire th_full;
-    wire th_empty;
-
-
-    // THRESHOLD FIFO
-    srl_fifo
-    #(
-        .WIDTH  (CNT_WIDTH      ),
-        .DEPTH  (2*VECTOR_WIDTH )
-    ) threshold_fifo (
-        .clk    (clk            ),
-        .rst    (rst            ),
-        .wr     (th_write       ),
-        .d      (th_din         ),
-        .full   (th_full        ),
-        .rd     (th_read        ),
-        .q      (th_dout        ),
-        .empty  (th_empty       )
-    );
-
-
     // DUT
     wire                        id_pair_read;
     wire [2*VEC_ID_WIDTH-1:0]   id_pair_out;
@@ -93,18 +69,17 @@ module tb_top_cnt1(
         .GRANULE_WIDTH  (GRANULE_WIDTH  ),
         .SHR_DEPTH      (SHR_DEPTH      ),
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
-    ) uut (
+    ) dut (
         .clk                    (clk            ),
         .rst                    (rst            ),
         .i_Vector               (f_dout         ),
         .i_Valid                (~f_empty       ),
         .i_WrThreshold          (wr_threshold   ),
-        .i_Threshold            (th_dout        ),
+        .i_Threshold            (threshold      ),
         .i_LoadNewRefVectors    (load_new_ref   ),
         .i_IDPair_Read          (id_pair_read   ),
         .o_Read                 (f_read         ),
-        .o_ReadThreshold        (th_read        ),
-        .o_ComparatorReady      (cmp_rdy        ),
+        .o_ComparatorsReady     (cmp_rdy        ),
         .o_IDPair_Ready         (id_pair_ready  ),
         .o_IDPair_Out           (id_pair_out    )
     );
@@ -151,9 +126,7 @@ module tb_top_cnt1(
     initial begin
         #100;
         rst <= 1'b0;
-        th_write <= 1'b1;
-        #(CLK_PERIOD*2*VECTOR_WIDTH);
-        th_write <= 1'b0;
+        #CLK_PERIOD;
         wr_threshold <= 1'b1;
         #CLK_PERIOD;
         wr_threshold <= 1'b0;

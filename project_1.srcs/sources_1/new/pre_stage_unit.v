@@ -30,13 +30,13 @@
 
 module pre_stage_unit
     #(
+        VECTOR_WIDTH        = 920,
         BUS_WIDTH           = 512,
-        SUB_VECTOR_NO       = 4,
+        SUB_VECTOR_NO       = 2,
         GRANULE_WIDTH       = 6,
 
         //
-        OUTPUT_VECTOR_WIDTH = BUS_WIDTH*SUB_VECTOR_NO,
-        BIT_NO_OUTPUT_WIDTH = $clog2(OUTPUT_VECTOR_WIDTH)
+        BIT_NO_OUTPUT_WIDTH = $clog2(VECTOR_WIDTH)
     )
     (
         input wire                              clk,
@@ -51,7 +51,7 @@ module pre_stage_unit
 
     localparam WORD_CNTR_WIDTH      = 4;
     localparam DELAY                = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
-    localparam BIT_CNTR_OUT_WIDTH   = $clog2(OUTPUT_VECTOR_WIDTH);
+    localparam BIT_CNTR_OUT_WIDTH   = $clog2(VECTOR_WIDTH);
 
     /////////////////////////////////////////////////////////////////////////////////////
     // DATA WORD COUNTER

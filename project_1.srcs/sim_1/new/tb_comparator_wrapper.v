@@ -28,40 +28,16 @@ module tb_comparator_wrapper(
     reg [CNT_WIDTH-1:0] cnt_b = 0;
     reg [CNT_WIDTH-1:0] cnt_c = 0;
 
-    wire [CNT_WIDTH+1:0]    threshold;
-    reg                     wr_threshold    = 0;
+    reg [CNT_WIDTH-1:0] threshold       = 25;
+    reg                 wr_threshold    = 0;
+    reg                 valid           = 0;
 
+    wire out_valid;
     wire ready;
-    wire rd_threshold;
     wire dout;
 
     // testbench state machine
     reg state = LOAD_RAM;
-
-    // store threshold values
-    reg                 f_wr    = 0;
-    reg [CNT_WIDTH:0]   f_din   = 20;
-
-    wire f_full;
-    wire f_q;
-    wire f_item_no;
-    wire f_empty;
-
-    srl_fifo #(
-        .WIDTH  (CNT_WIDTH+1        ),
-        .DEPTH  (2*VECTOR_WIDTH-1   )
-    ) u_fifo (
-        .clk        (clk            ),
-        .rst        (rst            ),
-        .wr         (f_wr           ),
-        .d          (f_din          ),
-        .full       (f_full         ),
-        .rd         (rd_threshold   ),
-        .q          (threshold      ),
-        .item_no    (f_item_no      ),
-        .empty      (f_empty        )
-    );
-
 
     // DUT
     comparator_wrapper #(
@@ -75,8 +51,9 @@ module tb_comparator_wrapper(
         .i_CntC         (cnt_c          ),
         .i_WrThreshold  (wr_threshold   ),
         .i_Threshold    (threshold      ),
+        .i_Valid        (valid          ),
+        .o_Valid        (out_valid      ),
         .o_Ready        (ready          ),
-        .o_ReadThreshold(rd_threshold   ),
         .o_Dout         (dout           )          // 1: over threshold, 0: under threshold
     );
 
@@ -84,15 +61,6 @@ module tb_comparator_wrapper(
     always begin 
         clk <= ~clk;
         #HALF_CLK_PERIOD;
-    end
-
-
-    // load FIFO
-    initial begin
-        #50;
-        f_wr <= 1'b1;
-        #(CLK_PERIOD*2*VECTOR_WIDTH);
-        f_wr <= 1'b0;
     end
 
 
@@ -113,70 +81,76 @@ module tb_comparator_wrapper(
     initial begin
         #2000;
         #CLK_PERIOD;
-        cnt_a = 33;
-        cnt_b = 17;
-        cnt_c = 17;
+        valid <= 1'b1;
+        cnt_a <= 33;
+        cnt_b <= 17;
+        cnt_c <= 17;
         #CLK_PERIOD;
-        cnt_a = 8;
-        cnt_b = 19;
-        cnt_c = 6;
+        cnt_a <= 8;
+        cnt_b <= 19;
+        cnt_c <= 6;
         #CLK_PERIOD;
-        cnt_a = 15;
-        cnt_b = 32;
-        cnt_c = 12;
+        cnt_a <= 15;
+        cnt_b <= 32;
+        cnt_c <= 12;
         #CLK_PERIOD;
-        cnt_a = 35;
-        cnt_b = 17;
-        cnt_c = 17;
+        cnt_a <= 35;
+        cnt_b <= 17;
+        cnt_c <= 17;
         #CLK_PERIOD;
-        cnt_a = 8;
-        cnt_b = 5;
-        cnt_c = 1;
+        cnt_a <= 8;
+        cnt_b <= 5;
+        cnt_c <= 1;
         #CLK_PERIOD;
-        cnt_a = 35;
-        cnt_b = 35;
-        cnt_c = 35;
+        cnt_a <= 35;
+        cnt_b <= 35;
+        cnt_c <= 35;
         #CLK_PERIOD;
-        cnt_a = 24;
-        cnt_b = 0;
-        cnt_c = 0;
+        cnt_a <= 24;
+        cnt_b <= 0;
+        cnt_c <= 0;
         #CLK_PERIOD;
-        cnt_a = 0;
-        cnt_b = 0;
-        cnt_c = 0;
+        cnt_a <= 0;
+        cnt_b <= 0;
+        cnt_c <= 0;
+        #CLK_PERIOD;
+        valid <= 1'b0;
         #500;
         #CLK_PERIOD;
-        cnt_a = 33;
-        cnt_b = 17;
-        cnt_c = 17;
+        cnt_a <= 33;
+        cnt_b <= 17;
+        cnt_c <= 17;
         #CLK_PERIOD;
-        cnt_a = 8;
-        cnt_b = 19;
-        cnt_c = 6;
+        valid <= 1'b1;
+        cnt_a <= 8;
+        cnt_b <= 19;
+        cnt_c <= 6;
         #CLK_PERIOD;
-        cnt_a = 15;
-        cnt_b = 32;
-        cnt_c = 12;
+        cnt_a <= 15;
+        cnt_b <= 32;
+        cnt_c <= 12;
         #CLK_PERIOD;
-        cnt_a = 35;
-        cnt_b = 17;
-        cnt_c = 17;
+        cnt_a <= 35;
+        cnt_b <= 17;
+        cnt_c <= 17;
         #CLK_PERIOD;
-        cnt_a = 8;
-        cnt_b = 5;
-        cnt_c = 1;
+        cnt_a <= 8;
+        cnt_b <= 5;
+        cnt_c <= 1;
         #CLK_PERIOD;
-        cnt_a = 35;
-        cnt_b = 35;
-        cnt_c = 35;
+        cnt_a <= 35;
+        cnt_b <= 35;
+        cnt_c <= 35;
         #CLK_PERIOD;
-        cnt_a = 24;
-        cnt_b = 0;
-        cnt_c = 0;
+        cnt_a <= 24;
+        cnt_b <= 0;
+        cnt_c <= 0;
         #CLK_PERIOD;
-        cnt_a = 0;
-        cnt_b = 0;
-        cnt_c = 0;
+        cnt_a <= 0;
+        cnt_b <= 0;
+        cnt_c <= 0;
+        #CLK_PERIOD;
+        valid <= 1'b0;
     end
 
 
