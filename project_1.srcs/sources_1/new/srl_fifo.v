@@ -1,5 +1,9 @@
+`ifndef SRL_FIFO
+`define SRL_FIFO
+
 `timescale 1ns / 1ps
 `default_nettype none
+
 
 module srl_fifo
 #(
@@ -70,3 +74,5 @@ assign item_no  = item_cntr;
 
 
 endmodule
+
+`endif

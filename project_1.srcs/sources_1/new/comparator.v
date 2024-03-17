@@ -1,3 +1,6 @@
+`ifndef COMPARATOR
+`define COMPARATOR
+
 `timescale 1ns / 1ps
 `default_nettype none
 
@@ -8,7 +11,6 @@
 // metric between A and B vectors, if C = A & B;.
 // The result is used as an address into a 1 bit wide block RAM,
 // that contains 1s up until the desired threshold address, then 0s.
-
 module comparator
     #(
         VECTOR_WIDTH    = 920,
@@ -63,3 +65,5 @@ module comparator
 
 
 endmodule
+
+`endif

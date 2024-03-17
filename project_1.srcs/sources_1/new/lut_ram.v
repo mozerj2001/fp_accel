@@ -1,8 +1,11 @@
+`ifndef LUT_RAM
+`define LUT_RAM
+
 `timescale 1ns / 1ps
 `default_nettype none
 
-// Parametrizable RAM module. Will be instantiated as LUT RAM in this project.
 
+// Parametrizable RAM module. Will be instantiated as LUT RAM in this project.
 module lut_ram
     #(
         WIDTH = 512,
@@ -28,3 +31,5 @@ module lut_ram
     assign dout = mem[addr];
 
 endmodule
+
+`endif

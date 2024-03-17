@@ -1,8 +1,11 @@
+`ifndef LUT_SHR
+`define LUT_SHR
+
 `timescale 1ns / 1ps
 `default_nettype none
 
-// Parametrizable, addressable LUT shiftregister module.
 
+// Parametrizable, addressable LUT shiftregister module.
 module lut_shr
     #(
         WIDTH = 64
@@ -27,3 +30,5 @@ module lut_shr
 
 
 endmodule
+
+`endif

@@ -1,6 +1,11 @@
+`ifndef VEC_CAT
+`define VEC_CAT
+
 `timescale 1ns / 1ps
 `default_nettype none
 
+
+// VEC_CAT
 // To the input of the accelerator, vectors will arrive one after another,
 // without being separated from each other into different data words. The
 // purpose of this module is to do this separation. As the vector width is
@@ -10,9 +15,6 @@
 //
 // [ASSUMPTION]: The vector width is never more than twice the width of the
 // input bus.
-
-
-
 module vec_cat
     #(
         BUS_WIDTH       = 512,
@@ -143,3 +145,5 @@ module vec_cat
 
     
     endmodule
+
+`endif

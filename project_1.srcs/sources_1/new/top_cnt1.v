@@ -1,5 +1,10 @@
+`ifndef TOP_CNT1
+`define TOP_CNT1
+
+
 `timescale 1ns / 1ps
 `default_nettype none
+
 
 // VECTOR WEIGHT CALCULATOR TOP MODULE
 // Reads SubVectors from a FIFO, stores ref vectors and their calculated
@@ -9,7 +14,6 @@
 // and compares it agains a threshold. Vector IDs under a threshold are
 // similar enough, so their ID is propagated through a FIFO-tree.
 // (ID is the position in the database, so vec_cat counts input vectors.)
-
 module top_cnt1
     #(
         BUS_WIDTH           = 512,      // system bus data width
@@ -25,7 +29,6 @@ module top_cnt1
         input wire                          rst,
         input wire [BUS_WIDTH-1:0]          i_Vector,
         input wire                          i_Valid,
-        input wire                          i_LoadNewRefVectors,    // 0: shift A, 1: shift B
         //
         input wire                          i_WrThreshold,
         input wire [CNT_WIDTH-1:0]          i_Threshold,
@@ -54,8 +57,6 @@ module top_cnt1
     begin
         if(rst) begin
             r_SubVecCntr <= 0;
-        end else if(i_LoadNewRefVectors) begin
-            r_SubVecCntr <= 0;
         end else if(w_Cnt_SubVector_Valid) begin
             r_SubVecCntr <= r_SubVecCntr + 1;
         end
@@ -68,8 +69,6 @@ module top_cnt1
     always @ (posedge clk)
     begin
         if(rst) begin
-            r_State <= LOAD_REF;
-        end else if(i_LoadNewRefVectors) begin
             r_State <= LOAD_REF;
         end else if(r_SubVecCntr == (SHR_DEPTH*SUB_VECTOR_NO-1)) begin
             r_State <= COMPARE;
@@ -562,3 +561,5 @@ module top_cnt1
 
 
 endmodule
+
+`endif
