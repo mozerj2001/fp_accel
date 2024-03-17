@@ -1,3 +1,6 @@
+`ifndef BIT_ADDER
+`define BIT_ADDER
+
 `timescale 1ns / 1ps
 `default_nettype none
 
@@ -22,3 +25,5 @@ module bit_adder
     end
 
 endmodule
+
+`endif

@@ -1,5 +1,9 @@
+`ifndef COMPARATOR_WRAPPER
+`define COMPARATOR_WRAPPER
+
 `timescale 1ns / 1ps
 `default_nettype none
+
 
 // COMPARATOR_WRAPPER
 // This module is a wrapper to the comparator module in comparator.v.
@@ -7,8 +11,6 @@
 // input needed are the desired threshold of (dis)similarity (i_Threshold)
 // and the write signal for the threshold (i_WrThreshold). These need to be
 // provided in the same clk.
-
-
 module comparator_wrapper
     #(
         VECTOR_WIDTH    = 920,
@@ -104,5 +106,4 @@ module comparator_wrapper
 
 endmodule
 
-
-
+`endif

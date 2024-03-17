@@ -1,3 +1,6 @@
+`ifndef BLOCK_RAM_RD_1ST
+`define BLOCK_RAM_RD_1ST
+
 `timescale 1ns / 1ps
 `default_nettype none
 
@@ -34,3 +37,5 @@ module block_ram_rd_1st
 
 
 endmodule
+
+`endif

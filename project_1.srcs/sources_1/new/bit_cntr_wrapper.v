@@ -1,7 +1,11 @@
+`ifndef BIT_CNTR_WRAPPER
+`define BIT_CNTR_WRAPPER
+
 `timescale 1ns / 1ps
 `default_nettype none
 
-`include "./bit_cntr.v"
+`include "bit_cntr.v"
+
 
 module bit_cntr_wrapper
     #(
@@ -100,3 +104,5 @@ module bit_cntr_wrapper
     assign o_Sum = r_Accumulator;
 
 endmodule
+
+`endif

@@ -21,7 +21,6 @@ module tb_top_cnt1(
     reg clk                     = 1'b0;
     reg rst                     = 1'b1;
     reg [BUS_WIDTH-1:0] vector;
-    reg load_new_ref            = 0;
     reg wr_threshold            = 0;
     wire cmp_rdy;
 
@@ -76,7 +75,6 @@ module tb_top_cnt1(
         .i_Valid                (~f_empty       ),
         .i_WrThreshold          (wr_threshold   ),
         .i_Threshold            (threshold      ),
-        .i_LoadNewRefVectors    (load_new_ref   ),
         .i_IDPair_Read          (id_pair_read   ),
         .o_Read                 (f_read         ),
         .o_ComparatorsReady     (cmp_rdy        ),

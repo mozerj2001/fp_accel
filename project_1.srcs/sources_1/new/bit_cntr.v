@@ -1,12 +1,15 @@
+`ifndef BIT_CNTR
+`define BIT_CNTR
+
 `timescale 1ns / 1ps
 `default_nettype none
 
-`include "./bit_adder.v"
+`include "bit_adder.v"
+
 
 // This is a parametrizable bit counter, that counts the number of bits with
 // the value '1' in the input vector. It operates based on the principle of
 // binary adder trees.
-
 module bit_cntr
     #(
         parameter VECTOR_WIDTH  = 920,           // how wide the input vector is
@@ -102,3 +105,5 @@ module bit_cntr
     assign o_Sum = r_Pipeline[1];
 
 endmodule
+
+`endif
