@@ -406,7 +406,7 @@ module top_cnt1
     // a FIFO-tree.
     wire [SHR_DEPTH-1:0] w_CompareDout;
     wire [SHR_DEPTH-1:0] w_CompareValid;
-    wire [SHR_DEPTH-1:0] w_ComparatorReady;
+    wire [SHR_DEPTH-1:0] w_ComparatorsReady;
 
     genvar cc;
     generate
@@ -424,7 +424,7 @@ module top_cnt1
                 .i_Threshold    (i_Threshold                    ),
                 .i_Valid        (w_PreStageOut_Valid[cc]        ),
                 .o_Valid        (w_CompareValid[cc]             ),
-                .o_Ready        (w_ComparatorReady[cc]          ),
+                .o_Ready        (w_ComparatorsReady[cc]          ),
                 .o_Dout         (w_CompareDout[cc]              )
             );
         end
@@ -433,7 +433,8 @@ module top_cnt1
 
     // OUTPUT FIFO TREE
     localparam FIFO_DATA_WIDTH          = 2*VEC_ID_WIDTH;
-    localparam FIFO_DATA_COUNT_WIDTH    = $clog2(FIFO_DATA_WIDTH);
+    localparam FIFO_DEPTH               = 32;
+    localparam FIFO_DATA_COUNT_WIDTH    = $clog2(FIFO_DEPTH);
     localparam FIFO_TREE_DEPTH          = $clog2(SHR_DEPTH) + 1;
 
     // CNT1 outputs are valid for 2 clk long --> FIFO write clock is half of
@@ -482,72 +483,74 @@ module top_cnt1
         for(tt = 0; tt < FIFO_TREE_DEPTH; tt = tt + 1) begin
             for(uu = 0; uu < SHR_DEPTH; uu = uu + 1) begin
                 localparam LOCAL_DEPTH = SHR_DEPTH/(2**(FIFO_TREE_DEPTH-1-tt));
-                // xpm_fifo_sync: Synchronous FIFO
-                // Xilinx Parameterized Macro, version 2023.2
-                xpm_fifo_sync #(
-                   .CASCADE_HEIGHT      (0                      ),
-                   .DOUT_RESET_VALUE    ("0"                    ),
-                   .ECC_MODE            ("no_ecc"               ),
-                   .FIFO_MEMORY_TYPE    ("auto"                 ),
-                   .FIFO_READ_LATENCY   (0                      ),
-                   .FIFO_WRITE_DEPTH    (32                     ),
-                   .FULL_RESET_VALUE    (0                      ),
-                   .PROG_EMPTY_THRESH   (10                     ),
-                   .PROG_FULL_THRESH    (12                     ),  // must be high enough so that data in the pipeline still fits
-                   .RD_DATA_COUNT_WIDTH (FIFO_DATA_COUNT_WIDTH  ),
-                   .READ_DATA_WIDTH     (FIFO_DATA_WIDTH        ),
-                   .READ_MODE           ("fwft"                 ),
-                   .SIM_ASSERT_CHK      (0                      ),
-                   .USE_ADV_FEATURES    ("0707"                 ),
-                   .WAKEUP_TIME         (0                      ),
-                   .WRITE_DATA_WIDTH    (FIFO_DATA_WIDTH        ),
-                   .WR_DATA_COUNT_WIDTH (FIFO_DATA_COUNT_WIDTH  )
-                )
-                u_fifo_tree_fifo (
-                   .almost_empty     (w_fifo_almost_empty   [2**tt + uu]),
-                   .almost_full      (w_fifo_almost_full    [2**tt + uu]),
-                   .data_valid       (w_fifo_data_valid     [2**tt + uu]),
-                   .dbiterr          (w_fifo_dbiterr        [2**tt + uu]),
-                   .dout             (w_fifo_dout           [2**tt + uu]),
-                   .empty            (w_fifo_empty          [2**tt + uu]),
-                   .full             (w_fifo_full           [2**tt + uu]),
-                   .overflow         (w_fifo_overflow       [2**tt + uu]),
-                   .prog_empty       (w_fifo_prog_empty     [2**tt + uu]),
-                   .prog_full        (w_fifo_prog_full      [2**tt + uu]),
-                   .rd_data_count    (w_fifo_rd_data_count  [2**tt + uu]),
-                   .rd_rst_busy      (w_fifo_rd_rst_busy    [2**tt + uu]),
-                   .sbiterr          (w_fifo_sbiterr        [2**tt + uu]),
-                   .underflow        (w_fifo_underflow      [2**tt + uu]),
-                   .wr_ack           (w_fifo_wr_ack         [2**tt + uu]),
-                   .wr_data_count    (w_fifo_wr_data_count  [2**tt + uu]),
-                   .wr_rst_busy      (w_fifo_wr_rst_busy    [2**tt + uu]),
-                   .din              (w_fifo_din            [2**tt + uu]),
-                   .injectdbiterr    (w_fifo_injectdbiterr  [2**tt + uu]),
-                   .injectsbiterr    (w_fifo_injectsbiterr  [2**tt + uu]),
-                   .rd_en            (w_fifo_rd_en          [2**tt + uu]),
-                   .rst              (w_fifo_rst            [2**tt + uu]),
-                   .sleep            (w_fifo_sleep          [2**tt + uu]),
-                   .wr_clk           (w_fifo_wr_clk         [2**tt + uu]),
-                   .wr_en            (w_fifo_wr_en          [2**tt + uu])
-                ); // End of xpm_fifo_sync_inst instantiation
+                if(uu < LOCAL_DEPTH) begin
+                    // xpm_fifo_sync: Synchronous FIFO
+                    // Xilinx Parameterized Macro, version 2023.2
+                    xpm_fifo_sync #(
+                       .CASCADE_HEIGHT      (0                      ),
+                       .DOUT_RESET_VALUE    ("0"                    ),
+                       .ECC_MODE            ("no_ecc"               ),
+                       .FIFO_MEMORY_TYPE    ("auto"                 ),
+                       .FIFO_READ_LATENCY   (0                      ),
+                       .FIFO_WRITE_DEPTH    (FIFO_DEPTH             ),
+                       .FULL_RESET_VALUE    (0                      ),
+                       .PROG_EMPTY_THRESH   (10                     ),
+                       .PROG_FULL_THRESH    (12                     ),  // must be high enough so that data in the pipeline still fits
+                       .RD_DATA_COUNT_WIDTH (FIFO_DATA_COUNT_WIDTH  ),
+                       .READ_DATA_WIDTH     (FIFO_DATA_WIDTH        ),
+                       .READ_MODE           ("fwft"                 ),
+                       .SIM_ASSERT_CHK      (0                      ),
+                       .USE_ADV_FEATURES    ("0707"                 ),
+                       .WAKEUP_TIME         (0                      ),
+                       .WRITE_DATA_WIDTH    (FIFO_DATA_WIDTH        ),
+                       .WR_DATA_COUNT_WIDTH (FIFO_DATA_COUNT_WIDTH  )
+                    )
+                    u_fifo_tree_fifo (
+                       .almost_empty     (w_fifo_almost_empty   [2**tt + uu]),
+                       .almost_full      (w_fifo_almost_full    [2**tt + uu]),
+                       .data_valid       (w_fifo_data_valid     [2**tt + uu]),
+                       .dbiterr          (w_fifo_dbiterr        [2**tt + uu]),
+                       .dout             (w_fifo_dout           [2**tt + uu]),
+                       .empty            (w_fifo_empty          [2**tt + uu]),
+                       .full             (w_fifo_full           [2**tt + uu]),
+                       .overflow         (w_fifo_overflow       [2**tt + uu]),
+                       .prog_empty       (w_fifo_prog_empty     [2**tt + uu]),
+                       .prog_full        (w_fifo_prog_full      [2**tt + uu]),
+                       .rd_data_count    (w_fifo_rd_data_count  [2**tt + uu]),
+                       .rd_rst_busy      (w_fifo_rd_rst_busy    [2**tt + uu]),
+                       .sbiterr          (w_fifo_sbiterr        [2**tt + uu]),
+                       .underflow        (w_fifo_underflow      [2**tt + uu]),
+                       .wr_ack           (w_fifo_wr_ack         [2**tt + uu]),
+                       .wr_data_count    (w_fifo_wr_data_count  [2**tt + uu]),
+                       .wr_rst_busy      (w_fifo_wr_rst_busy    [2**tt + uu]),
+                       .din              (w_fifo_din            [2**tt + uu]),
+                       .injectdbiterr    (w_fifo_injectdbiterr  [2**tt + uu]),
+                       .injectsbiterr    (w_fifo_injectsbiterr  [2**tt + uu]),
+                       .rd_en            (w_fifo_rd_en          [2**tt + uu]),
+                       .rst              (w_fifo_rst            [2**tt + uu]),
+                       .sleep            (w_fifo_sleep          [2**tt + uu]),
+                       .wr_clk           (w_fifo_wr_clk         [2**tt + uu]),
+                       .wr_en            (w_fifo_wr_en          [2**tt + uu])
+                    ); // End of xpm_fifo_sync_inst instantiation
 
-                assign w_fifo_wr_clk[2**tt + uu] = r_fifo_wr_clk;
-                assign w_fifo_rst   [2**tt + uu] = rst;
+                    assign w_fifo_wr_clk[2**tt + uu] = r_fifo_wr_clk;
+                    assign w_fifo_rst   [2**tt + uu] = rst;
 
-                // Pipeline output to first layer of FIFOs (compatible vector
-                // IDs are conacatenated as output)
-                // Upper levels of the FIFO tree take input from FIFOs on
-                // previous levels, priorizing FIFOs that are closer to being
-                // full.
-                if(tt == FIFO_TREE_DEPTH-1) begin           // CNT1 output to lowest FIFO-level
-                    assign w_fifo_din   [2**tt + uu]        = {r_ShrID_2_A[uu][CNT1_DELAY+1], r_ShrID_2_B[uu][CNT1_DELAY+1]};
-                    assign w_fifo_wr_en [2**tt + uu]        = (w_CompareDout[uu] && w_CompareValid[uu]);
-                end else if(uu < LOCAL_DEPTH) begin         // other FIFO levels
-                    assign w_FifoDin_Sel[2**tt + uu]        = (w_fifo_rd_data_count[2**(tt+1) + 2*uu] > w_fifo_rd_data_count[2**(tt+1) + 2*uu+1]) ? 1'b1 : 1'b0;
-                    assign w_fifo_din   [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? w_fifo_dout[2**(tt+1) + 2*uu] : w_fifo_dout[2**(tt+1) + 2*uu+1];
-                    assign w_fifo_wr_en [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_empty[2**(tt+1) + 2*uu] : ~w_fifo_empty[2**(tt+1) + 2*uu+1];
-                    assign w_fifo_rd_en [2**(tt+1) + 2*uu]  = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_full[2**tt + uu] : 1'b0;
-                    assign w_fifo_rd_en [2**(tt+1) + 2*uu+1]= w_FifoDin_Sel[2**tt + uu] ? 1'b0 : ~w_fifo_full[2**tt + uu];
+                    // Pipeline output to first layer of FIFOs (compatible vector
+                    // IDs are conacatenated as output)
+                    // Upper levels of the FIFO tree take input from FIFOs on
+                    // previous levels, priorizing FIFOs that are closer to being
+                    // full.
+                    if(tt == FIFO_TREE_DEPTH-1) begin           // CNT1 output to lowest FIFO-level
+                        assign w_fifo_din   [2**tt + uu]        = {r_ShrID_2_A[uu][CNT1_DELAY+1], r_ShrID_2_B[uu][CNT1_DELAY+1]};
+                        assign w_fifo_wr_en [2**tt + uu]        = (w_CompareDout[uu] && w_CompareValid[uu]);
+                    end else if(uu < LOCAL_DEPTH) begin         // other FIFO levels
+                        assign w_FifoDin_Sel[2**tt + uu]        = (w_fifo_wr_data_count[2**(tt+1) + 2*uu] > w_fifo_wr_data_count[2**(tt+1) + 2*uu+1]) ? 1'b1 : 1'b0;
+                        assign w_fifo_din   [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? w_fifo_dout[2**(tt+1) + 2*uu] : w_fifo_dout[2**(tt+1) + 2*uu+1];
+                        assign w_fifo_wr_en [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_empty[2**(tt+1) + 2*uu] : ~w_fifo_empty[2**(tt+1) + 2*uu+1];
+                        assign w_fifo_rd_en [2**(tt+1) + 2*uu]  = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_full[2**tt + uu] : 1'b0;
+                        assign w_fifo_rd_en [2**(tt+1) + 2*uu+1]= w_FifoDin_Sel[2**tt + uu] ? 1'b0 : ~w_fifo_full[2**tt + uu];
+                    end
                 end
             end
         end
@@ -556,7 +559,7 @@ module top_cnt1
     // Connect the root of the FIFO-tree with IO ports
     assign o_IDPair_Out         = w_fifo_dout   [1];
     assign o_IDPair_Ready       = ~w_fifo_empty [1];
-    assign o_ComparatorsReady   = &w_ComparatorReady;
+    assign o_ComparatorsReady   = &w_ComparatorsReady;
     assign w_fifo_rd_en[1]      = i_IDPair_Read;
 
 
