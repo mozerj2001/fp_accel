@@ -11,19 +11,28 @@
 void str_to_hex(char* str, uint_fast32_t* hex){
 
     unsigned int strLen = strlen(str);
-    unsigned int wordNo = strLen/8;         // no. of 32 bit words the string representing the hex number will fill
+    int idx;
     unsigned int currentInt = 0;            // integer value of each 8 neighbouring characters
     uint_fast32_t currentCharVal;
     char currentChar;
-    unsigned int i, j, k;
+    unsigned int i, j;
 
-    for(i = wordNo; i > 0; i--){        // iterate through string by 8 char words
-        hex[wordNo-i] = 0;
-        for(j = 0; j < 8; j++){         // iterate through 8 char word char-by-char
-            currentChar = str[i*8-j-1];
+    if(VECTOR_WIDTH/4 > strLen) { printf("ERROR: Input string too short!\n"); exit(1); }
+
+    for(i = 0; i < WORD_NO; i++){       // Iterate through 32-bit words
+        hex[i] = 0;
+        for(j = 0; j < 8; j++){         // Iterate through 
+            idx = strLen-(i*8+j)-1;
+
+            if(idx < 0){                // Out of bounds
+                currentChar = '0';
+            } else {
+                currentChar = str[idx];
+            }
+
             if(currentChar <= '9')  { currentCharVal = (uint_fast32_t) (currentChar-'0'); }
             else                    { currentCharVal = (uint_fast32_t) (currentChar-'7'); }
-            hex[wordNo-i] += currentCharVal * pow(16.0, (double) j);
+            hex[i] += currentCharVal * pow(16.0, (double) j);
         }
     }
 
@@ -32,14 +41,15 @@ void str_to_hex(char* str, uint_fast32_t* hex){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void hex_to_str(uint_fast32_t* hex, char** str){
-    unsigned int strLen = WORD_NO*8 + 1;
+    unsigned int strLen = VECTOR_WIDTH/4;
+    int idx;
     char currentChar;
     int i, j;
 
-    *str = (char*) malloc(strLen);
+    *str = (char*) malloc(strLen+1);
 
-    for(i = 0; i < WORD_NO; i++){
-        for(j = 7; j >= 0; j--){
+    for(i = 0; i < WORD_NO; i++){           // Iterate 32 bit words
+        for(j = 0; j < 8; j++){             // Iterate 4 bit digits
             switch(hex[i] & 0x0000000F){
                 case 0: currentChar = '0'; break;
                 case 1: currentChar = '1'; break;
@@ -60,7 +70,13 @@ void hex_to_str(uint_fast32_t* hex, char** str){
             }
 
             hex[i] = (hex[i] >> 4);
-            *(*str+(WORD_NO-i-1)*8+j) = currentChar;
+            idx = strLen - (i*8+j) - 1;
+
+            if(idx >= 0){
+                *(*str + idx) = currentChar;
+            } else {
+                return;
+            }
         }
     }
 

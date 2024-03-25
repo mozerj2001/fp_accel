@@ -1,8 +1,8 @@
 #ifndef TANIMOTO_H
 #define TANIMOTO_H
 
-#define VECTOR_WIDTH 128
-#define WORD_NO VECTOR_WIDTH/32
+#define VECTOR_WIDTH 920
+#define WORD_NO (VECTOR_WIDTH + 32 - 1)/32                  // divided by 32, rounded up
 #define REF_VEC_NO 32
 #define CMP_VEC_NO 128
 
@@ -118,7 +118,7 @@ void gen_test_set(FINGERPRINT* A, unsigned int n_A, FINGERPRINT* B, unsigned int
 unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int*** out_arr);
 
 
-// PURPOSE: Calculate a Tanimoto dissimilarity-like metric analogous to the
+// PURPOSE: Calculate a Tanimoto dissimilarity-like metric analog to the
 //      way the hardware implementation calculates it. Compare it to a threshold
 //      and return pairs that satisfy the criterium.
 //      This function is for the verification of the hardware simulation.
