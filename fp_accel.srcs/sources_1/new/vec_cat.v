@@ -42,6 +42,7 @@ module vec_cat
     /////////////////////////////////////////////////////////////////////////////////////
     // VECTOR SHIFT --> store current and previous CAT_REG_NO number of input vectors
     reg [CAT_REG_NO*BUS_WIDTH-1:0] r_InnerVector;
+    wire                    w_Overflow;
 
     genvar ii;
     generate
@@ -87,8 +88,8 @@ module vec_cat
 
     genvar jj;
     generate
-        for(jj = 0; jj <= (CAT_REG_NO-1)*BUS_WIDTH; jj = jj + 1) begin
-            assign w_PermArray[jj] = r_InnerVector[jj+BUS_WIDTH-1 -: BUS_WIDTH];
+        for(jj = 0; jj <= CAT_REG_NO*BUS_WIDTH; jj = jj + 1) begin
+            assign w_PermArray[jj] = (jj <= (CAT_REG_NO-1)*BUS_WIDTH) ? r_InnerVector[jj+BUS_WIDTH-1 -: BUS_WIDTH] : 0;
         end
     endgenerate
 
@@ -97,7 +98,6 @@ module vec_cat
     // CREATE OUTPUT
     reg [IDX_REG_WIDTH-1:0] r_IdxReg;
     reg                     r_State;
-    wire                    w_Overflow;
     assign w_Overflow = ((r_IdxReg + DELTA) > (CAT_REG_NO-1)*BUS_WIDTH) && (r_State == PAD);    // 1, when information from the next vector would be shifted out
 
     always @ (posedge clk)

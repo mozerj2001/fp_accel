@@ -41,7 +41,7 @@ module comparator_wrapper
     // COMPARE: Calculate CntA+CntB-CntC. o_Dout is 1 when under
     // the threshold, 0 when over the threshold.
     reg                     r_State;
-    reg [CNT_WIDTH-1:0]     r_AddrCntr;
+    reg [CNT_WIDTH:0]       r_AddrCntr;
     reg [2*CNT_WIDTH-1:0]   r_Threshold;
 
     always @ (posedge clk)
@@ -51,7 +51,7 @@ module comparator_wrapper
         end else if((r_State == COMPARE) && i_WrThreshold) begin
             r_State <= LOAD_RAM;
             r_Threshold <= i_Threshold;
-        end else if(r_AddrCntr == 2*VECTOR_WIDTH-1) begin
+        end else if(r_AddrCntr == VECTOR_WIDTH) begin
             r_State <= COMPARE;
         end
     end
