@@ -127,8 +127,9 @@ module top_cnt1
     // Propagate state and valid gradually along the shiftregisters, so
     // the out pre_stage_units start counting at the appropriate time.
     // SUB_VEC_NO = 2 is assumed.
-    reg [SHR_DEPTH-1:0] r_Valid_Shr;
-    reg [SHR_DEPTH-1:0] r_State_Shr;
+    reg     [SHR_DEPTH-1:0] r_Valid_Shr;
+    reg     [SHR_DEPTH-1:0] r_State_Shr;
+    wire    [SHR_DEPTH-1:0] w_PreStageOut_ValidIn;
 
     genvar vv;
     generate
@@ -340,7 +341,6 @@ module top_cnt1
     wire [CNT_WIDTH-1:0] w_Cnt_AnB[SHR_DEPTH-1:0];
     wire [SHR_DEPTH-1:0] w_PreStageOut_Valid;
     wire [SHR_DEPTH-1:0] w_CntOutNew_AnB;
-    wire [SHR_DEPTH-1:0] w_PreStageOut_ValidIn;
 
     assign w_PreStageOut_ValidIn = r_Valid_Shr & r_State_Shr;
 
@@ -437,18 +437,8 @@ module top_cnt1
     localparam FIFO_DATA_COUNT_WIDTH    = $clog2(FIFO_DEPTH);
     localparam FIFO_TREE_DEPTH          = $clog2(SHR_DEPTH) + 1;
 
-    // CNT1 outputs are valid for 2 clk long --> FIFO write clock is half of
-    // clk
-    reg r_fifo_wr_clk;
-    
-    always @ (posedge clk)
-    begin
-        if(rst) begin
-            r_fifo_wr_clk <= 1'b0;
-        end else begin
-            r_fifo_wr_clk <= ~r_fifo_wr_clk;
-        end
-    end
+    // CNT1 outputs are valid for 2 clk long --> wr_en needs to be one clk
+    // pulse wide.
 
     wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_almost_empty                                 ;
     wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_almost_full                                  ;
@@ -533,7 +523,7 @@ module top_cnt1
                        .wr_en            (w_fifo_wr_en          [2**tt + uu])
                     ); // End of xpm_fifo_sync_inst instantiation
 
-                    assign w_fifo_wr_clk[2**tt + uu] = r_fifo_wr_clk;
+                    assign w_fifo_wr_clk[2**tt + uu] = clk;
                     assign w_fifo_rst   [2**tt + uu] = rst;
 
                     // Pipeline output to first layer of FIFOs (compatible vector
@@ -551,6 +541,10 @@ module top_cnt1
                         assign w_fifo_rd_en [2**(tt+1) + 2*uu]  = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_full[2**tt + uu] : 1'b0;
                         assign w_fifo_rd_en [2**(tt+1) + 2*uu+1]= w_FifoDin_Sel[2**tt + uu] ? 1'b0 : ~w_fifo_full[2**tt + uu];
                     end
+
+                    // FIFO port tie-offs
+                    assign w_fifo_sleep[2**tt + uu] = 1'b0;
+
                 end
             end
         end

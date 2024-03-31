@@ -6,8 +6,8 @@ module tb_top_cnt1(
 
     );
 
-    localparam BUS_WIDTH        = 96;
-    localparam VECTOR_WIDTH     = 128;
+    localparam BUS_WIDTH        = 512;
+    localparam VECTOR_WIDTH     = 920;
     localparam SUB_VECTOR_NO    = 2;
     localparam GRANULE_WIDTH    = 6;
     localparam SHR_DEPTH        = 32;
@@ -18,10 +18,11 @@ module tb_top_cnt1(
     localparam CLK_PERIOD       = 10;
     localparam HALF_CLK_PERIOD  = CLK_PERIOD/2;
 
-    reg clk                     = 1'b0;
-    reg rst                     = 1'b1;
+    reg clk                         = 1'b0;
+    reg rst                         = 1'b1;
     reg [BUS_WIDTH-1:0] vector;
-    reg wr_threshold            = 0;
+    reg [CNT_WIDTH-1:0] threshold   = 300;
+    reg wr_threshold                = 0;
     wire cmp_rdy;
 
     reg [CNT_WIDTH-1:0] threshold = 25;
@@ -93,7 +94,7 @@ module tb_top_cnt1(
     integer scan;
     reg [BUS_WIDTH-1:0] vec;
     initial begin
-        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/project_1.srcs/sources_1/new/test_vectors.dat", "r");
+        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/fp_accel.srcs/sources_1/new/test_vectors.dat", "r");
         if(fp_vec == 0) begin
             $display("File containing test vectors was not found...");
             $finish;

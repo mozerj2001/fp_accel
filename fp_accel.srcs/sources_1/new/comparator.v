@@ -16,7 +16,7 @@ module comparator
         VECTOR_WIDTH    = 920,
         //
         CNT_WIDTH       = $clog2(VECTOR_WIDTH),
-        ADDR_WIDTH      = CNT_WIDTH
+        ADDR_WIDTH      = CNT_WIDTH+1
     )(
         input wire                  clk,
         input wire                  rst,
@@ -46,13 +46,14 @@ module comparator
 
     // RAM storing Y/N values based on the configured threshold
     // NOTE: r_Sum result will never exceed VECTOR_WIDTH.
+    // --> Required address range is VECTOR_WIDTH:0 ==> depth is VECTOR_WIDTH+1
     wire [ADDR_WIDTH-1:0]   w_Addr;
     assign w_Addr = i_RAM_Setup ? i_Addr : r_Sum;
 
 
     block_ram_rd_1st
     #(
-        .DEPTH  (VECTOR_WIDTH   ),
+        .DEPTH  (VECTOR_WIDTH+1 ),
         .WIDTH  (1              )
     ) u_result_ram (
         .clk    (clk        ),
