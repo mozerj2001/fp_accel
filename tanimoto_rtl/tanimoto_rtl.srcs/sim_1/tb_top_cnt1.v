@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-`include "../../sources_1/new/top_cnt1.v"
+`include "../sources_1/top_cnt1.v"
 
 module tb_top_cnt1(
 
