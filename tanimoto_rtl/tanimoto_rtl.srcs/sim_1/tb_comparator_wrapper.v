@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-`include "../../sources_1/new/comparator_wrapper.v"
+`include "../sources_1/comparator_wrapper.v"
 
 
 module tb_comparator_wrapper(

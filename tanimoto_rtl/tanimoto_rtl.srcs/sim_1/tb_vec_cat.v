@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
-`include "../../sources_1/new/srl_fifo.v"
-`include "../../sources_1/new/vec_cat.v"
+`include "../sources_1/srl_fifo.v"
+`include "../sources_1/vec_cat.v"
 
 module tb_vec_cat(
 

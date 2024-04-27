@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-`include "../../sources_1/new/bit_cntr_wrapper.v"
+`include "../sources_1/bit_cntr_wrapper.v"
 
 module tb_bit_cntr_wrapper(
 
