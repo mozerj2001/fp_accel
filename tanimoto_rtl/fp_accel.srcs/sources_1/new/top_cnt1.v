@@ -20,7 +20,7 @@ module top_cnt1
         VECTOR_WIDTH        = 920,
         SUB_VECTOR_NO       = 2,        // how many sub-vectors are in a full vector
         GRANULE_WIDTH       = 6,        // width of the first CNT1 tree stage, 6 on Xilinx FPGA
-        SHR_DEPTH           = 4,        // how many vectors this module is able to store as reference vectors
+        SHR_DEPTH           = 32,       // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 8,
         //
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
