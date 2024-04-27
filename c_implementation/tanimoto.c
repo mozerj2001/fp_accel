@@ -45,12 +45,14 @@ void hex_to_str(uint_fast32_t* hex, char** str){
     int idx;
     char currentChar;
     int i, j;
+    uint_fast32_t tmp;
 
     *str = (char*) malloc(strLen+1);
 
     for(i = 0; i < WORD_NO; i++){           // Iterate 32 bit words
+        tmp = hex[i];
         for(j = 0; j < 8; j++){             // Iterate 4 bit digits
-            switch(hex[i] & 0x0000000F){
+            switch(tmp & 0x0000000F){
                 case 0: currentChar = '0'; break;
                 case 1: currentChar = '1'; break;
                 case 2: currentChar = '2'; break;
@@ -69,7 +71,7 @@ void hex_to_str(uint_fast32_t* hex, char** str){
                 case 15: currentChar = 'F';
             }
 
-            hex[i] = (hex[i] >> 4);
+            tmp = (tmp >> 4);
             idx = strLen - (i*8+j) - 1;
 
             if(idx >= 0){
@@ -211,7 +213,7 @@ void gen_test_set(FINGERPRINT* A, unsigned int n_A, FINGERPRINT* B, unsigned int
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int*** out_arr){
+unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, unsigned int thresh, unsigned int* out_arr[][]){
     unsigned int i, j;
     unsigned int numA = sizeof(A)/sizeof(FINGERPRINT);
     unsigned int numB = sizeof(B)/sizeof(FINGERPRINT);
