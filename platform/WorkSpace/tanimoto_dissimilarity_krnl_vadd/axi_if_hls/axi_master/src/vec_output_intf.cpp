@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "ap_axi_sdata.h"
-#include "defines.h"
+#include "if.h"
 
 
 /*
@@ -9,7 +9,7 @@
  */
 
 // AXI-Stream ==> AXI-Lite
-void vec_output_intf(id_t* id_in, id_t* id_out){
+void vec_output_intf(id_out_t* id_in, id_out_t* id_out){
 #pragma HLS INTERFACE mode=ap_ctrl_none port=return
 #pragma HLS INTERFACE mode=axis register_mode=both port=id_in register
 #pragma HLS INTERFACE mode=s_axilite port=id_out
