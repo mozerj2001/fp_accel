@@ -26,7 +26,7 @@ module top_cnt1
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
     )(
         input wire                          clk,
-        input wire                          rst,
+        input wire                          rstn,
         input wire [BUS_WIDTH-1:0]          i_Vector,
         input wire                          i_Valid,
         //
@@ -45,6 +45,9 @@ module top_cnt1
     localparam LOAD_REF             = 1'b0;
     localparam COMPARE              = 1'b1;
     localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
+
+    wire rst;
+    assign rst = ~rstn;
 
     // SUB VECTOR COUNTER
     // Counts sub-vectors incoming from the input pre_stage_unit.
