@@ -23,6 +23,8 @@ module top_cnt1
         SHR_DEPTH           = 32,       // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 8,
         //
+        S_AXI_CFG_TDATA_NUM_BYTES_VEC = (BUS_WIDTH + (8-1))/8,
+        M_AXI_CFG_TDATA_NUM_BYTES_ID_PAIR = (2*VEC_ID_WIDTH + (8-1))/8,
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
     )(
         input wire                          clk,
