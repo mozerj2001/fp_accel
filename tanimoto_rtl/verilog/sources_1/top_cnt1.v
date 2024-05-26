@@ -32,13 +32,11 @@ module top_cnt1
         input wire [BUS_WIDTH-1:0]          i_Vector,
         input wire                          i_Valid,
         //
-        input wire                          i_WrThreshold,
         input wire [CNT_WIDTH-1:0]          i_Threshold,
         //
         input wire                          i_IDPair_Read,
         //
         output wire                         o_Read,
-        output wire                         o_ComparatorsReady,     // comparators not setting up new threshold
         output wire                         o_IDPair_Ready,
         output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out
     );
@@ -89,6 +87,9 @@ module top_cnt1
     wire [BUS_WIDTH-1:0]    w_Catted_Vector;
     wire                    w_Catted_Valid;
     wire [VEC_ID_WIDTH-1:0] w_CatOut_VecID;
+    wire                    w_CatValidIn;
+
+    assign w_CatValidIn = i_Valid & (&w_ComparatorsReady);      // only start reading, when the comparators are ready
 
     vec_cat #(
         .BUS_WIDTH      (BUS_WIDTH      ),
@@ -98,7 +99,7 @@ module top_cnt1
         .clk            (clk            ),
         .rst            (rst            ),
         .i_Vector       (i_Vector       ),
-        .i_Valid        (i_Valid        ),
+        .i_Valid        (w_CatValidIn   ),
         .o_Vector       (w_Catted_Vector),
         .o_VecID        (w_CatOut_VecID ),
         .o_Valid        (w_Catted_Valid ),
@@ -409,9 +410,19 @@ module top_cnt1
     // metric. It is compared against a threshold to decide if two
     // fingerprints are similar enough. Output will be collected with
     // a FIFO-tree.
-    wire [SHR_DEPTH-1:0] w_CompareDout;
-    wire [SHR_DEPTH-1:0] w_CompareValid;
-    wire [SHR_DEPTH-1:0] w_ComparatorsReady;
+    wire [SHR_DEPTH-1:0]    w_CompareDout;
+    wire [SHR_DEPTH-1:0]    w_CompareValid;
+    wire [SHR_DEPTH-1:0]    w_ComparatorsReady;
+    wire                    w_WrThreshold;
+    reg  [CNT_WIDTH-1:0]    r_ThresholdReg[1:0];
+
+    assign w_WrThreshold = (r_ThresholdReg[0] !== r_ThresholdReg[1]);
+
+    always @ (posedge clk)
+    begin
+        r_ThresholdReg[1] <= i_Threshold;
+        r_ThresholdReg[0] <= r_ThresholdReg[1];
+    end
 
     genvar cc;
     generate
@@ -420,17 +431,17 @@ module top_cnt1
                 .VECTOR_WIDTH   (VECTOR_WIDTH),
                 .BUS_WIDTH      (BUS_WIDTH)
             ) u_comparator_wr (
-                .clk            (clk                            ),
-                .rst            (rst                            ),
-                .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY]   ),
-                .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY]   ),
-                .i_CntC         (w_Cnt_AnB[cc]                  ),
-                .i_WrThreshold  (i_WrThreshold                  ),
-                .i_Threshold    (i_Threshold                    ),
-                .i_Valid        (w_PreStageOut_Valid[cc]        ),
-                .o_Valid        (w_CompareValid[cc]             ),
-                .o_Ready        (w_ComparatorsReady[cc]          ),
-                .o_Dout         (w_CompareDout[cc]              )
+                .clk            (clk                                    ),
+                .rst            (rst                                    ),
+                .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY]      ),
+                .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY]      ),
+                .i_CntC         (w_Cnt_AnB[cc]                          ),
+                .i_WrThreshold  (w_WrThreshold                          ),
+                .i_Threshold    (i_Threshold                            ),
+                .i_Valid        (w_PreStageOut_Valid[cc]                ),
+                .o_Valid        (w_CompareValid[cc]                     ),
+                .o_Ready        (w_ComparatorsReady[cc]                 ),
+                .o_Dout         (w_CompareDout[cc]                      )
             );
         end
     endgenerate
@@ -558,7 +569,6 @@ module top_cnt1
     // Connect the root of the FIFO-tree with IO ports
     assign o_IDPair_Out         = w_fifo_dout   [1];
     assign o_IDPair_Ready       = ~w_fifo_empty [1];
-    assign o_ComparatorsReady   = &w_ComparatorsReady;
     assign w_fifo_rd_en[1]      = i_IDPair_Read;
 
 
