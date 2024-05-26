@@ -35,4 +35,23 @@ void vec_input_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out){
 }
 
 
+/*
+ * id_in: ID pair output of top_cnt.
+ * id_out: ID pairs forwarded to PS.
+ *
+ * NOTE: Only does one transaction, as the number of ID pair data that needs
+ * to be read is unknown.
+ */
 
+// AXI-Stream ==> AXI-Lite
+void vec_output_intf(id_out_t* id_in, id_out_t* id_out){
+#pragma HLS INTERFACE mode=ap_ctrl_none port=return
+#pragma HLS INTERFACE mode=axis register_mode=both port=id_in register
+#pragma HLS INTERFACE mode=m_axi port=id_out
+
+	id_out_t tmp;
+
+	tmp = *id_in;
+	*id_out = tmp;
+
+}

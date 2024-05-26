@@ -15,4 +15,16 @@ typedef ap_uint<BUS_WIDTH> 				bus_t;
 typedef ap_uint<2*VEC_ID_WIDTH>			id_out_t;
 typedef ap_uint<THRESHOLD_WIDTH>		thresh_t;
 
+void threshold_intf(thresh_t* th_in, thresh_t* th_out);
+void vec_input_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out);
+void vec_output_intf(id_out_t* id_in, id_out_t* id_out);
+extern "C" void tan_intf(   thresh_t* th_in,
+							thresh_t* th_out,
+							bus_t* vec_ref,
+							bus_t* vec_cmp,
+							bus_t* vec_out,
+							id_out_t* id_in,
+							id_out_t* id_out);
+
+
 #endif
