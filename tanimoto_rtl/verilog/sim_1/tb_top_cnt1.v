@@ -21,8 +21,7 @@ module tb_top_cnt1(
     reg clk                         = 1'b0;
     reg rst                         = 1'b1;
     reg [BUS_WIDTH-1:0] vector;
-    reg [CNT_WIDTH-1:0] threshold   = 300;
-    reg wr_threshold                = 0;
+    reg [CNT_WIDTH-1:0] threshold   = 0;
     wire cmp_rdy;
 
     reg [CNT_WIDTH-1:0] threshold = 25;
@@ -71,14 +70,12 @@ module tb_top_cnt1(
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) dut (
         .clk                    (clk            ),
-        .rst                    (rst            ),
+        .rstn                   (~rst         ),
         .i_Vector               (f_dout         ),
         .i_Valid                (~f_empty       ),
-        .i_WrThreshold          (wr_threshold   ),
         .i_Threshold            (threshold      ),
         .i_IDPair_Read          (id_pair_read   ),
         .o_Read                 (f_read         ),
-        .o_ComparatorsReady     (cmp_rdy        ),
         .o_IDPair_Ready         (id_pair_ready  ),
         .o_IDPair_Out           (id_pair_out    )
     );
@@ -94,7 +91,7 @@ module tb_top_cnt1(
     integer scan;
     reg [BUS_WIDTH-1:0] vec;
     initial begin
-        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/fp_accel.srcs/sources_1/new/test_vectors.dat", "r");
+        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/test_vectors.dat", "r");
         if(fp_vec == 0) begin
             $display("File containing test vectors was not found...");
             $finish;
@@ -126,9 +123,8 @@ module tb_top_cnt1(
         #100;
         rst <= 1'b0;
         #CLK_PERIOD;
-        wr_threshold <= 1'b1;
+        threshold = 650;
         #CLK_PERIOD;
-        wr_threshold <= 1'b0;
         #500;
         f_write <= 1'b1;
         if($feof(fp_vec)) begin
