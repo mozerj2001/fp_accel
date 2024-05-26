@@ -42,5 +42,5 @@ def writeTest(vec_list: list, fname: str):
 
 # BODY
 if __name__ == "__main__":
-    catVectors = processVectorTxt("../c_implementation/ref_vec.txt", "../c_implementation/cmp_vec.txt")
-    writeTest(catVectors, "../fp_accel.srcs/sources_1/new/test_vectors.dat")
+    catVectors = processVectorTxt("../tanimoto_c/ref_vec.txt", "../tanimoto_c/cmp_vec.txt")
+    writeTest(catVectors, "../tanimoto_rtl/test_vectors.dat")
