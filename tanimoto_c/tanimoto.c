@@ -213,30 +213,30 @@ void gen_test_set(FINGERPRINT* A, unsigned int n_A, FINGERPRINT* B, unsigned int
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, unsigned int thresh, unsigned int* out_arr[][]){
-    unsigned int i, j;
-    unsigned int numA = sizeof(A)/sizeof(FINGERPRINT);
-    unsigned int numB = sizeof(B)/sizeof(FINGERPRINT);
-    unsigned int cntPair = 0;
-    double tnDissim;
-    FINGERPRINT C;
-
-    for(i = 0; i < numA; i++){      // iterate through reference vectors
-        for(j = 0; j < numB; j++){  // iterate through compare vectors
-            C = get_bitwise_and(A[i], B[j]);
-            set_fp_weight(&C);
-
-            tnDissim = (A[i].weight + B[j].weight) / C.weight;
-            if(tnDissim <= thresh){
-                (*out_arr)[cntPair][0] = i;
-                (*out_arr)[cntPair][1] = j;
-                cntPair++;
-            }
-        }
-    }
-
-    return cntPair;
-}
+// unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, unsigned int thresh, unsigned int* out_arr[][]){
+//     unsigned int i, j;
+//     unsigned int numA = sizeof(A)/sizeof(FINGERPRINT);
+//     unsigned int numB = sizeof(B)/sizeof(FINGERPRINT);
+//     unsigned int cntPair = 0;
+//     double tnDissim;
+//     FINGERPRINT C;
+// 
+//     for(i = 0; i < numA; i++){      // iterate through reference vectors
+//         for(j = 0; j < numB; j++){  // iterate through compare vectors
+//             C = get_bitwise_and(A[i], B[j]);
+//             set_fp_weight(&C);
+// 
+//             tnDissim = (A[i].weight + B[j].weight) / C.weight;
+//             if(tnDissim <= thresh){
+//                 (*out_arr)[cntPair][0] = i;
+//                 (*out_arr)[cntPair][1] = j;
+//                 cntPair++;
+//             }
+//         }
+//     }
+// 
+//     return cntPair;
+// }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////

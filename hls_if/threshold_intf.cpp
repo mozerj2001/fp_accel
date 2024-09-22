@@ -10,9 +10,6 @@
 
 // AXI-Lite ==> AP Intf
 void threshold_intf(thresh_t* th_in, thresh_t* th_out){
-#pragma HLS INTERFACE mode=ap_ctrl_none port=return
-#pragma HLS INTERFACE mode=s_axilite port=th_in
-#pragma HLS INTERFACE mode=ap_none port=th_out
 
 	thresh_t tmp;
 
