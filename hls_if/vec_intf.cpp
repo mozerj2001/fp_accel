@@ -4,19 +4,15 @@
 
 
 /*
- * vec_ref: 	AXI-Lite source of reference vectors.
- * vec_cmp: 	AXI-Lite source of vectors to be compared against reference vectors.
+ * vec_ref: 	AXI source of reference vectors.
+ * vec_cmp: 	AXI source of vectors to be compared against reference vectors.
  * REF_READ_NO:	Number of bus cycles carrying reference vectors.
  * CMP_READ_NO:	Number of bus cycles carrying compare vectors.
  * vec_out: 	AXI-Stream sink of vectors, direct input of the top_cnt RTL module.
  */
 
-// AXI-Lite ==> AXI-Stream
+// AXI ==> AXI-Stream
 void vec_input_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out){
-#pragma HLS INTERFACE mode=ap_ctrl_none port=return
-#pragma HLS INTERFACE mode=s_axilite port=vec_ref
-#pragma HLS INTERFACE mode=s_axilite port=vec_cmp
-#pragma HLS INTERFACE mode=axis register_mode=both port=vec_out register
 
 	bus_t tmp;
 
@@ -43,11 +39,8 @@ void vec_input_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out){
  * to be read is unknown.
  */
 
-// AXI-Stream ==> AXI-Lite
+// AXI-Stream ==> AXI
 void vec_output_intf(id_out_t* id_in, id_out_t* id_out){
-#pragma HLS INTERFACE mode=ap_ctrl_none port=return
-#pragma HLS INTERFACE mode=axis register_mode=both port=id_in register
-#pragma HLS INTERFACE mode=m_axi port=id_out
 
 	id_out_t tmp;
 

@@ -15,11 +15,11 @@ int main(void){
 
     gen_test_set(A, REF_VEC_NO, B, CMP_VEC_NO, "ref_vec.txt", "cmp_vec.txt");
 
-    pairCnt = calc_tanimoto(A, B, 300, &idPairArr);
+    // pairCnt = calc_tanimoto(A, B, 300, &idPairArr);
 
-    for(i = 0; i < pairCnt; i++){
-        printf("A: %d\tB: %d\n", idPairArr[i][0], idPairArr[i][1]);
-    }
+    // for(i = 0; i < pairCnt; i++){
+    //     printf("A: %d\tB: %d\n", idPairArr[i][0], idPairArr[i][1]);
+    // }
 
     return 0;
 }

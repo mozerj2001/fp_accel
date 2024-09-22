@@ -115,7 +115,7 @@ void gen_test_set(FINGERPRINT* A, unsigned int n_A, FINGERPRINT* B, unsigned int
 //      of which satisfy the threshold criterium. Assumed to be "large enough"
 //      for all found pairs to fit. (For execution speed's sake.)
 //  Return: Number of returned index-pairs.
-unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int* out_arr[][]);
+// unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, double thresh, unsigned int* out_arr[][]);
 
 
 // PURPOSE: Calculate a Tanimoto dissimilarity-like metric analog to the
