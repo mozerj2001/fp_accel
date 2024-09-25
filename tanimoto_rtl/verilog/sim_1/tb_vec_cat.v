@@ -82,13 +82,13 @@ module tb_vec_cat(
     integer scan;
     reg [BUS_WIDTH-1:0] vec;
     initial begin
-        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/project_1.srcs/sources_1/new/test_vectors.dat", "r");
+        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/test_vectors.dat", "r");
         if(fp_vec == 0) begin
             $display("File containing test vectors was not found...");
             $finish;
         end
 
-        fp_cat = $fopen("/home/jozmoz01/Documents/fp_accel/project_1.srcs/sim_1/new/vec_cat_result.txt", "w");
+        fp_cat = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/vec_cat_result.txt", "w");
         if(fp_cat == 0) begin
             $display("Output file could not be opened...");
             $finish;

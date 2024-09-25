@@ -1,8 +1,8 @@
 `timescale 1ns / 1ps
 
-`include "../sources_1/top_cnt1.v"
+`include "../sources_1/tanimoto_top.v"
 
-module tb_top_cnt1(
+module tb_tanimoto_top(
 
     );
 
@@ -24,7 +24,7 @@ module tb_top_cnt1(
     reg [CNT_WIDTH-1:0] threshold   = 0;
     wire cmp_rdy;
 
-    reg [CNT_WIDTH-1:0] threshold = 25;
+    reg [CNT_WIDTH-1:0] threshold = 0;
 
 
     // TEST FIFO SIGNALS
@@ -60,7 +60,7 @@ module tb_top_cnt1(
 
     assign id_pair_read = id_pair_ready;
 
-    top_cnt1
+    tanimoto_top
     #(
         .BUS_WIDTH      (BUS_WIDTH      ),
         .VECTOR_WIDTH   (VECTOR_WIDTH   ),
@@ -85,8 +85,20 @@ module tb_top_cnt1(
         #HALF_CLK_PERIOD;
     end
 
+    // STIMULUS
+    // load threshold RAM
+    initial begin
+        #50;
+        rst <= 1'b0;
+        #10;
+        #CLK_PERIOD;
+        for(integer i = 0; i < VECTOR_WIDTH; i = i + 1) begin
+            threshold = threshold + 1;
+            #CLK_PERIOD;
+        end
+    end
 
-    // FILL FIFOS
+    // fill FIFOs
     integer fp_vec;
     integer scan;
     reg [BUS_WIDTH-1:0] vec;

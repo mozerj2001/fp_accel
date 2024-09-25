@@ -7,27 +7,27 @@
 `include "block_ram_rd_1st.v"
 
 // COMPARATOR
-// Calculates CNT(A)+CNT(B)-CNT(C) to provide a (dis)similarity
-// metric between A and B vectors, if C = A & B;.
-// The result is used as an address into a 1 bit wide block RAM,
-// that contains 1s up until the desired threshold address, then 0s.
+// Results that require division are stored in u_result_ram, at the address
+// as the corresponding i_CntC value. The output of the RAM module is compared
+// against the sum of i_CntA and i_CntB, which determines whether the Tanimoto
+// dissimilarity is under the specified threshold.
+// u_result_ram is configured by the wrapper, through the threshold top level
+// port.
 module comparator
     #(
         VECTOR_WIDTH    = 920,
         //
-        CNT_WIDTH       = $clog2(VECTOR_WIDTH),
-        ADDR_WIDTH      = CNT_WIDTH+1
+        CNT_WIDTH       = $clog2(VECTOR_WIDTH)
     )(
         input wire                  clk,
         input wire                  rst,
         input wire [CNT_WIDTH-1:0]  i_CntA,
         input wire [CNT_WIDTH-1:0]  i_CntB,
         input wire [CNT_WIDTH-1:0]  i_CntC,
-        input wire                  i_RAM_Setup,    // Mux i_Addr onto the addr input of the RAM module
 
         // RAM I/O
-        input wire [ADDR_WIDTH-1:0] i_Addr,
-        input wire                  i_Din,
+        input wire [CNT_WIDTH-1:0]  i_Addr,
+        input wire [CNT_WIDTH:0]    i_Din,
         input wire                  i_WrEn,
         output wire                 o_Dout          // 0: over threshold, 1: under threshold
     );
@@ -40,30 +40,29 @@ module comparator
         if(rst) begin
             r_Sum   <= 0;
         end else begin
-            r_Sum   <= i_CntA + i_CntB - i_CntC;    // CntC will never be greater than CntA + CntB
+            r_Sum   <= i_CntA + i_CntB;
         end
     end
 
-    // RAM storing Y/N values based on the configured threshold
-    // NOTE: r_Sum result will never exceed VECTOR_WIDTH.
-    // --> Required address range is VECTOR_WIDTH:0 ==> depth is VECTOR_WIDTH+1
-    wire [ADDR_WIDTH-1:0]   w_Addr;
-    assign w_Addr = i_RAM_Setup ? i_Addr : r_Sum;
 
+    wire [CNT_WIDTH-1:0] w_Addr;
+    assign w_Addr = i_WrEn ? i_Addr : i_CntC;
 
+    wire [CNT_WIDTH-1:0] w_Result;
     block_ram_rd_1st
     #(
         .DEPTH  (VECTOR_WIDTH+1 ),
-        .WIDTH  (1              )
+        .WIDTH  (CNT_WIDTH+1    )
     ) u_result_ram (
         .clk    (clk        ),
         .we     (i_WrEn     ),
         .en     (1'b1       ),
         .addr   (w_Addr     ),
         .din    (i_Din      ),
-        .dout   (o_Dout     )
+        .dout   (w_Result   )
     );
 
+    assign o_Dout = (r_Sum >= {1'b0, w_Result});
 
 endmodule
 
