@@ -27,31 +27,25 @@ module tb_comparator(
     reg [CNT_WIDTH-1:0] cnt_b = 0;
     reg [CNT_WIDTH-1:0] cnt_c = 0;
 
-    reg [CNT_WIDTH-1:0] threshold       = 30;
-    reg [CNT_WIDTH:0]   wr_threshold    = 0;
+    reg [CNT_WIDTH:0]   threshold = 0;
+    reg                 wr_threshold = 0;
 
     wire dout;
 
-    // testbench state machine
-    reg state = LOAD_RAM;
-
-    srl_fifo#(
-    ) u_ext_fifo (
-    );
-
 
     // DUT
-    comparator_wrapper #(
-        .VECTOR_WIDTH   (VECTOR_WIDTH   ),
-        .BUS_WIDTH      (BUS_WIDTH      )
+    // --> wired so that a RAM cell always contains the corresponding address
+    comparator #(
+        .VECTOR_WIDTH   (VECTOR_WIDTH   )
     ) u_dut (
         .clk            (clk            ),
         .rst            (rst            ),
         .i_CntA         (cnt_a          ),
         .i_CntB         (cnt_b          ),
         .i_CntC         (cnt_c          ),
-        .i_WrThreshold  (wr_threshold   ),
-        .i_Threshold    (threshold      ),
+        .i_Addr         (threshold      ),
+        .i_WrEn         (wr_threshold   ),
+        .i_Din          (threshold      ),
         .o_Dout         (dout           )
     );
 
@@ -61,51 +55,53 @@ module tb_comparator(
         #HALF_CLK_PERIOD;
     end
 
-    // stimulus
-
-
+    // STIMULUS
+    // load threshold RAM
     initial begin
         #50;
         rst <= 1'b0;
-        wr_threshold <= 1'b1;
+        #10;
+        wr_threshold <= 1;
         #CLK_PERIOD;
-        wr_threshold <= 1'b0;
+        for(integer i = 0; i < VECTOR_WIDTH; i = i + 1) begin
+            threshold = threshold + 1;
+            #CLK_PERIOD;
+        end
+        wr_threshold <= 0;
     end
 
+    // generate input data
     initial begin
         #500;
-        #CLK_PERIOD;
-        cnt_a = 33;
-        cnt_b = 17;
-        cnt_c = 17;
-        #CLK_PERIOD;
-        cnt_a = 8;
-        cnt_b = 19;
-        cnt_c = 6;
-        #CLK_PERIOD;
-        cnt_a = 15;
-        cnt_b = 32;
-        cnt_c = 12;
-        #CLK_PERIOD;
-        cnt_a = 35;
-        cnt_b = 17;
-        cnt_c = 17;
-        #CLK_PERIOD;
-        cnt_a = 8;
-        cnt_b = 5;
-        cnt_c = 1;
-        #CLK_PERIOD;
-        cnt_a = 35;
-        cnt_b = 35;
-        cnt_c = 35;
-        #CLK_PERIOD;
-        cnt_a = 24;
-        cnt_b = 0;
-        cnt_c = 0;
         #CLK_PERIOD;
         cnt_a = 0;
         cnt_b = 0;
         cnt_c = 0;
+        #CLK_PERIOD;
+        // a+b=7 | c = 3 --> OK
+        cnt_a = 3;
+        cnt_b = 4;
+        cnt_c = 3;
+        #CLK_PERIOD;
+        // a+b=14 | c = 16 --> X
+        cnt_a = 6;
+        cnt_b = 8;
+        cnt_c = 16;
+        #CLK_PERIOD;
+        // a+b=21 | c = 20 --> OK
+        cnt_a = 20;
+        cnt_b = 1;
+        cnt_c = 20;
+        #CLK_PERIOD;
+        // a+b=28 | c = 32 --> X
+        cnt_a = 11;
+        cnt_b = 17;
+        cnt_c = 32;
+        #CLK_PERIOD;
+        // a+b=35 | c = 35 --> OK
+        cnt_a = 33;
+        cnt_b = 2;
+        cnt_c = 35;
     end
 
 

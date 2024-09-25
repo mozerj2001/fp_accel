@@ -8,7 +8,7 @@
 module block_ram_rd_1st
     #(
         DEPTH = 1024,
-        WIDTH = 1,
+        WIDTH = 8,
         //
         ADDR_WIDTH = $clog2(DEPTH)
     )(

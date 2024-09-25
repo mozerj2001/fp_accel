@@ -7,19 +7,19 @@
 
 
 // VECTOR WEIGHT CALCULATOR TOP MODULE
-// Reads SubVectors from a FIFO, stores ref vectors and their calculated
+// Reads SubVectors from a FIFO (AXI-Stream), stores ref vectors and their calculated
 // weight in an array of shiftregisters. Shifts other incoming vectors
 // beside the ref vectors, calculates the weight of every ref_vector
-// & compared_vector vector, then calculates CNT(ref)+CNT(comp)-CNT(ref&comp)
-// and compares it agains a threshold. Vector IDs under a threshold are
-// similar enough, so their ID is propagated through a FIFO-tree.
+// & compared_vector vector, then calculates CNT(ref)+CNT(comp)
+// and compares it agains a threshold (precalculated with possible CNT(ref&comp) values).
+// Vector IDs over the threshold are propagated through a FIFO-tree.
 // (ID is the position in the database, so vec_cat counts input vectors.)
-module top_cnt1
+module tanimoto_top
     #(
         BUS_WIDTH           = 512,      // system bus data width
         VECTOR_WIDTH        = 920,
-        SUB_VECTOR_NO       = 2,        // how many sub-vectors are in a full vector
-        GRANULE_WIDTH       = 6,        // width of the first CNT1 tree stage, 6 on Xilinx FPGA
+        SUB_VECTOR_NO       = 2,        // how many sub-vectors are in a full vector (NOTE: only 2 is supported)
+        GRANULE_WIDTH       = 6,        // width of the first CNT1 tree stage, 6 on Xilinx/AMD FPGA
         SHR_DEPTH           = 32,       // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 8,
         //
@@ -405,24 +405,12 @@ module top_cnt1
     endgenerate
 
 
-    // COMPARE MODULES
-    // CNT(A)+CNT(B)-CNT(A&B) is the calculated dissimilarity
-    // metric. It is compared against a threshold to decide if two
-    // fingerprints are similar enough. Output will be collected with
-    // a FIFO-tree.
+    // COMPARATOR MODULES
+    // Compare CNT1 results to programmed threshold.
+    // o_Dout == 1 --> Current output IDs are over the threshold.
     wire [SHR_DEPTH-1:0]    w_CompareDout;
     wire [SHR_DEPTH-1:0]    w_CompareValid;
     wire [SHR_DEPTH-1:0]    w_ComparatorsReady;
-    wire                    w_WrThreshold;
-    reg  [CNT_WIDTH-1:0]    r_ThresholdReg[1:0];
-
-    assign w_WrThreshold = (r_ThresholdReg[0] !== r_ThresholdReg[1]);
-
-    always @ (posedge clk)
-    begin
-        r_ThresholdReg[1] <= i_Threshold;
-        r_ThresholdReg[0] <= r_ThresholdReg[1];
-    end
 
     genvar cc;
     generate
@@ -436,11 +424,9 @@ module top_cnt1
                 .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY]      ),
                 .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY]      ),
                 .i_CntC         (w_Cnt_AnB[cc]                          ),
-                .i_WrThreshold  (w_WrThreshold                          ),
                 .i_Threshold    (i_Threshold                            ),
                 .i_Valid        (w_PreStageOut_Valid[cc]                ),
                 .o_Valid        (w_CompareValid[cc]                     ),
-                .o_Ready        (w_ComparatorsReady[cc]                 ),
                 .o_Dout         (w_CompareDout[cc]                      )
             );
         end
@@ -572,6 +558,6 @@ module top_cnt1
     assign w_fifo_rd_en[1]      = i_IDPair_Read;
 
 
-endmodule
+endmodule // tanimoto_top
 
 `endif
