@@ -14,6 +14,7 @@ set_property board_part xilinx.com:zcu106:part0:2.6 [current_project]
 # Create the top level block of the IP.
 create_bd_design "tanimoto"
 add_files -fileset sources_1 [glob ./tanimoto_rtl/verilog/sources_1/*.v]
+add_files -fileset sim_1 [glob ./tanimoto_rtl/verilog/sim_1/tb_*.v]
 update_compile_order -fileset sources_1
 startgroup
 create_bd_cell -type module -reference top_intf -name top_intf_0

@@ -30,6 +30,9 @@ module tb_comparator(
     reg [CNT_WIDTH:0]   threshold = 0;
     reg                 wr_threshold = 0;
 
+    reg     valid_in = 0;
+    wire    valid_out;
+
     wire dout;
 
 
@@ -43,10 +46,15 @@ module tb_comparator(
         .i_CntA         (cnt_a          ),
         .i_CntB         (cnt_b          ),
         .i_CntC         (cnt_c          ),
-        .i_Addr         (threshold      ),
-        .i_WrEn         (wr_threshold   ),
-        .i_Din          (threshold      ),
-        .o_Dout         (dout           )
+        // BRAM
+        .i_BRAM_Addr    (threshold      ),
+        .i_BRAM_WrEn    (wr_threshold   ),
+        .i_BRAM_Din     (threshold      ),
+        .i_BRAM_En      (1'b1           ),
+        .o_Dout         (dout           ),
+        // Valid
+        .i_Valid        (valid_in       ),
+        .o_Valid        (valid_out      )
     );
 
     // clk gen
@@ -74,6 +82,7 @@ module tb_comparator(
     initial begin
         #500;
         #CLK_PERIOD;
+        valid_in = 1;
         cnt_a = 0;
         cnt_b = 0;
         cnt_c = 0;
@@ -102,6 +111,8 @@ module tb_comparator(
         cnt_a = 33;
         cnt_b = 2;
         cnt_c = 35;
+        #CLK_PERIOD;
+        valid_in = 0;
     end
 
 

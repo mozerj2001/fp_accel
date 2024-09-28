@@ -1,5 +1,5 @@
-`ifndef TOP_CNT1
-`define TOP_CNT1
+`ifndef TANIMOTO_TOP
+`define TANIMOTO_TOP
 
 
 `timescale 1ns / 1ps
@@ -29,13 +29,16 @@ module tanimoto_top
     )(
         input wire                          clk,
         input wire                          rstn,
+        // Vector stream
         input wire [BUS_WIDTH-1:0]          i_Vector,
         input wire                          i_Valid,
-        //
-        input wire [CNT_WIDTH-1:0]          i_Threshold,
-        //
+        // Comprator BRAM interface for thresholds
+        input wire [CNT_WIDTH-1:0]          i_BRAM_Addr,
+        input wire [CNT_WIDTH:0]            i_BRAM_Din, 
+        input wire                          i_BRAM_En,  
+        input wire                          i_BRAM_WrEn,
+        // Output ID stream
         input wire                          i_IDPair_Read,
-        //
         output wire                         o_Read,
         output wire                         o_IDPair_Ready,
         output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out
@@ -415,16 +418,19 @@ module tanimoto_top
     genvar cc;
     generate
         for(cc = 0; cc < SHR_DEPTH; cc = cc + 1) begin
-            comparator_wrapper#(
+            comparator#(
                 .VECTOR_WIDTH   (VECTOR_WIDTH),
                 .BUS_WIDTH      (BUS_WIDTH)
-            ) u_comparator_wr (
+            ) u_comparator (
                 .clk            (clk                                    ),
                 .rst            (rst                                    ),
                 .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY]      ),
                 .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY]      ),
                 .i_CntC         (w_Cnt_AnB[cc]                          ),
-                .i_Threshold    (i_Threshold                            ),
+                .i_BRAM_Addr    (i_BRAM_Addr                            ),
+                .i_BRAM_Din     (i_BRAM_Din                             ),
+                .i_BRAM_En      (i_BRAM_En                              ),
+                .i_BRAM_WrEn    (i_BRAM_WrEn                            ),
                 .i_Valid        (w_PreStageOut_Valid[cc]                ),
                 .o_Valid        (w_CompareValid[cc]                     ),
                 .o_Dout         (w_CompareDout[cc]                      )
@@ -560,4 +566,4 @@ module tanimoto_top
 
 endmodule // tanimoto_top
 
-`endif
+`endif // TANIMOTO_TOP
