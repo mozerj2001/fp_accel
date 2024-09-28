@@ -53,7 +53,7 @@ module tanimoto_top
     assign rst = ~rstn;
 
     // SUB VECTOR COUNTER
-    // Counts sub-vectors incoming from the input pre_stage_unit.
+    // Counts sub-vectors incoming from the input cnt1.
     // Assuming there are two sub-vectors per vector, its LSB
     // is the select signal for the output multiplexers.
     reg [SUB_VEC_CNTR_WIDTH-1:0] r_SubVecCntr;
@@ -92,8 +92,6 @@ module tanimoto_top
     wire [VEC_ID_WIDTH-1:0] w_CatOut_VecID;
     wire                    w_CatValidIn;
 
-    assign w_CatValidIn = i_Valid & (&w_ComparatorsReady);      // only start reading, when the comparators are ready
-
     vec_cat #(
         .BUS_WIDTH      (BUS_WIDTH      ),
         .VECTOR_WIDTH   (VECTOR_WIDTH   ),
@@ -102,7 +100,7 @@ module tanimoto_top
         .clk            (clk            ),
         .rst            (rst            ),
         .i_Vector       (i_Vector       ),
-        .i_Valid        (w_CatValidIn   ),
+        .i_Valid        (i_Valid        ),
         .o_Vector       (w_Catted_Vector),
         .o_VecID        (w_CatOut_VecID ),
         .o_Valid        (w_Catted_Valid ),
@@ -115,7 +113,7 @@ module tanimoto_top
     wire [BUS_WIDTH-1:0]    w_Cnted_Vector;
     wire [CNT_WIDTH-1:0]    w_Cnt;
     wire                    w_Cnt_New;
-    pre_stage_unit #(
+    cnt1 #(
         .VECTOR_WIDTH   (VECTOR_WIDTH           ),
         .BUS_WIDTH      (BUS_WIDTH              ),
         .SUB_VECTOR_NO  (SUB_VECTOR_NO          ),
@@ -134,7 +132,7 @@ module tanimoto_top
 
     // VALID SHIFTREGISTER AND STATE SHIFTREGISTER
     // Propagate state and valid gradually along the shiftregisters, so
-    // the out pre_stage_units start counting at the appropriate time.
+    // the out cnt1s start counting at the appropriate time.
     // SUB_VEC_NO = 2 is assumed.
     reg     [SHR_DEPTH-1:0] r_Valid_Shr;
     reg     [SHR_DEPTH-1:0] r_State_Shr;
@@ -247,9 +245,9 @@ module tanimoto_top
 
     // ID SHIFTREGISTERS
     // Identical to CNT shiftregisters, they store the ID of each vector.
-    // SHR0: Compensate the delay of the input pre_stage_unit.  [CNT1_DELAY]
+    // SHR0: Compensate the delay of the input cnt1.  [CNT1_DELAY]
     // SHR1: Store alongside the CNT value and sub_vectors.     [SHR_DEPTH]
-    // SHR2: Compensate output pre_stage_unit and comparison.   [CNT1_DELAY+2]
+    // SHR2: Compensate output cnt1 and comparison.   [CNT1_DELAY+2]
     //  (CNT1 delay + 2 clk for comparator addition and RAM activity)
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_0   [CNT1_DELAY-1:0];
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_1_A [SHR_DEPTH-1:0];
@@ -326,7 +324,7 @@ module tanimoto_top
 
 
     // STAGE OUT MUX
-    // Selects which sub_vector is on the input of the output pre_stage_unit
+    // Selects which sub_vector is on the input of the output cnt1
     // for each level of shiftregister blocks.
     // Assuming there are two sub-vectors, the select signal is the
     // LSB of the SubVecCntr.
@@ -356,7 +354,7 @@ module tanimoto_top
     genvar kk;
     generate
     for(kk = 0; kk < SHR_DEPTH; kk = kk + 1) begin
-        pre_stage_unit #(
+        cnt1 #(
             .VECTOR_WIDTH   (VECTOR_WIDTH               ),
             .BUS_WIDTH      (BUS_WIDTH                  ),
             .SUB_VECTOR_NO  (SUB_VECTOR_NO              ),
@@ -413,7 +411,6 @@ module tanimoto_top
     // o_Dout == 1 --> Current output IDs are over the threshold.
     wire [SHR_DEPTH-1:0]    w_CompareDout;
     wire [SHR_DEPTH-1:0]    w_CompareValid;
-    wire [SHR_DEPTH-1:0]    w_ComparatorsReady;
 
     genvar cc;
     generate

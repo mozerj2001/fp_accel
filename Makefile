@@ -11,7 +11,7 @@
 
 all: platform rtl_ip rtl_xo hls_xo xclbin
 
-kernel: rtl_ip rtl_xo hls_xo xclbin
+kernel: rtl_ip rtl_xo hls_xo
 
 platform:
 	@echo "############################################################################"
@@ -78,12 +78,15 @@ clean:
 	rm -rf _x
 	rm -rf .Xil
 	rm -rf platform/WorkSpace/zcu106_custom_platform/
+	rm -rf platform/WorkSpace/zcu106_custom/
 	rm -rf platform/WorkSpace/.Xil
 	rm tan_intf.xo.compile_summary
 	rm tanimoto_krnl.xclbin.link_summary
 
 help:
-	@echo "rtl_ip: Create exported RTL IP."
+	@echo "platform: Create ZCU106 processor subsystem and the corresponding .xsa file."
+	@echo "kernel: Create all parts of the PL kernel. (rtl_ip, rtl_xo, hls_xo)"
+	@echo "rtl_ip: Create Vivado project from RTL sources and export .xsa file."
 	@echo "rtl_xo: Generate .xo file containing the RTL kernel."
 	@echo "hls_xo: Generate .xo file of the interface written in HLS."
 	@echo "xclbin: Generate .xclbin file that can be used as an OpenCL target in Vitis."

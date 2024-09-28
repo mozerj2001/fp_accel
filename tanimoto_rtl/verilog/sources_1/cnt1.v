@@ -1,12 +1,12 @@
-`ifndef PRE_STAGE_UNIT
-`define PRE_STAGE_UNIT
+`ifndef CNT1
+`define CNT1
 
 `timescale 1ns / 1ps
 `default_nettype none
 
 `include "lut_shr.v"
 
-// PRE_STAGE_UNIT
+// CNT1
 // This module implements the first stage of the pharmacophore fingerprint
 // comparison hardware accelerator. The number of high bits in the input
 // vector are counted by the CNT1 bit_cntr module.
@@ -30,7 +30,7 @@
 //           
 
 
-module pre_stage_unit
+module cnt1
     #(
         VECTOR_WIDTH        = 920,
         BUS_WIDTH           = 512,
