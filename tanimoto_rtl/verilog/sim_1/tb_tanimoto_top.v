@@ -21,10 +21,11 @@ module tb_tanimoto_top(
     reg clk                         = 1'b0;
     reg rst                         = 1'b1;
     reg [BUS_WIDTH-1:0] vector;
-    reg [CNT_WIDTH-1:0] threshold   = 0;
     wire cmp_rdy;
 
-    reg [CNT_WIDTH-1:0] threshold = 0;
+    reg [CNT_WIDTH:0]   threshold = 0;
+    reg [CNT_WIDTH-1:0] threshold_addr = 0;
+    reg                 wr_threshold;
 
 
     // TEST FIFO SIGNALS
@@ -70,10 +71,13 @@ module tb_tanimoto_top(
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) dut (
         .clk                    (clk            ),
-        .rstn                   (~rst         ),
+        .rstn                   (~rst           ),
         .i_Vector               (f_dout         ),
         .i_Valid                (~f_empty       ),
-        .i_Threshold            (threshold      ),
+        .i_BRAM_Addr            (threshold_addr ),
+        .i_BRAM_Din             (threshold      ),
+        .i_BRAM_En              (1'b1           ),
+        .i_BRAM_WrEn            (wr_threshold   ),
         .i_IDPair_Read          (id_pair_read   ),
         .o_Read                 (f_read         ),
         .o_IDPair_Ready         (id_pair_ready  ),
@@ -92,10 +96,13 @@ module tb_tanimoto_top(
         rst <= 1'b0;
         #10;
         #CLK_PERIOD;
+        wr_threshold <= 1;
         for(integer i = 0; i < VECTOR_WIDTH; i = i + 1) begin
             threshold = threshold + 1;
+            threshold_addr = threshold_addr + 1;
             #CLK_PERIOD;
         end
+        wr_threshold <= 0;
     end
 
     // fill FIFOs
@@ -105,7 +112,7 @@ module tb_tanimoto_top(
     initial begin
         fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/test_vectors.dat", "r");
         if(fp_vec == 0) begin
-            $display("File containing test vectors was not found...");
+            $display("ERROR: File containing test vectors was not found...");
             $finish;
         end
     end
@@ -126,6 +133,8 @@ module tb_tanimoto_top(
             scan = $fscanf(fp_vec, "%h\n", vec);
             if(!$feof(fp_vec)) begin
                 f_din <= vec;
+            end else begin
+                $fclose(fp_vec);
             end
         end
     end
@@ -143,6 +152,26 @@ module tb_tanimoto_top(
             f_write <= 1'b0;
         end
         #CLK_PERIOD;
+    end
+
+    // write results to file
+    integer fp_id;
+    initial begin
+        fp_id = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/id_out.txt", "w");
+        if(fp_id == 0) begin
+            $display("ERROR: Logfile for ID pairs could not be opened...");
+            $finish;
+        end
+
+        #10000;
+        $fclose(fp_id);
+    end
+
+    always @ (posedge clk)
+    begin
+        if(!rst && id_pair_ready) begin
+            $fdisplay(fp_id, "%h\n", id_pair_out);
+        end
     end
 
 

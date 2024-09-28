@@ -26,10 +26,15 @@ module comparator
         input wire [CNT_WIDTH-1:0]  i_CntC,
 
         // RAM I/O
-        input wire [CNT_WIDTH-1:0]  i_Addr,
-        input wire [CNT_WIDTH:0]    i_Din,
-        input wire                  i_WrEn,
-        output wire                 o_Dout          // 0: over threshold, 1: under threshold
+        input wire [CNT_WIDTH-1:0]  i_BRAM_Addr,
+        input wire [CNT_WIDTH:0]    i_BRAM_Din,
+        input wire                  i_BRAM_En,
+        input wire                  i_BRAM_WrEn,
+        output wire                 o_Dout,         // 0: over threshold, 1: under threshold
+        
+        // Valid signal
+        input wire                  i_Valid,
+        output wire                 o_Valid
     );
 
     // Similarity calc
@@ -46,7 +51,7 @@ module comparator
 
 
     wire [CNT_WIDTH-1:0] w_Addr;
-    assign w_Addr = i_WrEn ? i_Addr : i_CntC;
+    assign w_Addr = i_BRAM_WrEn ? i_BRAM_Addr : i_CntC;
 
     wire [CNT_WIDTH-1:0] w_Result;
     block_ram_rd_1st
@@ -55,14 +60,15 @@ module comparator
         .WIDTH  (CNT_WIDTH+1    )
     ) u_result_ram (
         .clk    (clk        ),
-        .we     (i_WrEn     ),
-        .en     (1'b1       ),
+        .we     (i_BRAM_WrEn),
+        .en     (i_BRAM_En  ),
         .addr   (w_Addr     ),
-        .din    (i_Din      ),
+        .din    (i_BRAM_Din ),
         .dout   (w_Result   )
     );
 
     assign o_Dout = (r_Sum >= {1'b0, w_Result});
+    assign o_Valid = i_Valid;       // no delay
 
 endmodule
 

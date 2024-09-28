@@ -1,9 +1,11 @@
-# Ignore all folders, except the source folder.
-
-fp_accel.cache/*
-fp_accel.hw/*
-fp_accel.ip_user_files/*
-fp_accel.sim/*
+# Ignore Vivado project folders (all source files are in other folders).
+*.cache/*
+*.hw/*
+*.ip_user_files/*
+*.sim/*
+*.scrcs/*
+*.gen/*
+_x/*
 
 # Ignore project file.
 *.xpr
@@ -13,3 +15,27 @@ fp_accel.sim/*
 *.swp
 *.bak
 
+# Ignore log and journal files.
+*.jou
+*.log
+*.str
+
+# Ignore test data files.
+*.txt
+*.dat
+
+# Ignore .drawio backups.
+*.drawio.bkp
+
+# Ignore platform files (these are auto-generated or downloaded), except platform gen TCL.
+platform/WorkSpace/*
+!platform/WorkSpace/*.tcl
+
+# Ignore executables and object files.
+*.exe
+*.o
+
+# Ignore packages.
+*.zip
+*.tar*
+*.xo
