@@ -1,11 +1,11 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-`include "../sources_1/pre_stage_unit.v"
+`include "../sources_1/cnt1.v"
 
 // Testbench for the pre-stage unit.
 
-module tb_pre_stage_unit(
+module tb_cnt1(
 
     );
 
@@ -28,7 +28,7 @@ module tb_pre_stage_unit(
     wire [BUS_WIDTH-1:0]           o_SubVector;
     wire [BIT_NO_OUTPUT_WIDTH-1:0] o_Cnt;
 
-    pre_stage_unit#(
+    cnt1#(
         .BUS_WIDTH(BUS_WIDTH),
         .SUB_VECTOR_NO(SUB_VECTOR_NO),
         .GRANULE_WIDTH(GRANULE_WIDTH)
