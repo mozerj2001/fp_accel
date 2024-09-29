@@ -47,6 +47,8 @@ module tb_comparator(
         .i_CntB         (cnt_b          ),
         .i_CntC         (cnt_c          ),
         // BRAM
+        .i_BRAM_Clk     (clk            ),
+        .i_BRAM_Rst     (rst            ),
         .i_BRAM_Addr    (threshold      ),
         .i_BRAM_WrEn    (wr_threshold   ),
         .i_BRAM_Din     (threshold      ),
