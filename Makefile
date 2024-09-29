@@ -7,7 +7,7 @@
 # 2023-2024, Jozsef Mozer
 # ###########################################################
 
-.PHONY: all kernel clean platform rtl_xo hls_xo rtl_ip xclbin
+.PHONY: all kernel clean clean_platform platform rtl_xo hls_xo rtl_ip xclbin
 
 all: platform rtl_ip rtl_xo hls_xo xclbin
 
@@ -60,12 +60,18 @@ xclbin:
     	--save-temps \
     	-o tanimoto_krnl.xclbin
 
+clean_platform:
+	rm -rf platform/WorkSpace/zcu106_custom_platform/
+	rm -rf platform/WorkSpace/zcu106_custom/
+
+
 clean:
 	@echo "############################################################################"
 	@echo "# CLEANING UP WORKSPACE"
 	@echo "############################################################################"
 	find . -type f -name '*.log' -delete
 	find . -type f -name '*.jou' -delete
+	find . -type f -name '*.str' -delete
 	rm -rf tanimoto_rtl/tanimoto_rtl.cache
 	rm -rf tanimoto_rtl/tanimoto_rtl.gen
 	rm -rf tanimoto_rtl/tanimoto_rtl.hw
@@ -77,8 +83,6 @@ clean:
 	rm -rf hls_if/build
 	rm -rf _x
 	rm -rf .Xil
-	rm -rf platform/WorkSpace/zcu106_custom_platform/
-	rm -rf platform/WorkSpace/zcu106_custom/
 	rm -rf platform/WorkSpace/.Xil
 	rm tan_intf.xo.compile_summary
 	rm tanimoto_krnl.xclbin.link_summary
@@ -90,5 +94,8 @@ help:
 	@echo "rtl_xo: Generate .xo file containing the RTL kernel."
 	@echo "hls_xo: Generate .xo file of the interface written in HLS."
 	@echo "xclbin: Generate .xclbin file that can be used as an OpenCL target in Vitis."
+	@echo "clean: Remove all generated and build files, except for platform build results and final .xo files."
+	@echo "clean_platform: Remove zcu106_custom_platform and zcu106_custom."
 	@echo "all: All of the above."
+
 	@echo "help: Print this message."

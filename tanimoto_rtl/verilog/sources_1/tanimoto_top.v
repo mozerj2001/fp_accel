@@ -23,8 +23,6 @@ module tanimoto_top
         SHR_DEPTH           = 32,       // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 8,
         //
-        S_AXI_CFG_TDATA_NUM_BYTES_VEC = (BUS_WIDTH + (8-1))/8,
-        M_AXI_CFG_TDATA_NUM_BYTES_ID_PAIR = (2*VEC_ID_WIDTH + (8-1))/8,
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
     )(
         input wire                          clk,
@@ -33,6 +31,8 @@ module tanimoto_top
         input wire [BUS_WIDTH-1:0]          i_Vector,
         input wire                          i_Valid,
         // Comprator BRAM interface for thresholds
+        input wire                          i_BRAM_Clk,
+        input wire                          i_BRAM_Rst,  
         input wire [CNT_WIDTH-1:0]          i_BRAM_Addr,
         input wire [CNT_WIDTH:0]            i_BRAM_Din, 
         input wire                          i_BRAM_En,  
@@ -416,14 +416,15 @@ module tanimoto_top
     generate
         for(cc = 0; cc < SHR_DEPTH; cc = cc + 1) begin
             comparator#(
-                .VECTOR_WIDTH   (VECTOR_WIDTH),
-                .BUS_WIDTH      (BUS_WIDTH)
+                .VECTOR_WIDTH   (VECTOR_WIDTH)
             ) u_comparator (
                 .clk            (clk                                    ),
                 .rst            (rst                                    ),
                 .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY]      ),
                 .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY]      ),
                 .i_CntC         (w_Cnt_AnB[cc]                          ),
+                .i_BRAM_Clk     (i_BRAM_Clk                             ),
+                .i_BRAM_Rst     (i_BRAM_Rst                             ),
                 .i_BRAM_Addr    (i_BRAM_Addr                            ),
                 .i_BRAM_Din     (i_BRAM_Din                             ),
                 .i_BRAM_En      (i_BRAM_En                              ),
