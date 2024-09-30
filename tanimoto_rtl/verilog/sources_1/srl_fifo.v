@@ -12,7 +12,7 @@ module srl_fifo
     parameter          CNT_W = $clog2(DEPTH)
 )(
     input wire              clk,
-    input wire              rst,
+    input wire              rstn,
     
     input wire              wr,
     input wire [WIDTH-1:0]  d,
@@ -29,7 +29,7 @@ integer i;
 reg [CNT_W:0] item_cntr;
 always @ (posedge clk)
 begin
-    if(rst) begin
+    if(!rstn) begin
         item_cntr <= 0;
     end else if(wr && rd) begin
         item_cntr <= item_cntr;
@@ -50,7 +50,7 @@ if (wr)
     
 reg [CNT_W:0] cntr;
 always @(posedge clk)
-if (rst)
+if (!rstn)
     cntr <= -1;
 else if (rd & ~wr)
     cntr <= cntr - 1;
@@ -59,7 +59,7 @@ else if (~rd & wr)
 
 reg full_ff;
 always @(posedge clk)
-if (rst)
+if (!rstn)
     full_ff <= 1'b0;
 else if (wr & ~rd & cntr==(DEPTH-2))
     full_ff <= 1'b1;

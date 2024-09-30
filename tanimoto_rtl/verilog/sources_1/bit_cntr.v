@@ -17,7 +17,7 @@ module bit_cntr
     )
     (
         input wire                              clk,
-        input wire                              rst,
+        input wire                              rstn,
         input wire [VECTOR_WIDTH-1:0]           i_Vector,
 
         output wire [$clog2(VECTOR_WIDTH):0]    o_Sum 
@@ -75,7 +75,7 @@ module bit_cntr
                 for(kk = 0; kk < 3**jj; kk = kk + 1) begin
                     always @ (posedge clk)
                     begin
-                        if(rst) begin
+                        if(!rstn) begin
                             r_Pipeline[3**jj + kk] <= 0;
                         end else begin
                             r_Pipeline[3**jj + kk] <= w_GranuleSum[3*kk]    +
@@ -89,7 +89,7 @@ module bit_cntr
                 for(kk = 0; kk < 3**jj; kk = kk + 1) begin
                     always @ (posedge clk)
                     begin
-                        if(rst) begin
+                        if(!rstn) begin
                             r_Pipeline[3**jj + kk] <= 0;
                         end else begin
                             r_Pipeline[3**jj + kk] <= r_Pipeline[3**(jj+1) + 3*kk]    +

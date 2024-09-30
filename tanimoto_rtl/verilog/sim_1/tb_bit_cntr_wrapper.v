@@ -18,7 +18,7 @@ module tb_bit_cntr_wrapper(
 
     // UUT
     reg clk = 0;
-    reg rst = 1;
+    reg rstn = 0;
     reg [VECTOR_WIDTH-1:0] test_Vector = 160'b0;
     reg test_Valid;
     reg test_LastWordOfVector;
@@ -34,7 +34,7 @@ module tb_bit_cntr_wrapper(
     )
     uut(
         .clk(clk),
-        .rst(rst),
+        .rstn(rstn),
         .i_Vector(test_Vector),
         .i_Valid(test_Valid),
         .i_LastWordOfVector(test_LastWordOfVector),
@@ -54,7 +54,7 @@ module tb_bit_cntr_wrapper(
     initial
     begin
         #T_RESET;
-        rst <= 1'b0;
+        rstn <= 1'b1;
         test_Vector <= 160'h0000000000000000000000000000000000000000;
         test_Valid <= 1'b0;
         test_LastWordOfVector <= 1'b0;

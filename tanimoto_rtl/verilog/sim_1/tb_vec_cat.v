@@ -15,7 +15,7 @@ module tb_vec_cat(
     localparam HALF_CLK_PERIOD  = CLK_PERIOD/2;
 
     reg clk = 1'b0;
-    reg rst = 1'b1;
+    reg rstn = 1'b0;
     reg [BUS_WIDTH-1:0] vector;
     reg valid = 1'b0;
     wire [VEC_ID_WIDTH-1:0] vec_id;
@@ -43,7 +43,7 @@ module tb_vec_cat(
         .DEPTH  (VECTOR_WIDTH   )
     ) test_fifo (
         .clk    (clk        ),
-        .rst    (rst        ),
+        .rst    (!rstn      ),
         .wr     (f_write_d  ),
         .d      (f_din      ),
         .full   (f_full     ),
@@ -62,7 +62,7 @@ module tb_vec_cat(
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) uut(
         .clk        (clk        ),
-        .rst        (rst        ),
+        .rstn       (rstn       ),
         .i_Vector   (f_dout     ),
         .i_Valid    (~f_empty   ),
         .o_Vector   (cat_vector ),
@@ -98,7 +98,7 @@ module tb_vec_cat(
     reg state = 1'b1;
     always @ (posedge clk)
     begin
-        if(~rst & f_write) begin
+        if(rstn & f_write) begin
             scan = $fscanf(fp_vec, "%h\n", vec);
             if(!$feof(fp_vec)) begin
                 f_din <= vec;
@@ -121,7 +121,7 @@ module tb_vec_cat(
     initial begin
         #50;
         f_write <= 1'b1;
-        rst <= 1'b0;
+        rstn <= 1'b1;
 
         #3500;
 

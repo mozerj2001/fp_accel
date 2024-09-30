@@ -22,7 +22,7 @@ module tb_cnt1(
 
     // UUT
     reg                            clk = 0;
-    reg                            rst = 1;
+    reg                            rstn = 0;
     reg [BUS_WIDTH-1:0]            test_Vector;
     reg                            test_Valid;
     wire [BUS_WIDTH-1:0]           o_SubVector;
@@ -35,7 +35,7 @@ module tb_cnt1(
     )
     uut(
         .clk(clk),
-        .rst(rst),
+        .rstn(rstn),
         .i_Vector(test_Vector),
         .i_Valid(test_Valid),
         .o_SubVector(o_SubVector),
@@ -52,7 +52,7 @@ module tb_cnt1(
     initial
     begin
         #T_RESET;
-        rst <= 1'b0;
+        rstn <= 1'b1;
         test_Vector <= 128'h00000000000000000000000000000000;
         test_Valid <= 1'b0;
 

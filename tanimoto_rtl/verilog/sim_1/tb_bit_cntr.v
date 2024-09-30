@@ -15,7 +15,7 @@ module tb_bit_cntr(
     localparam PIPELINE_DEPTH = $clog2(VECTOR_WIDTH/GW3)/$clog2(3);
 
     reg clk = 0;
-    reg rst;
+    reg rstn;
     reg [VECTOR_WIDTH-1:0] vector;
     wire [(PIPELINE_DEPTH+1)*2:0] sum;
 
@@ -26,7 +26,7 @@ module tb_bit_cntr(
     )
     uut(
         .clk(clk),
-        .rst(rst),
+        .rstn(rstn),
         .i_Vector(vector),
         .o_Sum(sum)
     );
@@ -40,9 +40,9 @@ module tb_bit_cntr(
 
     initial
     begin
-        rst <= 1;
+        rstn <= 0;
         vector <= 50'h0FFFFFFFFFFFF;
-        #CLK_PERIOD rst <= 0;
+        #CLK_PERIOD rstn <= 1;
 
         #CLK_PERIOD vector <= 50'h0F0F0F0F0F0F0;
         #CLK_PERIOD vector <= 50'h0666666666666;

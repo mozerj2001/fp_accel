@@ -19,7 +19,7 @@ module tb_tanimoto_top(
     localparam HALF_CLK_PERIOD  = CLK_PERIOD/2;
 
     reg clk                         = 1'b0;
-    reg rst                         = 1'b1;
+    reg rstn                        = 1'b0;
     reg [BUS_WIDTH-1:0] vector;
     wire cmp_rdy;
 
@@ -44,7 +44,7 @@ module tb_tanimoto_top(
         .DEPTH  (VECTOR_WIDTH   )
     ) test_fifo (
         .clk    (clk            ),
-        .rst    (rst            ),
+        .rst    (!rstn          ),
         .wr     (f_write_d      ),
         .d      (f_din          ),
         .full   (f_full         ),
@@ -71,7 +71,7 @@ module tb_tanimoto_top(
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) dut (
         .clk                    (clk            ),
-        .rstn                   (~rst           ),
+        .rstn                   (rstn           ),
         .i_Vector               (f_dout         ),
         .i_Valid                (~f_empty       ),
         .i_BRAM_Addr            (threshold_addr ),
@@ -93,7 +93,7 @@ module tb_tanimoto_top(
     // load threshold RAM
     initial begin
         #50;
-        rst <= 1'b0;
+        rstn <= 1'b1;
         #10;
         #CLK_PERIOD;
         wr_threshold <= 1;
@@ -120,7 +120,7 @@ module tb_tanimoto_top(
     reg f_write_d;
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             f_write_d <= 0;
         end else begin
             f_write_d <= f_write;
@@ -129,7 +129,7 @@ module tb_tanimoto_top(
 
     always @ (posedge clk)
     begin
-        if(~rst & f_write) begin
+        if(rstn & f_write) begin
             scan = $fscanf(fp_vec, "%h\n", vec);
             if(!$feof(fp_vec)) begin
                 f_din <= vec;
@@ -142,7 +142,7 @@ module tb_tanimoto_top(
 
     initial begin
         #100;
-        rst <= 1'b0;
+        rstn <= 1'b1;
         #CLK_PERIOD;
         threshold = 650;
         #CLK_PERIOD;
@@ -169,7 +169,7 @@ module tb_tanimoto_top(
 
     always @ (posedge clk)
     begin
-        if(!rst && id_pair_ready) begin
+        if(rstn && id_pair_ready) begin
             $fdisplay(fp_id, "%h\n", id_pair_out);
         end
     end

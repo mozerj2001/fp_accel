@@ -20,7 +20,7 @@ module tb_comparator(
     localparam THRESHOLD        = 24;
 
     //
-    reg rst = 1;
+    reg rstn = 0;
     reg clk = 0;
 
     reg [CNT_WIDTH-1:0] cnt_a = 0;
@@ -42,13 +42,13 @@ module tb_comparator(
         .VECTOR_WIDTH   (VECTOR_WIDTH   )
     ) u_dut (
         .clk            (clk            ),
-        .rst            (rst            ),
+        .rstn           (rstn           ),
         .i_CntA         (cnt_a          ),
         .i_CntB         (cnt_b          ),
         .i_CntC         (cnt_c          ),
         // BRAM
         .i_BRAM_Clk     (clk            ),
-        .i_BRAM_Rst     (rst            ),
+        .i_BRAM_Rst     (!rstn          ),
         .i_BRAM_Addr    (threshold      ),
         .i_BRAM_WrEn    (wr_threshold   ),
         .i_BRAM_Din     (threshold      ),
@@ -69,7 +69,7 @@ module tb_comparator(
     // load threshold RAM
     initial begin
         #50;
-        rst <= 1'b0;
+        rstn <= 1'b1;
         #10;
         wr_threshold <= 1;
         #CLK_PERIOD;
