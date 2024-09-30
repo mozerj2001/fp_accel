@@ -20,7 +20,7 @@ module comparator
         CNT_WIDTH       = $clog2(VECTOR_WIDTH)
     )(
         input wire                  clk,
-        input wire                  rst,
+        input wire                  rstn,
         input wire [CNT_WIDTH-1:0]  i_CntA,
         input wire [CNT_WIDTH-1:0]  i_CntB,
         input wire [CNT_WIDTH-1:0]  i_CntC,
@@ -44,7 +44,7 @@ module comparator
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_Sum   <= 0;
         end else begin
             r_Sum   <= i_CntA + i_CntB;

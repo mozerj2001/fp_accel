@@ -49,9 +49,6 @@ module tanimoto_top
     localparam COMPARE              = 1'b1;
     localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
 
-    wire rst;
-    assign rst = ~rstn;
-
     // SUB VECTOR COUNTER
     // Counts sub-vectors incoming from the input cnt1.
     // Assuming there are two sub-vectors per vector, its LSB
@@ -61,7 +58,7 @@ module tanimoto_top
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_SubVecCntr <= 0;
         end else if(w_Cnt_SubVector_Valid) begin
             r_SubVecCntr <= r_SubVecCntr + 1;
@@ -74,7 +71,7 @@ module tanimoto_top
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_State <= LOAD_REF;
         end else if(r_SubVecCntr == (SHR_DEPTH*SUB_VECTOR_NO-1)) begin
             r_State <= COMPARE;
@@ -98,7 +95,7 @@ module tanimoto_top
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) u_vec_cat_0 (
         .clk            (clk            ),
-        .rst            (rst            ),
+        .rstn           (rstn            ),
         .i_Vector       (i_Vector       ),
         .i_Valid        (i_Valid        ),
         .o_Vector       (w_Catted_Vector),
@@ -120,7 +117,7 @@ module tanimoto_top
         .GRANULE_WIDTH  (GRANULE_WIDTH          )
     ) u_cnt1_in (
         .clk            (clk                    ),
-        .rst            (rst                    ),
+        .rstn           (rstn                   ),
         .i_Vector       (w_Catted_Vector        ),
         .i_Valid        (w_Catted_Valid         ),
         .o_SubVector    (w_Cnted_Vector         ),
@@ -144,7 +141,7 @@ module tanimoto_top
             if(vv == 0) begin
                 always @ (posedge clk)
                 begin
-                    if(rst) begin
+                    if(!rstn) begin
                         r_Valid_Shr[vv] <= 1'b0;
                         r_State_Shr[vv] <= 1'b0;
                     end else if(r_SubVecCntr[0]) begin
@@ -155,7 +152,7 @@ module tanimoto_top
             end else begin
                 always @ (posedge clk)
                 begin
-                    if(rst) begin
+                    if(!rstn) begin
                         r_Valid_Shr[vv] <= 1'b0;
                         r_State_Shr[vv] <= 1'b0;
                     end else if(r_SubVecCntr[0]) begin
@@ -361,7 +358,7 @@ module tanimoto_top
             .GRANULE_WIDTH  (GRANULE_WIDTH              )
         ) u_cnt1_out (
             .clk            (clk                        ),
-            .rst            (rst                        ),
+            .rstn           (rstn                       ),
             .i_Vector       (w_OutPreStageIn_AnB[kk]    ),
             .i_Valid        (w_PreStageOut_ValidIn[kk]  ),
             .o_SubVector    (                           ),
@@ -419,7 +416,7 @@ module tanimoto_top
                 .VECTOR_WIDTH   (VECTOR_WIDTH)
             ) u_comparator (
                 .clk            (clk                                    ),
-                .rst            (rst                                    ),
+                .rstn           (rstn                                   ),
                 .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY]      ),
                 .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY]      ),
                 .i_CntC         (w_Cnt_AnB[cc]                          ),
@@ -530,7 +527,7 @@ module tanimoto_top
                     ); // End of xpm_fifo_sync_inst instantiation
 
                     assign w_fifo_wr_clk[2**tt + uu] = clk;
-                    assign w_fifo_rst   [2**tt + uu] = rst;
+                    assign w_fifo_rst   [2**tt + uu] = !rstn;
 
                     // Pipeline output to first layer of FIFOs (compatible vector
                     // IDs are conacatenated as output)

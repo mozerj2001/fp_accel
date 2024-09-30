@@ -14,11 +14,11 @@ module tb_srl_fifo #()();
     localparam HALF_CLK_PERIOD = 5;
     localparam T_RESET = 30;
 
-    reg                 clk = 0;
-    reg                 rst = 1;
-    reg                 wr  = 0;
-    reg [WIDTH-1:0]     din = 0;
-    reg                 rd  = 0;
+    reg                 clk     = 0;
+    reg                 rstn    = 0;
+    reg                 wr      = 0;
+    reg [WIDTH-1:0]     din     = 0;
+    reg                 rd      = 0;
 
     wire                full;
     wire [WIDTH-1:0]    q;
@@ -34,7 +34,7 @@ module tb_srl_fifo #()();
         .CNT_W      (CNT_W      )
     ) u_dut (
         .clk        (clk        ),
-        .rst        (rst        ),
+        .rstn       (rstn       ),
         .wr         (wr         ),
         .d          (din        ),
         .full       (full       ),
@@ -54,7 +54,7 @@ module tb_srl_fifo #()();
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             din <= 0;
         end else begin
             din <= din + 1;
@@ -63,7 +63,7 @@ module tb_srl_fifo #()();
 
     initial begin
         #T_RESET;
-        rst <= 1'b0;
+        rstn <= 1'b1;
         #T_RESET;
         wr <= 1'b1;
         #(CLK_PERIOD*6);

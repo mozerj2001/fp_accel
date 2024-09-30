@@ -23,7 +23,7 @@ module vec_cat
     )
     (
         input wire                      clk,
-        input wire                      rst,
+        input wire                      rstn,
         input wire [BUS_WIDTH-1:0]      i_Vector,       // continuous stream of unseparated vectors
         input wire                      i_Valid,        // external FIFO not empty
         output wire [BUS_WIDTH-1:0]     o_Vector,       // stream of separated vectors, only one vector per output word
@@ -71,7 +71,7 @@ module vec_cat
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_ValidShr <= 0;
         end else begin
             r_ValidShr[0] <= i_Valid;
@@ -102,7 +102,7 @@ module vec_cat
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_State <= PAD;
         end else if(i_Valid) begin
             r_State <= ~r_State;
@@ -111,7 +111,7 @@ module vec_cat
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_IdxReg = 0;
         end else if(r_State == PAD && ~w_Overflow && r_ValidShr[1]) begin
             r_IdxReg = r_IdxReg + DELTA;
@@ -127,7 +127,7 @@ module vec_cat
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_IDCntr <= {VEC_ID_WIDTH{1'b1}};
         end else if(i_Valid && (r_State == PAD)) begin
             r_IDCntr <= r_IDCntr + 1;

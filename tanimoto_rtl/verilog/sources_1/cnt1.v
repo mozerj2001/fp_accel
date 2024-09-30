@@ -42,7 +42,7 @@ module cnt1
     )
     (
         input wire                              clk,
-        input wire                              rst,
+        input wire                              rstn,
         input wire [BUS_WIDTH-1:0]              i_Vector,
         input wire                              i_Valid,
         output wire [BUS_WIDTH-1:0]             o_SubVector,
@@ -65,7 +65,7 @@ module cnt1
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_WordCntr <= 0;
         end else if(w_LastWordOfVector) begin
             r_WordCntr <= 0;
@@ -90,7 +90,7 @@ module cnt1
     )
     bit_counter(
         .clk                (clk                ),
-        .rst                (rst                ),
+        .rstn               (rstn               ),
         .i_Vector           (i_Vector           ),
         .i_Valid            (i_Valid            ),
         .i_LastWordOfVector (w_LastWordOfVector ),

@@ -15,7 +15,7 @@ module bit_cntr_wrapper
     )
     (
         input wire                      clk,
-        input wire                      rst,
+        input wire                      rstn,
         input wire [VECTOR_WIDTH-1:0]   i_Vector,
         input wire                      i_Valid,
         input wire                      i_LastWordOfVector,
@@ -40,7 +40,7 @@ module bit_cntr_wrapper
         .GRANULE_WIDTH  (GRANULE_WIDTH  )
     ) pipelined_counter (
         .clk            (clk            ),
-        .rst            (rst            ),
+        .rstn           (rstn           ),
         .i_Vector       (i_Vector       ),
 
         .o_Sum          (w_NewSum       ) 
@@ -56,7 +56,7 @@ module bit_cntr_wrapper
         for(ii = 0; ii <= DELAY-1; ii = ii + 1) begin
             if(ii == 0) begin
                 always @ (posedge clk) begin
-                    if(rst) begin
+                    if(!rstn) begin
                         r_DelayValidFF[ii]      <= 1'b0;
                         r_DelayLastWordFF[ii]   <= 1'b0;
                     end else begin
@@ -68,7 +68,7 @@ module bit_cntr_wrapper
             else
             begin
                 always @ (posedge clk) begin
-                    if(rst) begin
+                    if(!rstn) begin
                         r_DelayValidFF[ii]      <= 1'b0;
                         r_DelayLastWordFF[ii]   <= 1'b0;
                     end else begin
@@ -90,7 +90,7 @@ module bit_cntr_wrapper
 
     always @ (posedge clk)
     begin
-        if(rst) begin
+        if(!rstn) begin
             r_Accumulator <= 0;
         end
         else if(r_DelayLastWordFF[DELAY-1]) begin
