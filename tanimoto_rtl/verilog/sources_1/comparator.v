@@ -61,7 +61,7 @@ module comparator
         .DEPTH  (VECTOR_WIDTH+1 ),
         .WIDTH  (CNT_WIDTH+1    )
     ) u_result_ram (
-        .clk    (i_BRAM_Clk ),
+        .clk    (clk        ),
         .we     (i_BRAM_WrEn),
         .en     (i_BRAM_En  ),
         .addr   (w_Addr     ),

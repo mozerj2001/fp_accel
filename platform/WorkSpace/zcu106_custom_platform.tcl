@@ -405,18 +405,6 @@ proc cr_bd_system { parentCell } {
   current_bd_instance $parentObj
 
 
-  # Create interface ports
-  set M_AXI_BRAM [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M_AXI_BRAM ]
-  set_property -dict [ list \
-   CONFIG.ADDR_WIDTH {32} \
-   CONFIG.DATA_WIDTH {32} \
-   CONFIG.FREQ_HZ {99990000} \
-   CONFIG.NUM_READ_OUTSTANDING {2} \
-   CONFIG.NUM_WRITE_OUTSTANDING {2} \
-   CONFIG.PROTOCOL {AXI4} \
-   ] $M_AXI_BRAM
-
-
   # Create ports
 
   # Create instance: zynq_ultra_ps_e_0, and set properties
@@ -782,51 +770,53 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
     CONFIG.NUM_MI {2} \
   ] $ps8_0_axi_periph
 
+  set axi_bram_ctrl_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_0 ]
+  set_property CONFIG.SINGLE_PORT_BRAM {1} $axi_bram_ctrl_0
+
 
   # Create interface connections
   connect_bd_intf_net -intf_net ps8_0_axi_periph_M00_AXI [get_bd_intf_pins ps8_0_axi_periph/M00_AXI] [get_bd_intf_pins axi_intc_0/s_axi]
-  connect_bd_intf_net -intf_net ps8_0_axi_periph_M01_AXI [get_bd_intf_ports M_AXI_BRAM] [get_bd_intf_pins ps8_0_axi_periph/M01_AXI]
   connect_bd_intf_net -intf_net zynq_ultra_ps_e_0_M_AXI_HPM0_LPD [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM0_LPD] [get_bd_intf_pins ps8_0_axi_periph/S00_AXI]
+  connect_bd_intf_net -intf_net ps8_0_axi_periph_M01_AXI [get_bd_intf_pins ps8_0_axi_periph/M01_AXI] [get_bd_intf_pins axi_bram_ctrl_0/S_AXI]
 
   # Create port connections
-  connect_bd_net -net axi_intc_0_irq [get_bd_pins axi_intc_0/irq] [get_bd_pins zynq_ultra_ps_e_0/pl_ps_irq0]
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins axi_intc_0/s_axi_aclk] [get_bd_pins ps8_0_axi_periph/M00_ACLK] [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_lpd_aclk] [get_bd_pins ps8_0_axi_periph/S00_ACLK] [get_bd_pins ps8_0_axi_periph/ACLK] [get_bd_pins ps8_0_axi_periph/M01_ACLK]
-  connect_bd_net -net clk_wiz_0_locked [get_bd_pins clk_wiz_0/locked] [get_bd_pins proc_sys_reset_0/dcm_locked] [get_bd_pins axi_intc_0/s_axi_aresetn]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins ps8_0_axi_periph/M00_ARESETN] [get_bd_pins ps8_0_axi_periph/S00_ARESETN] [get_bd_pins ps8_0_axi_periph/ARESETN] [get_bd_pins ps8_0_axi_periph/M01_ARESETN]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins clk_wiz_0/clk_in1]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0] [get_bd_pins clk_wiz_0/resetn] [get_bd_pins proc_sys_reset_0/ext_reset_in]
+  connect_bd_net -net axi_intc_0_irq \
+      [get_bd_pins axi_intc_0/irq] \
+      [get_bd_pins zynq_ultra_ps_e_0/pl_ps_irq0]
+  connect_bd_net -net clk_wiz_0_clk_out1 \
+      [get_bd_pins clk_wiz_0/clk_out1] \
+      [get_bd_pins proc_sys_reset_0/slowest_sync_clk] \
+      [get_bd_pins axi_intc_0/s_axi_aclk] \
+      [get_bd_pins ps8_0_axi_periph/M00_ACLK] \
+      [get_bd_pins zynq_ultra_ps_e_0/maxihpm0_lpd_aclk] \
+      [get_bd_pins ps8_0_axi_periph/S00_ACLK] \
+      [get_bd_pins ps8_0_axi_periph/ACLK] \
+      [get_bd_pins ps8_0_axi_periph/M01_ACLK] \
+      [get_bd_pins axi_bram_ctrl_0/s_axi_aclk]
+  connect_bd_net -net clk_wiz_0_locked \
+      [get_bd_pins clk_wiz_0/locked] \
+      [get_bd_pins proc_sys_reset_0/dcm_locked] \
+      [get_bd_pins axi_intc_0/s_axi_aresetn]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn \
+      [get_bd_pins proc_sys_reset_0/peripheral_aresetn] \
+      [get_bd_pins ps8_0_axi_periph/M00_ARESETN] \
+      [get_bd_pins ps8_0_axi_periph/S00_ARESETN] \
+      [get_bd_pins ps8_0_axi_periph/ARESETN] \
+      [get_bd_pins ps8_0_axi_periph/M01_ARESETN]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 \
+      [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] \
+      [get_bd_pins clk_wiz_0/clk_in1]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_resetn0 \
+      [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0] \
+      [get_bd_pins clk_wiz_0/resetn] \
+      [get_bd_pins proc_sys_reset_0/ext_reset_in]
 
   # Create address segments
-  assign_bd_address -offset 0x80010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs M_AXI_BRAM/Reg] -force
   assign_bd_address -offset 0x80000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces zynq_ultra_ps_e_0/Data] [get_bd_addr_segs axi_intc_0/S_AXI/Reg] -force
+  assign_bd_address -offset 0x82000000 -range 0x00002000 -target_address_space /zynq_ultra_ps_e_0/Data [get_bd_addr_segs axi_bram_ctrl_0/S_AXI/Mem0] -force
 
   # Perform GUI Layout
-  regenerate_bd_layout -layout_string {
-   "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"1.0",
-   "Default View_TopLeft":"178,-224",
-   "ExpandedHierarchyInLayout":"",
-   "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0 TLS
-#  -string -flagsOSRD
-preplace port M_AXI_BRAM -pg 1 -lvl 5 -x 1450 -y 190 -defaultsOSRD
-preplace inst zynq_ultra_ps_e_0 -pg 1 -lvl 2 -x 570 -y 120 -defaultsOSRD
-preplace inst clk_wiz_0 -pg 1 -lvl 1 -x 130 -y 310 -defaultsOSRD
-preplace inst proc_sys_reset_0 -pg 1 -lvl 2 -x 570 -y 340 -defaultsOSRD
-preplace inst axi_intc_0 -pg 1 -lvl 4 -x 1330 -y 100 -defaultsOSRD
-preplace inst ps8_0_axi_periph -pg 1 -lvl 3 -x 1060 -y 180 -defaultsOSRD
-preplace netloc zynq_ultra_ps_e_0_pl_resetn0 1 0 3 30 240 240 240 890
-preplace netloc clk_wiz_0_clk_out1 1 1 3 250 30 900 40 1210J
-preplace netloc clk_wiz_0_locked 1 1 3 230 20 NJ 20 1220
-preplace netloc proc_sys_reset_0_peripheral_aresetn 1 2 1 910 140n
-preplace netloc axi_intc_0_irq 1 1 4 260 10 NJ 10 NJ 10 1430
-preplace netloc zynq_ultra_ps_e_0_pl_clk0 1 0 3 20 230 NJ 230 880
-preplace netloc zynq_ultra_ps_e_0_M_AXI_HPM0_LPD 1 2 1 N 100
-preplace netloc ps8_0_axi_periph_M00_AXI 1 3 1 1230 70n
-preplace netloc ps8_0_axi_periph_M01_AXI 1 3 2 NJ 190 NJ
-levelinfo -pg 1 0 130 570 1060 1330 1450
-pagesize -pg 1 -db -bbox -sgen 0 0 1600 450
-"
-}
+  regenerate_bd_layout
 
   # Restore current instance
   current_bd_instance $oldCurInst
