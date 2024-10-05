@@ -22,43 +22,22 @@ startgroup
 create_bd_cell -type module -reference top_intf -name top_intf_0
 endgroup
 
-# Create and connecti BRAM controller.
-# (Needs to be here, as v++ can only link AXI interfaces.)
-startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_0
-set_property CONFIG.SINGLE_PORT_BRAM {1} [get_bd_cells axi_bram_ctrl_0]
-connect_bd_net [get_bd_pins axi_bram_ctrl_0/bram_addr_a] [get_bd_pins top_intf_0/BRAM_PORTA_addr_a]
-connect_bd_net [get_bd_pins axi_bram_ctrl_0/bram_clk_a] [get_bd_pins top_intf_0/BRAM_PORTA_clk_a]
-connect_bd_net [get_bd_pins axi_bram_ctrl_0/bram_wrdata_a] [get_bd_pins top_intf_0/BRAM_PORTA_wrdata_a]
-connect_bd_net [get_bd_pins axi_bram_ctrl_0/bram_rddata_a] [get_bd_pins top_intf_0/BRAM_PORTA_rddata_a]
-connect_bd_net [get_bd_pins axi_bram_ctrl_0/bram_en_a] [get_bd_pins top_intf_0/BRAM_PORTA_en_a]
-connect_bd_net [get_bd_pins axi_bram_ctrl_0/bram_rst_a] [get_bd_pins top_intf_0/BRAM_PORTA_rst_a]
-connect_bd_net [get_bd_pins axi_bram_ctrl_0/bram_we_a] [get_bd_pins top_intf_0/BRAM_PORTA_we_a]
-endgroup
-
 # Make interfaces and clock/reset pins external. --> These will be visible to v++.
 startgroup
 make_bd_pins_external [get_bd_pins top_intf_0/ap_clk]
 make_bd_pins_external [get_bd_pins top_intf_0/ap_rstn]
-make_bd_intf_pins_external  [get_bd_intf_pins top_intf_0/S_AXIS_DATA] [get_bd_intf_pins top_intf_0/M_AXIS_ID_PAIR] [get_bd_intf_pins axi_bram_ctrl_0/S_AXI]
+make_bd_intf_pins_external  [get_bd_intf_pins top_intf_0/S_AXIS_DATA] [get_bd_intf_pins top_intf_0/M_AXIS_ID_PAIR]
 endgroup
 
 # Rename external interfaces and pins.
 startgroup
 set_property name S_AXIS_DATA [get_bd_intf_ports S_AXIS_DATA_0]
 set_property name M_AXIS_ID_PAIR [get_bd_intf_ports M_AXIS_ID_PAIR_0]
-set_property name S_AXI_BRAM [get_bd_intf_ports S_AXI_0]
 set_property name ap_clk [get_bd_ports ap_clk_0]
 set_property name ap_rstn [get_bd_ports ap_rstn_0]
 endgroup
 
-# Connect external clock to BRAM interface.
-startgroup
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk]
-connect_bd_net [get_bd_ports ap_rstn] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn]
-endgroup
-
-set_property CONFIG.ASSOCIATED_BUSIF S_AXIS_DATA:M_AXIS_ID_PAIR:S_AXI_BRAM [get_bd_pins /top_intf_0/ap_clk]
+set_property CONFIG.ASSOCIATED_BUSIF S_AXIS_DATA:M_AXIS_ID_PAIR [get_bd_pins /top_intf_0/ap_clk]
 
 # Create HDL wrapper.
 make_wrapper -files [get_files {./tanimoto_rtl/tanimoto_rtl.srcs/sources_1/bd/tanimoto/tanimoto.bd}] -top

@@ -7,6 +7,10 @@
 # 2023-2024, Jozsef Mozer
 # ###########################################################
 
+# Ignore timing violations? --> ignore for bringup
+ERROR_ON_HOLD_VIOLATION=FALSE
+
+
 .PHONY: all kernel clean clean_platform platform rtl_xo hls_xo rtl_ip xclbin
 
 all: platform rtl_ip rtl_xo hls_xo xclbin
@@ -51,8 +55,12 @@ xclbin:
 	@echo "############################################################################"
 	@echo "# COMPILING XCLBIN"
 	@echo "############################################################################"
+	rm -rf _x
+	rm -rf .Xil
 	v++ -t hw \
     	--link \
+		--advanced.param compiler.errorOnHoldViolation=${ERROR_ON_HOLD_VIOLATION} \
+		--advanced.param compiler.userPostSysLinkOverlayTcl=scripting/post_link.tcl \
     	--platform ./platform/WorkSpace/zcu106_custom/export/zcu106_custom/zcu106_custom.xpfm \
     	--config ./scripting/connections.cfg \
     	./tanimoto.xo \
