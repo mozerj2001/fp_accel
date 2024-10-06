@@ -6,14 +6,6 @@
 
 `include "lut_shr.v"
 
-// CNT1
-// This module implements the first stage of the pharmacophore fingerprint
-// comparison hardware accelerator. The number of high bits in the input
-// vector are counted by the CNT1 bit_cntr module.
-// The vectors themselves are delayed via a lut_shr shiftregister.
-// Input vector size is configurable. Other constants, such as
-// pipeline depth and delay length are all determined based on BUS_WIDTH
-// and SUB_VECTOR_NO (how many input vectors make up a full vector).
 //
 //
 //                       --------     
