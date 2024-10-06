@@ -32,7 +32,7 @@ module comparator
         input wire [CNT_WIDTH:0]    i_BRAM_Din,
         input wire                  i_BRAM_En,
         input wire                  i_BRAM_WrEn,
-        output wire                 o_Dout,         // 0: over threshold, 1: under threshold
+        output wire                 o_Dout,
         
         // Valid signal
         input wire                  i_Valid,

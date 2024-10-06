@@ -11,7 +11,7 @@
 ERROR_ON_HOLD_VIOLATION=FALSE
 
 
-.PHONY: all kernel clean clean_platform platform rtl_xo hls_xo rtl_ip xclbin
+.PHONY: all kernel clean clean_platform platform rtl_xo hls_xo rtl_ip xclbin docs
 
 all: platform rtl_ip rtl_xo hls_xo xclbin
 
@@ -95,6 +95,18 @@ clean:
 	rm tan_intf.xo.compile_summary
 	rm tanimoto_krnl.xclbin.link_summary
 
+docs:
+	rm -rf README.md
+	cat docs/src_markdown/DOCS_HEADER.md > README.md
+	@echo "## RTL Kernel" >> README.md
+	cat docs/src_markdown/BIT_ADDER.md >> README.md
+	cat docs/src_markdown/BIT_CNTR.md >> README.md
+	cat docs/src_markdown/BIT_CNTR_WRAPPER.md >> README.md
+	cat docs/src_markdown/CNT1.md >> README.md
+	cat docs/src_markdown/COMPARATOR.md >> README.md
+	cat docs/src_markdown/VEC_CAT.md >> README.md
+	cat docs/src_markdown/TANIMOTO_TOP.md >> README.md
+
 help:
 	@echo "platform: Create ZCU106 processor subsystem and the corresponding .xsa file."
 	@echo "kernel: Create all parts of the PL kernel. (rtl_ip, rtl_xo, hls_xo)"
@@ -105,5 +117,6 @@ help:
 	@echo "clean: Remove all generated and build files, except for platform build results and final .xo files."
 	@echo "clean_platform: Remove zcu106_custom_platform and zcu106_custom."
 	@echo "all: All of the above."
+	@echo "docs: Compile documentation to README.md."
 
 	@echo "help: Print this message."

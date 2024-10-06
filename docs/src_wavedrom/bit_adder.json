@@ -1,0 +1,6 @@
+{signal: [
+  {name: 'clk', wave: 'p...........'},
+  {name: 'rstn', wave: '10..1.......'},
+  {name: 'i_Vector', wave: 'xxxx2222xxxx', data: ['0x33', '0x00', '0xFF', '0x11']},
+  {name: 'o_Sum', wave: 'xx2..2222xxx', data: ['0', '4', '0', '8', '2']}
+]}

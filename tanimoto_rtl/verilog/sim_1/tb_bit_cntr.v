@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+`include "../sources_1/bit_cntr.v"
+
 // This is a testbench file for the parametrizable bit counter.
 
 module tb_bit_cntr(
