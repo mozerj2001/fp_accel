@@ -5,6 +5,7 @@
 `default_nettype none
 
 `include "lut_shr.v"
+`include "bit_cntr.v"
 
 //
 //
@@ -14,8 +15,7 @@
 //               #       |      |     
 //               #       --------     
 //               #       -------                  
-//               #       |     |                  
-//               ########| SHR |############>> VECTOR_A
+//               #       |     |                  //               ########| SHR |############>> VECTOR_A
 //                       |     |         
 //                       -------         
 //          
@@ -30,7 +30,7 @@ module cnt1
         GRANULE_WIDTH       = 6,
 
         //
-        BIT_NO_OUTPUT_WIDTH = $clog2(VECTOR_WIDTH)
+        BIT_CNTR_OUT_WIDTH  = $clog2(VECTOR_WIDTH)
     )
     (
         input wire                              clk,
@@ -39,21 +39,21 @@ module cnt1
         input wire                              i_Valid,
         output wire [BUS_WIDTH-1:0]             o_SubVector,
 	    output wire				                o_Valid,
-        output wire [BIT_NO_OUTPUT_WIDTH-1:0]   o_Cnt,
+        output wire [BIT_CNTR_OUT_WIDTH-1:0]    o_Cnt,
         output wire                             o_CntNew
     );
 
     localparam WORD_CNTR_WIDTH      = 4;
     localparam DELAY                = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
-    localparam BIT_CNTR_OUT_WIDTH   = $clog2(VECTOR_WIDTH);
 
     /////////////////////////////////////////////////////////////////////////////////////
     // DATA WORD COUNTER
     // --> count input vectors, signal last word of a full vector to the
     // bit_cntr_wrapper. Shr act as a select signal for the concatenation of
     // delayed input vectors.
-    wire w_LastWordOfVector;
-    reg [WORD_CNTR_WIDTH-1:0] r_WordCntr;
+    wire                        w_LastWordOfVector;
+    reg [WORD_CNTR_WIDTH-1:0]   r_WordCntr;
+    wire                        w_ValidDel;
 
     always @ (posedge clk)
     begin
@@ -61,41 +61,57 @@ module cnt1
             r_WordCntr <= 0;
         end else if(w_LastWordOfVector) begin
             r_WordCntr <= 0;
-        end else if(i_Valid) begin
+        end else if(w_ValidDel) begin
             r_WordCntr <= r_WordCntr + 1;
         end
     end
 
     assign w_LastWordOfVector = (r_WordCntr == SUB_VECTOR_NO-1);
 
+
     /////////////////////////////////////////////////////////////////////////////////////
-    // BIT COUNTER MODULE
+    // BIT COUNTER 
+    // --> count bits in the input vector
     wire [BIT_CNTR_OUT_WIDTH-1:0] w_Sum;
-    wire w_SumValid;
-    wire w_SumNew;
 
-    bit_cntr_wrapper
+    bit_cntr
     #(
-        .VECTOR_WIDTH       (BUS_WIDTH          ), 
-        .GRANULE_WIDTH      (GRANULE_WIDTH      ),
-        .OUTPUT_WIDTH       (BIT_CNTR_OUT_WIDTH )
-    )
-    bit_counter(
-        .clk                (clk                ),
-        .rstn               (rstn               ),
-        .i_Vector           (i_Vector           ),
-        .i_Valid            (i_Valid            ),
-        .i_LastWordOfVector (w_LastWordOfVector ),
+        .VECTOR_WIDTH   (BUS_WIDTH      ), 
+        .GRANULE_WIDTH  (GRANULE_WIDTH  )
+    ) u_bit_cntr (
+        .clk            (clk            ),
+        .rstn           (rstn           ),
+        .i_Vector       (i_Vector       ),
 
-        .o_Sum              (w_Sum              ),
-        .o_SumValid         (w_SumValid         ),
-        .o_SumNew           (w_SumNew           )        // o_Sum can be read
+        .o_Sum          (w_Sum          ) 
     );
 
 
     /////////////////////////////////////////////////////////////////////////////////////
+    // ACCUMULATOR
+    reg [BIT_CNTR_OUT_WIDTH-1:0]  r_Accumulator;
+    wire                    w_CntNew;   // current sum is the full weight of the last vector
+    wire                    w_Valid;    // current counter output data is valid
+
+    always @ (posedge clk)
+    begin
+        if(!rstn) begin
+            r_Accumulator <= 0;
+        end
+        else if(w_CntNew) begin
+            r_Accumulator <= w_Sum;
+        end
+        else if(w_Valid) begin
+            r_Accumulator <= r_Accumulator + w_Sum;
+        end
+    end
+
+
+    /////////////////////////////////////////////////////////////////////////////////////
     // SHIFTREGISTER
-    // --> delay input vector as well as valid signal until the corresponding sum is calculated
+    // --> delay input vector as well as valid signal and signal marking the last word
+    // of the vector, until the corresponding sum is calculated and can be
+    // read from the accumulator register.
     wire [BUS_WIDTH-1:0] w_DelayedSubVector;
 
     genvar jj;
@@ -120,17 +136,29 @@ module cnt1
 	    .clk		(clk        ),
 	    .sh_en		(clk        ),
 	    .din		(i_Valid    ),
-	    .addr		(           ),
-	    .q_msb		(o_Valid    ),
-	    .q_sel		(           )
+	    .addr		(0          ),
+	    .q_msb		(w_Valid    ),
+	    .q_sel		(w_ValidDel )
+        );
+
+    lut_shr #(
+	    .WIDTH      (DELAY      )
+    ) last_word_shr (
+	    .clk		(clk                    ),
+	    .sh_en		(clk                    ),
+	    .din		(w_LastWordOfVector     ),
+	    .addr		(                       ),
+	    .q_msb		(w_CntNew               ),
+	    .q_sel		(                       )
         );
 
 
     /////////////////////////////////////////////////////////////////////////////////////
     // ASSIGN OUTPUTS
-    assign o_Cnt        = w_Sum;
+    assign o_Cnt        = r_Accumulator;
     assign o_SubVector  = w_DelayedSubVector;
-    assign o_CntNew     = w_SumNew;
+    assign o_CntNew     = w_CntNew;
+    assign o_Valid      = w_Valid;
     
 
 endmodule

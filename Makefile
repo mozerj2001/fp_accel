@@ -101,7 +101,6 @@ docs:
 	@echo "## RTL Kernel" >> README.md
 	cat docs/src_markdown/BIT_ADDER.md >> README.md
 	cat docs/src_markdown/BIT_CNTR.md >> README.md
-	cat docs/src_markdown/BIT_CNTR_WRAPPER.md >> README.md
 	cat docs/src_markdown/CNT1.md >> README.md
 	cat docs/src_markdown/COMPARATOR.md >> README.md
 	cat docs/src_markdown/VEC_CAT.md >> README.md

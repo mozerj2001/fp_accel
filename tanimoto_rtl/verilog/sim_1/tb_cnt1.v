@@ -29,6 +29,7 @@ module tb_cnt1(
     wire [BIT_NO_OUTPUT_WIDTH-1:0] o_Cnt;
 
     cnt1#(
+        .VECTOR_WIDTH(2*BUS_WIDTH),
         .BUS_WIDTH(BUS_WIDTH),
         .SUB_VECTOR_NO(SUB_VECTOR_NO),
         .GRANULE_WIDTH(GRANULE_WIDTH)
