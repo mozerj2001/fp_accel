@@ -12,7 +12,7 @@ Feel free to reach out to me on GitHub, or send an email to jozsef.mozer@edu.bme
   - [Bit Adder](#bit-adder)
   - [Bit Counter](#bit-counter)
   - [Bit Counter Wrapper](#bit-counter-wrapper)
-  - [CNT1](#CNT1)
+  - [CNT1](#cnt1)
   - [Comparator](#comparator)
   - [Vector Concatenator](#vector-concatenator)
   - [Top Level](#top-level)

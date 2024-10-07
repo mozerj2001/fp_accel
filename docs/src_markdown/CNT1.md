@@ -20,3 +20,9 @@ Wrapper encapsulating vector weight counting logic. Valid and other control sign
 #### Block diagram
 
 ![cnt1_block](docs/images/cnt1.png)
+
+#### Waveform
+
+Delay depends on i_Vector width. In the current example it is 1 clk, for 128 bits it would be 4 clk (see **bit_cntr**).
+
+![cnt1_wave](docs/images/wave_cnt1.png)
