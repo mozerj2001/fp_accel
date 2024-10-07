@@ -104,6 +104,12 @@ Wrapper encapsulating vector weight counting logic. Valid and other control sign
 
 ![cnt1_block](docs/images/cnt1.png)
 
+#### Waveform
+
+Delay depends on i_Vector width. In the current example it is 1 clk, for 128 bits it would be 4 clk (see **bit_cntr**).
+
+![cnt1_wave](docs/images/wave_cnt1.png)
+
 ### Comparator
 
 The comparator module uses a block RAM instance to determine whether the Tanimoto dissimilarity index is over or under a certain threshold, without actually calculating the index. Division is avoided, by pre-loading potential division results to **u_result_ram**, which is indexed by the binary weight of the A&B vector. The output of the RAM is then compared against the sum of the binary weights of vectors A and B. When the sum of the weights is greater than the threshold read from the RAM, the output of the module is high.
