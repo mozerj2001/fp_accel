@@ -134,7 +134,7 @@ module cnt1
 	    .WIDTH      (DELAY      )
     ) valid_shr (
 	    .clk		(clk        ),
-	    .sh_en		(clk        ),
+	    .sh_en		(1'b1       ),
 	    .din		(i_Valid    ),
 	    .addr		(0          ),
 	    .q_msb		(w_Valid    ),
@@ -145,7 +145,7 @@ module cnt1
 	    .WIDTH      (DELAY      )
     ) last_word_shr (
 	    .clk		(clk                    ),
-	    .sh_en		(clk                    ),
+	    .sh_en		(1'b1                   ),
 	    .din		(w_LastWordOfVector     ),
 	    .addr		(                       ),
 	    .q_msb		(w_CntNew               ),
