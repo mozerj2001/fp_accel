@@ -94,6 +94,7 @@ clean:
 	rm -rf platform/WorkSpace/.Xil
 	rm tan_intf.xo.compile_summary
 	rm tanimoto_krnl.xclbin.link_summary
+	rm -rf .ipcache
 
 docs:
 	rm -rf README.md
