@@ -80,17 +80,11 @@ clean:
 	find . -type f -name '*.log' -delete
 	find . -type f -name '*.jou' -delete
 	find . -type f -name '*.str' -delete
-	rm -rf tanimoto_rtl/tanimoto_rtl.cache
-	rm -rf tanimoto_rtl/tanimoto_rtl.gen
-	rm -rf tanimoto_rtl/tanimoto_rtl.hw
-	rm -rf tanimoto_rtl/tanimoto_rtl.ip_user_files
-	rm -rf tanimoto_rtl/tanimoto_rtl.srcs
-	rm -rf tanimoto_rtl/tanimoto_rtl.sim
-	rm -rf tanimoto_rtl/tanimoto_rtl.xpr
-	rm -rf tanimoto_rtl/tanimoto_rtl.runs
+	rm -rf src/tanimoto_rtl
 	rm -rf hls_if/build
 	rm -rf _x
 	rm -rf .Xil
+	rm -rf tanimoto_ip
 	rm -rf platform/WorkSpace/.Xil
 	rm tan_intf.xo.compile_summary
 	rm tanimoto_krnl.xclbin.link_summary

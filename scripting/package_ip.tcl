@@ -8,13 +8,13 @@
 # ###########################################################
 
 # Create the Tanimoto dissimilarity calculator IP project for the ZCU106 evaluation board.
-create_project tanimoto_rtl ./tanimoto_rtl -part xczu7ev-ffvc1156-2-e
+create_project tanimoto_rtl ./src/tanimoto_rtl -part xczu7ev-ffvc1156-2-e
 set_property board_part xilinx.com:zcu106:part0:2.6 [current_project]
 
 # Create the top level block of the IP.
 create_bd_design "tanimoto"
-add_files -fileset sources_1 [glob ./tanimoto_rtl/verilog/sources_1/*.v]
-add_files -fileset sim_1 [glob ./tanimoto_rtl/verilog/sim_1/tb_*.v]
+add_files -fileset sources_1 [glob ./src/verilog/sources_1/*.v]
+add_files -fileset sim_1 [glob ./src/verilog/sim_1/tb_*.v]
 update_compile_order -fileset sources_1
 
 # Create RTL block from source files.
@@ -40,8 +40,8 @@ endgroup
 set_property CONFIG.ASSOCIATED_BUSIF S_AXIS_DATA:M_AXIS_ID_PAIR [get_bd_pins /top_intf_0/ap_clk]
 
 # Create HDL wrapper.
-make_wrapper -files [get_files {./tanimoto_rtl/tanimoto_rtl.srcs/sources_1/bd/tanimoto/tanimoto.bd}] -top
-add_files -norecurse ./tanimoto_rtl/tanimoto_rtl.gen/sources_1/bd/tanimoto/hdl/tanimoto_wrapper.v
+make_wrapper -files [get_files {./src/tanimoto_rtl/tanimoto_rtl.srcs/sources_1/bd/tanimoto/tanimoto.bd}] -top
+add_files -norecurse ./src/tanimoto_rtl/tanimoto_rtl.gen/sources_1/bd/tanimoto/hdl/tanimoto_wrapper.v
 
 
 # Package and export IP.
