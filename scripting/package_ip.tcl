@@ -45,9 +45,9 @@ add_files -norecurse ./src/tanimoto_rtl/tanimoto_rtl.gen/sources_1/bd/tanimoto/h
 
 
 # Package and export IP.
-ipx::package_project -root_dir ./tanimoto_ip -vendor mit.bme.hu -library tanimoto -taxonomy /UserIP -import_files -set_current false
-ipx::unload_core ./tanimoto_ip/component.xml
-ipx::edit_ip_in_project -upgrade true -name tmp_edit_project -directory ./tanimoto_ip ./tanimoto_ip/component.xml
+ipx::package_project -root_dir ./build/tanimoto_ip -vendor mit.bme.hu -library tanimoto -taxonomy /UserIP -import_files -set_current false
+ipx::unload_core ./build/tanimoto_ip/component.xml
+ipx::edit_ip_in_project -upgrade true -name tmp_edit_project -directory ./build/tanimoto_ip ./build/tanimoto_ip/component.xml
 update_compile_order -fileset sources_1
 ipx::associate_bus_interfaces -busif S_AXIS_DATA -clock ap_clk [ipx::current_core]
 ipx::associate_bus_interfaces -busif M_AXIS_ID_PAIR -clock ap_clk [ipx::current_core]
@@ -58,7 +58,7 @@ ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
 ipx::save_core [ipx::current_core]
 ipx::check_integrity -quiet [ipx::current_core]
-ipx::archive_core ./tanimoto_ip/tanimoto_ip_0.1.zip [ipx::current_core]
+ipx::archive_core ./build/tanimoto_ip/tanimoto_ip_0.1.zip [ipx::current_core]
 
 
 close_project -delete
