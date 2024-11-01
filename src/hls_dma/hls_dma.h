@@ -13,7 +13,7 @@ typedef ap_uint<VEC_ID_WIDTH*2> id_pair_t;
 
 
 void vec_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out);
-void id_intf(id_out_t* id_in, id_out_t* id_out);
+void id_intf(id_pair_t* id_in, id_pair_t* id_out);
 extern "C" void hls_dma(  	bus_t* vec_ref,
 							bus_t* vec_cmp,
 							bus_t* vec_out,
