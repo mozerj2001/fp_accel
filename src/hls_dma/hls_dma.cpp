@@ -37,9 +37,9 @@ void vec_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out){
  * to be read is unknown.
  */
 
-void id_intf(id_out_t* id_in, id_out_t* id_out){
+void id_intf(id_pair_t* id_in, id_pair_t* id_out){
 
-	id_out_t tmp;
+	id_pair_t tmp;
 
 	tmp = *id_in;
 	*id_out = tmp;
@@ -52,9 +52,9 @@ void id_intf(id_out_t* id_in, id_out_t* id_out){
 void hls_dma(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out, id_pair_t* id_in, id_pair_t* id_out){
 #pragma HLS INTERFACE m_axi port=vec_ref bundle=gmem1
 #pragma HLS INTERFACE m_axi port=vec_cmp bundle=gmem1
-#pragma HLS INTERFACE m_axi port=vec_out bundle=gmem2
+#pragma HLS INTERFACE axis port=vec_out
 #pragma HLS INTERFACE axis port=id_in
-#pragma HLS INTERFACE axis port=id_out
+#pragma HLS INTERFACE m_axi port=id_out bundle=gmem2
 
 #pragma HLS dataflow
 
