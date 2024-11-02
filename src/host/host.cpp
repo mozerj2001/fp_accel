@@ -1,7 +1,15 @@
 #include <fstream>
 #include <iostream>
+#include <bitset>
 #include <stdlib.h>
-#include "krnl.h"
+#include "host.h"
+
+// Threshold RAM address limits
+#define BRAM_BASEADDR 0x82000000
+#define BRAM_MAXADDR 0x82001FFF
+
+// Define Tanimoto threshold
+#define THRESHOLD 0.33
 
 // Macro that submits OpenCL calls, then checks whether an error has occurred.
 #define OCL_CHECK(error, call)                                                                   \
@@ -11,10 +19,19 @@
         exit(EXIT_FAILURE);                                                                      \
     }
 
+static const int VECTOR_WIDTH = 920;
 static const int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
 static const int REF_VECTOR_NO = 32;
 static const int CMP_VECTOR_NO = 128;
 static const int ID_SIZE = 1;           // ID_WIDTH in bytes
+
+// See documentation on how this avoids doing division in the PL
+void configure_threshold_ram(){
+    unsigned int* bram = (unsigned int*) BRAM_BASEADDR;
+    for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
+        bram[cnt_c] = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+    }
+}
 
 
 int main(int argc, char* argv[]) {
@@ -137,6 +154,9 @@ int main(int argc, char* argv[]) {
 
     // Copy buffers to kernel memory space
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({vec_ref_buffer, cmp_ref_buffer}, 0 /* 0 means from host*/));
+
+    // Configure threshold BRAM
+    configure_threshold_ram();
 
     // Launch the Kernel
     OCL_CHECK(err, err = q.enqueueTask(tanimoto_krnl));
