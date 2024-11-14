@@ -18,7 +18,7 @@ fi
 WORKSPACE_PATH=${PWD}
 
 # Path to PetaLinux installation
-PETALINUX_PATH=../petalinux
+PETALINUX_PATH=../../../../petalinux
 
 # Path to Board Support Package
 BSP_PATH=xilinx-zcu106-v2023.2-10140544.bsp
