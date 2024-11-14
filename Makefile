@@ -75,7 +75,28 @@ xclbin:
 clean_platform:
 	rm -rf platform/WorkSpace/zcu106_custom_platform/
 	rm -rf platform/WorkSpace/zcu106_custom/
+	rm -rf platform/WorkSpace/device-tree-xlnx/
+	rm -rf platform/WorkSpace/mydevice/
+	rm -rf platform/WorkSpace/sysroot/
+	rm -rf platform/WorkSpace/tmp/
 
+clean_workspace:
+	find platform/WorkSpace -mindepth 1 -maxdepth 1 \
+				! -name 'app_component' \
+				! -name 'device-tree-xlnx' \
+				! -name 'Makefile' \
+				! -name 'mydevice' \
+				! -name 'petalinux_build.sh' \
+				! -name 'petalinux_project' \
+				! -name 'platform_creation.py' \
+				! -name 'sysroot' \
+				! -name 'system-user.dtsi' \
+				! -name 'xilinx-zcu106-v2023.2-10140544.bsp' \
+				! -name 'xilinx-zynqmp-common-v2023.2' \
+				! -name 'zcu106_custom' \
+				! -name 'zcu106_custom_platform' \
+				! -name 'zcu106_custom_platform.tcl' \
+				-exec rm -rf {} +
 
 clean:
 	@echo "############################################################################"
@@ -114,5 +135,6 @@ help:
 	@echo "all: All of the above."
 	@echo "clean: Remove all generated and build files, except for platform build results and final .xo files."
 	@echo "clean_platform: Remove zcu106_custom_platform and zcu106_custom."
+	@echo "clean_workspace: Clean Vitis workspace files. Needs to be run for Vitis GUI to recognize platforms and the app_component."
 	@echo "docs: Compile documentation to README.md."
 	@echo "help: Print this message."

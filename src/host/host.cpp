@@ -28,6 +28,8 @@ static const int ID_SIZE = 1;           // ID_WIDTH in bytes
 // See documentation on how this avoids doing division in the PL
 void configure_threshold_ram(){
     unsigned int* bram = (unsigned int*) BRAM_BASEADDR;
+
+    std::cout << "[INFO] Configure threshold RAM with the compare values.\n";
     for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
         bram[cnt_c] = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
     }
@@ -109,7 +111,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Failed to program device[" << i << "] with xclbin file!\n";
         } else {
             std::cout << "Device[" << i << "]: program successful!\n";
-            OCL_CHECK(err, tanimoto_krnl = cl::Kernel(program, "krnl_vadd", &err));
+            OCL_CHECK(err, tanimoto_krnl = cl::Kernel(program, "hls_dma", &err));       // hls_dma is the visible interface of the kernel
             valid_device = true;
             break; // we break because we found a valid device
         }
@@ -121,20 +123,27 @@ int main(int argc, char* argv[]) {
 
     // These commands will allocate memory on the Device. The cl::Buffer objects can
     // be used to reference the memory locations on the device.
+    uint8_t id_pair_buffer_init[id_pair_size] = {};
+
+    std::cout << "[INFO] Setting up OCL buffer objects.\n";
     OCL_CHECK(err, cl::Buffer vec_ref_buffer(context, CL_MEM_READ_ONLY, ref_buf_size, NULL, &err));
     OCL_CHECK(err, cl::Buffer cmp_ref_buffer(context, CL_MEM_READ_ONLY, cmp_buf_size, NULL, &err));
-    OCL_CHECK(err, cl::Buffer id_pair_buffer(context, CL_MEM_WRITE_ONLY, id_pair_size, NULL, &err));
+    OCL_CHECK(err, cl::Buffer id_pair_buffer(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, id_pair_size, id_pair_buffer_init, &err));
 
     // set the kernel Arguments
-    int narg = 0;
-    OCL_CHECK(err, err = tanimoto_krnl.setArg(narg++, vec_ref_buffer));
-    OCL_CHECK(err, err = tanimoto_krnl.setArg(narg++, cmp_ref_buffer));
-    OCL_CHECK(err, err = tanimoto_krnl.setArg(narg++, id_pair_buffer));
+    std::cout << "[INFO] Setting up kernel arguments.\n";
+    OCL_CHECK(err, err = tanimoto_krnl.setArg(0, vec_ref_buffer));
+    OCL_CHECK(err, err = tanimoto_krnl.setArg(1, cmp_ref_buffer));
+    // TODO: this causes an error. If it isn't called, there is a segfault. If it's called, we get "should be null" (irrespective of
+    // whether id_pair_buffer or NULL is passed).
+    OCL_CHECK(err, err = tanimoto_krnl.setArg(4, id_pair_buffer));
 
     // We then need to map our OpenCL buffers to get the pointers
     int* ptr_ref;
     int* ptr_cmp;
     int* ptr_idp;
+
+    std::cout << "[INFO] Mapping OCL buffers to pointers.\n";
     OCL_CHECK(err,
               ptr_ref = (int*)q.enqueueMapBuffer(vec_ref_buffer, CL_TRUE, CL_MAP_WRITE, 0, ref_buf_size, NULL, NULL, &err));
     OCL_CHECK(err,
@@ -144,26 +153,32 @@ int main(int argc, char* argv[]) {
 
     // Randomize data (int for now)
     // TODO: replace randomization with reading binary vectors from a file
-    for (int i = 0; i < (int) ref_buf_size; i++) {
+
+    std::cout << "[INFO] Randomize test data.\n";
+    for (int i = 0; i < (int) ref_buf_size/sizeof(int); i++) {
         ptr_ref[i] = rand() % RAND_MAX;
     }
-    for (int i = 0; i < (int) cmp_buf_size; i++) {
+    for (int i = 0; i < (int) cmp_buf_size/sizeof(int); i++) {
         ptr_cmp[i] = rand() % RAND_MAX;
     }
 
 
     // Copy buffers to kernel memory space
+    std::cout << "[INFO] Copy input buffers to the kernel's memory space.\n";
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({vec_ref_buffer, cmp_ref_buffer}, 0 /* 0 means from host*/));
 
     // Configure threshold BRAM
     configure_threshold_ram();
 
     // Launch the Kernel
+    std::cout << "[INFO] Launch kernel.\n";
     OCL_CHECK(err, err = q.enqueueTask(tanimoto_krnl));
 
     // Cpoy ID pair to host memory space
+    std::cout << "[INFO] Read output into host memory.\n";
     OCL_CHECK(err, q.enqueueMigrateMemObjects({id_pair_buffer}, CL_MIGRATE_MEM_OBJECT_HOST));
 
+    std::cout << "[INFO] Shut down queue.\n";
     OCL_CHECK(err, q.finish());
 
     // Verify the result --> Just check if we are getting data at all for now
@@ -178,6 +193,7 @@ int main(int argc, char* argv[]) {
         }
     } */
 
+    std::cout << "[INFO] Free buffers.\n";
     OCL_CHECK(err, err = q.enqueueUnmapMemObject(vec_ref_buffer, ptr_ref));
     OCL_CHECK(err, err = q.enqueueUnmapMemObject(cmp_ref_buffer, ptr_cmp));
     OCL_CHECK(err, err = q.enqueueUnmapMemObject(id_pair_buffer, ptr_idp));
