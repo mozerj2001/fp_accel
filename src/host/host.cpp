@@ -2,11 +2,15 @@
 #include <iostream>
 #include <bitset>
 #include <stdlib.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "host.h"
 
 // Threshold RAM address limits
-#define BRAM_BASEADDR 0x82000000
-#define BRAM_MAXADDR 0x82001FFF
+#define BRAM_BASEADDR 0x82000000    // BRAM base address
+#define BRAM_MAXADDR 0x82001FFF     // BRAM region upper limit as integer pointer
+#define BRAM_IO_SIZE 32768          // BRAM region size in bytes
 
 // Define Tanimoto threshold
 #define THRESHOLD 0.33
@@ -15,7 +19,7 @@
 #define OCL_CHECK(error, call)                                                                   \
     call;                                                                                        \
     if (error != CL_SUCCESS) {                                                                   \
-        printf("%s:%d Error calling " #call ", error code is: %d\n", __FILE__, __LINE__, error); \
+        printf("[ERROR][OCL_CHECK] %s:%d Error calling " #call ", error code is: %d\n", __FILE__, __LINE__, error); \
         exit(EXIT_FAILURE);                                                                      \
     }
 
@@ -26,13 +30,30 @@ static const int CMP_VECTOR_NO = 128;
 static const int ID_SIZE = 1;           // ID_WIDTH in bytes
 
 // See documentation on how this avoids doing division in the PL
-void configure_threshold_ram(){
-    unsigned int* bram = (unsigned int*) BRAM_BASEADDR;
-
-    std::cout << "[INFO] Configure threshold RAM with the compare values.\n";
-    for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
-        bram[cnt_c] = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+// Use /dev/mem and mmap to access memory mapped IO in physical memory
+int configure_threshold_ram(){
+    int mem_fp = open("/dev/mem", O_RDWR | O_SYNC);
+    if(mem_fp < 0){
+        std::cout << "[ERROR] Cannot open /dev/mem.\n";
+        return 1;
     }
+
+    void *mem = mmap(0, BRAM_IO_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fp, BRAM_BASEADDR);
+    if (mem == MAP_FAILED){
+        std::cout << "[ERROR] mmap() call failed, cannot access BRAM IO!\n";
+        close(mem_fp);
+        return 1;
+    }
+
+    // Configure threshold RAM
+    unsigned int *bram = (unsigned int*) mem;
+    for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
+        *(bram + cnt_c) = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+    }
+    
+    munmap(mem, BRAM_IO_SIZE);
+    close(mem_fp);
+    return 0;
 }
 
 
@@ -77,14 +98,14 @@ int main(int argc, char* argv[]) {
         }
     }
     if (found_device == false) {
-        std::cout << "Error: Unable to find Target Device " << std::endl;
+        std::cout << "[ERROR] Unable to find Target Device " << std::endl;
         return EXIT_FAILURE;
     }
 
-    std::cout << "INFO: Opening " << xclbinFilename << std::endl;
+    std::cout << "[INFO] Opening " << xclbinFilename << std::endl;
     FILE* fp;
     if ((fp = fopen(xclbinFilename.c_str(), "r")) == nullptr) {
-        printf("ERROR: %s xclbin not available please run <make xclbin> in the project root directory.\n", xclbinFilename.c_str());
+        printf("[ERROR] %s xclbin not available please run <make xclbin> in the project root directory.\n", xclbinFilename.c_str());
         exit(EXIT_FAILURE);
     }
     // Load xclbin
@@ -108,7 +129,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Attempting to program device[" << i << "]: " << device.getInfo<CL_DEVICE_NAME>() << std::endl;
         cl::Program program(context, {device}, bins, nullptr, &err);
         if (err != CL_SUCCESS) {
-            std::cout << "Failed to program device[" << i << "] with xclbin file!\n";
+            std::cout << "[ERROR] Failed to program device[" << i << "] with xclbin file!\n";
         } else {
             std::cout << "Device[" << i << "]: program successful!\n";
             OCL_CHECK(err, tanimoto_krnl = cl::Kernel(program, "hls_dma", &err));       // hls_dma is the visible interface of the kernel
@@ -117,7 +138,7 @@ int main(int argc, char* argv[]) {
         }
     }
     if (!valid_device) {
-        std::cout << "ERROR: Failed to program any device found, exit!\n";
+        std::cout << "[ERROR]: Failed to program any device found, exit!\n";
         exit(EXIT_FAILURE);
     }
 
@@ -168,7 +189,9 @@ int main(int argc, char* argv[]) {
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({vec_ref_buffer, cmp_ref_buffer}, 0 /* 0 means from host*/));
 
     // Configure threshold BRAM
-    configure_threshold_ram();
+    if(configure_threshold_ram()){
+        std::cout << "[ERROR] Someting went wrong when accessing the memory mapped threshold BRAMs.\n";
+    }
 
     // Launch the Kernel
     std::cout << "[INFO] Launch kernel.\n";
