@@ -10,10 +10,13 @@ module tb_tanimoto_top(
     localparam VECTOR_WIDTH     = 920;
     localparam SUB_VECTOR_NO    = 2;
     localparam GRANULE_WIDTH    = 6;
-    localparam SHR_DEPTH        = 32;
     localparam VEC_ID_WIDTH     = $clog2(VECTOR_WIDTH);
     localparam CNT_WIDTH        = $clog2(VECTOR_WIDTH);
 
+    localparam REF_VEC_NO       = 32;
+    localparam CMP_VEC_NO       = 128;
+
+    localparam SHR_DEPTH        = REF_VEC_NO;
 
     localparam CLK_PERIOD       = 10;
     localparam HALF_CLK_PERIOD  = CLK_PERIOD/2;
@@ -40,11 +43,11 @@ module tb_tanimoto_top(
     // TEST FIFO
     srl_fifo
     #(
-        .WIDTH  (BUS_WIDTH      ),
-        .DEPTH  (VECTOR_WIDTH   )
+        .WIDTH  (BUS_WIDTH                                  ),
+        .DEPTH  ((REF_VEC_NO + CMP_VEC_NO) * SUB_VECTOR_NO  )
     ) test_fifo (
         .clk    (clk            ),
-        .rst    (!rstn          ),
+        .rstn   (rstn           ),
         .wr     (f_write_d      ),
         .d      (f_din          ),
         .full   (f_full         ),
@@ -110,7 +113,8 @@ module tb_tanimoto_top(
     integer scan;
     reg [BUS_WIDTH-1:0] vec;
     initial begin
-        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/test_vectors.dat", "r");
+        $system("/home/jozmoz01/sandbox/fp_accel/src/verilog/sim_1/test_vectors.dat");
+        fp_vec = $fopen("/home/jozmoz01/sandbox/fp_accel/src/verilog/sim_1/test_vectors.dat", "r");
         if(fp_vec == 0) begin
             $display("ERROR: File containing test vectors was not found...");
             $finish;
@@ -157,7 +161,7 @@ module tb_tanimoto_top(
     // write results to file
     integer fp_id;
     initial begin
-        fp_id = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/id_out.txt", "w");
+        fp_id = $fopen("./id_out.txt", "w");
         if(fp_id == 0) begin
             $display("ERROR: Logfile for ID pairs could not be opened...");
             $finish;
