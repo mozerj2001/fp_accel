@@ -42,5 +42,5 @@ def writeTest(vec_list: list, fname: str):
 
 # BODY
 if __name__ == "__main__":
-    catVectors = processVectorTxt("../tanimoto_c/ref_vec.txt", "../tanimoto_c/cmp_vec.txt")
-    writeTest(catVectors, "../tanimoto_rtl/test_vectors.dat")
+    catVectors = processVectorTxt("../src/c_impl/ref_vec.txt", "../src/c_impl/cmp_vec.txt")
+    writeTest(catVectors, "../src/verilog/sim_1/test_vectors.dat")
