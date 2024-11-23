@@ -11,7 +11,7 @@
 ERROR_ON_HOLD_VIOLATION=FALSE
 
 
-.PHONY: all kernel clean clean_platform platform rtl_xo hls_xo rtl_ip xclbin docs
+.PHONY: all kernel clean clean_platform platform rtl_xo hls_xo rtl_ip xclbin xclbin_debug docs
 
 all: platform rtl_ip rtl_xo hls_xo xclbin
 
@@ -67,6 +67,26 @@ xclbin:
 		--advanced.param compiler.userPostSysLinkOverlayTcl=scripting/post_link.tcl \
     	--platform ./platform/WorkSpace/zcu106_custom/export/zcu106_custom/zcu106_custom.xpfm \
     	--config ./scripting/connections.cfg \
+    	./build/tanimoto.xo \
+    	./build/hls_dma.xo \
+    	--save-temps \
+    	-o ./build/tanimoto_krnl.xclbin
+	cp -rf ./_x/link/vivado/vpl/prj/prj.runs/impl_1/system_wrapper.bit ./platform/WorkSpace/petalinux_project/images/linux/system.bit
+
+xclbin_debug:
+	@echo "############################################################################"
+	@echo "# COMPILING XCLBIN FOR ILA USE"
+	@echo "############################################################################"
+	rm -rf _x
+	rm -rf .Xil
+	v++ -t hw \
+    	--link \
+		--log_dir ./logs/xclbin \
+		--report_dir ./logs/xclbin \
+		--advanced.param compiler.errorOnHoldViolation=${ERROR_ON_HOLD_VIOLATION} \
+		--advanced.param compiler.userPostSysLinkOverlayTcl=scripting/post_link.tcl \
+    	--platform ./platform/WorkSpace/zcu106_custom/export/zcu106_custom/zcu106_custom.xpfm \
+    	--config ./scripting/connections_debug.cfg \
     	./build/tanimoto.xo \
     	./build/hls_dma.xo \
     	--save-temps \
