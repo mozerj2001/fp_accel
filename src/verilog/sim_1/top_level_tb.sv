@@ -7,7 +7,8 @@ import system_axi4stream_vip_1_0_pkg::*;
 module top_level_tb(
   );
 
-  localparam CLK_PERIOD = 10;
+  localparam HLAF_CLK_PERIOD = 10;
+  localparam CLK_PERIOD = 2 * HLAF_CLK_PERIOD;
   localparam VECTOR_WIDTH = 920;
   localparam CNT_WIDTH = $clog2(VECTOR_WIDTH);
 
@@ -39,9 +40,9 @@ module top_level_tb(
   // Reset signal
   bit                                     reset;
 
-  reg [CNT_WIDTH:0]   threshold = 0;
+  reg [CNT_WIDTH-1:0] threshold = 0;
   reg [CNT_WIDTH-1:0] threshold_addr = 0;
-  reg                 wr_threshold;
+  reg                 wr_threshold = 0;
 
   // instantiate bd
   system_wrapper DUT(
@@ -53,7 +54,7 @@ module top_level_tb(
     .BRAM_PORTA_we_a_0    (wr_threshold   )
   );
 
-  always #CLK_PERIOD clock <= ~clock;
+  always #HLAF_CLK_PERIOD clock <= ~clock;
 
   //Main process
   initial begin
@@ -129,7 +130,7 @@ module top_level_tb(
   task slv_gen_tready();
     axi4stream_ready_gen ready_gen;
     ready_gen = slv_agent.driver.create_ready("ready_gen");
-    ready_gen.set_ready_policy(XIL_AXI4STREAM_READY_GEN_OSC);
+    ready_gen.set_ready_policy(XIL_AXI4STREAM_READY_GEN_SINGLE);
     ready_gen.set_low_time(2);
     ready_gen.set_high_time(6);
     slv_agent.driver.send_tready(ready_gen);
@@ -138,8 +139,8 @@ module top_level_tb(
   // mst VIP generate transaction
   task mst_gen_transaction();
     axi4stream_transaction wr_transaction; 
-    wr_transaction = mst_agent.driver.create_transaction("Master VIP write transaction");
-    wr_transaction.set_xfer_alignment(XIL_AXI4STREAM_XFER_RANDOM);
+    wr_transaction = mst_agent.driver.create_transaction("mst_vip_transaction");
+    // wr_transaction.set_xfer_alignment(XIL_AXI4STREAM_XFER_RANDOM);
     WR_TRANSACTION_FAIL: assert(wr_transaction.randomize());
     mst_agent.driver.send(wr_transaction);
   endtask

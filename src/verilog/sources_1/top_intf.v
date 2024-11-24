@@ -32,8 +32,8 @@ module top_intf
         input wire                          BRAM_PORTA_clk_a    ,
         input wire                          BRAM_PORTA_rst_a    ,  
         input wire [CNT_WIDTH-1:0]          BRAM_PORTA_addr_a   ,
-        input wire [CNT_WIDTH:0]            BRAM_PORTA_wrdata_a , 
-        output wire [CNT_WIDTH:0]           BRAM_PORTA_rddata_a , 
+        input wire [CNT_WIDTH-1:0]          BRAM_PORTA_wrdata_a , 
+        output wire [CNT_WIDTH-1:0]         BRAM_PORTA_rddata_a , 
         input wire                          BRAM_PORTA_en_a     ,  
         input wire                          BRAM_PORTA_we_a
     );
