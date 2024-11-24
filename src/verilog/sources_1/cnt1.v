@@ -136,7 +136,7 @@ module cnt1
 	    .clk		(clk        ),
 	    .sh_en		(1'b1       ),
 	    .din		(i_Valid    ),
-	    .addr		(0          ),
+	    .addr		(3'b0       ),
 	    .q_msb		(w_Valid    ),
 	    .q_sel		(w_ValidDel )
         );

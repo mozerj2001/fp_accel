@@ -34,7 +34,7 @@ module tanimoto_top
         input wire                          i_BRAM_Clk,
         input wire                          i_BRAM_Rst,  
         input wire [CNT_WIDTH-1:0]          i_BRAM_Addr,
-        input wire [CNT_WIDTH:0]            i_BRAM_Din, 
+        input wire [CNT_WIDTH-1:0]          i_BRAM_Din, 
         input wire                          i_BRAM_En,  
         input wire                          i_BRAM_WrEn,
         // Output ID stream
@@ -68,12 +68,15 @@ module tanimoto_top
 
     // STATE MACHINE
     reg r_State;
+    wire w_StartCompare;
+
+    assign w_StartCompare = (r_SubVecCntr == (SHR_DEPTH*SUB_VECTOR_NO-1)) && w_Cnt_SubVector_Valid;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
             r_State <= LOAD_REF;
-        end else if(r_SubVecCntr == (SHR_DEPTH*SUB_VECTOR_NO-1)) begin
+        end else if(w_StartCompare) begin
             r_State <= COMPARE;
         end
     end
@@ -87,7 +90,6 @@ module tanimoto_top
     wire [BUS_WIDTH-1:0]    w_Catted_Vector;
     wire                    w_Catted_Valid;
     wire [VEC_ID_WIDTH-1:0] w_CatOut_VecID;
-    wire                    w_CatValidIn;
 
     vec_cat #(
         .BUS_WIDTH      (BUS_WIDTH      ),
@@ -128,12 +130,18 @@ module tanimoto_top
 
 
     // VALID SHIFTREGISTER AND STATE SHIFTREGISTER
-    // Propagate state and valid gradually along the shiftregisters, so
+    // LOAD_REF: only shift valid vectors
+    // COMPARE: Shift all subvectors, propagate state and 
+    // valid gradually along the shiftregisters, so
     // the out cnt1s start counting at the appropriate time.
     // SUB_VEC_NO = 2 is assumed.
     reg     [SHR_DEPTH-1:0] r_Valid_Shr;
     reg     [SHR_DEPTH-1:0] r_State_Shr;
-    wire    [SHR_DEPTH-1:0] w_PreStageOut_ValidIn;
+    wire    [SHR_DEPTH-1:0] w_OutCnt1_ValidIn;
+
+    // --> valid is only propagated on valid, so pipeline will have to be flushed by pushing zeroes
+    wire w_PropagateControl;
+    assign w_PropagateControl = (r_State == COMPARE) && r_SubVecCntr[0] && w_Cnt_SubVector_Valid;
 
     genvar vv;
     generate
@@ -144,7 +152,7 @@ module tanimoto_top
                     if(!rstn) begin
                         r_Valid_Shr[vv] <= 1'b0;
                         r_State_Shr[vv] <= 1'b0;
-                    end else if(r_SubVecCntr[0]) begin
+                    end else if(w_PropagateControl) begin
                         r_Valid_Shr[vv] <= w_Cnt_SubVector_Valid;
                         r_State_Shr[vv] <= r_State;
                     end
@@ -155,7 +163,7 @@ module tanimoto_top
                     if(!rstn) begin
                         r_Valid_Shr[vv] <= 1'b0;
                         r_State_Shr[vv] <= 1'b0;
-                    end else if(r_SubVecCntr[0]) begin
+                    end else if(w_PropagateControl) begin
                         r_Valid_Shr[vv] <= r_Valid_Shr[vv-1];
                         r_State_Shr[vv] <= r_State_Shr[vv-1];
                     end
@@ -300,7 +308,7 @@ module tanimoto_top
                 if(gg == 0) begin
                     always @ (posedge clk)
                     begin
-                        if(w_PreStageOut_ValidIn[ff]) begin
+                        if(w_OutCnt1_ValidIn[ff]) begin
                             r_ShrID_2_A[ff][gg] <= r_ShrID_1_A[ff];
                             r_ShrID_2_B[ff][gg] <= r_ShrID_1_B[ff];
                         end
@@ -308,7 +316,7 @@ module tanimoto_top
                 end else begin
                     always @ (posedge clk)
                     begin
-                        if(w_PreStageOut_ValidIn[ff]) begin
+                        if(w_OutCnt1_ValidIn[ff]) begin
                             r_ShrID_2_A[ff][gg] <= r_ShrID_2_A[ff][gg-1];
                             r_ShrID_2_B[ff][gg] <= r_ShrID_2_B[ff][gg-1];
                         end
@@ -346,7 +354,7 @@ module tanimoto_top
     wire [SHR_DEPTH-1:0] w_PreStageOut_Valid;
     wire [SHR_DEPTH-1:0] w_CntOutNew_AnB;
 
-    assign w_PreStageOut_ValidIn = r_Valid_Shr & r_State_Shr;
+    assign w_OutCnt1_ValidIn = r_Valid_Shr & r_State_Shr;
 
     genvar kk;
     generate
@@ -360,7 +368,7 @@ module tanimoto_top
             .clk            (clk                        ),
             .rstn           (rstn                       ),
             .i_Vector       (w_OutPreStageIn_AnB[kk]    ),
-            .i_Valid        (w_PreStageOut_ValidIn[kk]  ),
+            .i_Valid        (w_OutCnt1_ValidIn[kk]  ),
             .o_SubVector    (                           ),
             .o_Valid        (w_PreStageOut_Valid[kk]    ),
             .o_Cnt          (w_Cnt_AnB[kk]              ),
@@ -384,7 +392,7 @@ module tanimoto_top
                 if(oo == 0) begin
                     always @ (posedge clk)
                     begin
-                        if(w_PreStageOut_ValidIn[nn]) begin
+                        if(w_OutCnt1_ValidIn[nn]) begin
                             r_CntDelayedOut_A[nn][oo] <= r_Cnt_Array_A[nn];     // required in case new ref vectors are loaded on the fly
                             r_CntDelayedOut_B[nn][oo] <= r_Cnt_Array_B[nn];
                         end
@@ -392,7 +400,7 @@ module tanimoto_top
                 end else begin
                     always @ (posedge clk)
                     begin
-                        if(w_PreStageOut_ValidIn[nn]) begin
+                        if(w_OutCnt1_ValidIn[nn]) begin
                             r_CntDelayedOut_A[nn][oo] <= r_CntDelayedOut_A[nn][oo-1];     // required in case new ref vectors are loaded on the fly
                             r_CntDelayedOut_B[nn][oo] <= r_CntDelayedOut_B[nn][oo-1];
                         end

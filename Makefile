@@ -120,18 +120,18 @@ clean_workspace:
 
 clean:
 	@echo "############################################################################"
-	@echo "# CLEANING UP WORKSPACE"
+	@echo "# CLEANING UP OUTPUT FILES AND LOGFILES"
+	@echo "# -- leaving output files of compile procedures"
 	@echo "############################################################################"
 	rm -rf logs
 	find . -type f -name '*.log' -delete
 	find . -type f -name '*.jou' -delete
 	find . -type f -name '*.str' -delete
+	find build/* ! -name 'tanimoto.xo' ! -name 'tanimoto_krnl.ltx' ! -name 'tanimoto_krnl.xclbin' ! -name 'hls_dma.xo' -delete
 	rm -rf src/tanimoto_rtl
 	rm -rf _x
-	rm -rf .Xil
-	rm -rf platform/WorkSpace/.Xil
-	rm hls_dma.xo.compile_summary
-	rm tanimoto_krnl.xclbin.link_summary
+	rm -rf top_level_tb
+	find . -type d -name '.Xil' -exec bash -c 'rm -rf ${0}' {} \;
 	rm -rf .ipcache
 
 docs:
