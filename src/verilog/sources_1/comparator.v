@@ -29,7 +29,7 @@ module comparator
         input wire                  i_BRAM_Clk,
         input wire                  i_BRAM_Rst,
         input wire [CNT_WIDTH-1:0]  i_BRAM_Addr,
-        input wire [CNT_WIDTH:0]    i_BRAM_Din,
+        input wire [CNT_WIDTH-1:0]  i_BRAM_Din,
         input wire                  i_BRAM_En,
         input wire                  i_BRAM_WrEn,
         output wire                 o_Dout,
@@ -59,7 +59,7 @@ module comparator
     block_ram_rd_1st
     #(
         .DEPTH  (VECTOR_WIDTH+1 ),
-        .WIDTH  (CNT_WIDTH+1    )
+        .WIDTH  (CNT_WIDTH      )
     ) u_result_ram (
         .clk    (clk        ),
         .we     (i_BRAM_WrEn),

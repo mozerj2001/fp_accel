@@ -69,6 +69,13 @@ validate_bd_design
 
 make_wrapper -files [get_files ${FP_ROOT}/top_level_tb/top_level_tb.srcs/sources_1/bd/system/system.bd] -top
 
+# Export output products --> generate VIP packages
+export_ip_user_files -of_objects [get_files /home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.srcs/sources_1/bd/system/system.bd] -no_script -sync -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] /home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.srcs/sources_1/bd/system/system.bd]
+launch_runs system_axi4stream_vip_0_0_synth_1 system_axi4stream_vip_1_0_synth_1 system_top_intf_0_0_synth_1 -jobs 8
+export_simulation -of_objects [get_files /home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.srcs/sources_1/bd/system/system.bd] -directory /home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.ip_user_files/sim_scripts -ip_user_files_dir /home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.ip_user_files -ipstatic_source_dir /home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.ip_user_files/ipstatic -lib_map_path [list {modelsim=/home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.cache/compile_simlib/modelsim} {questa=/home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.cache/compile_simlib/questa} {xcelium=/home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.cache/compile_simlib/xcelium} {vcs=/home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.cache/compile_simlib/vcs} {riviera=/home/jozmoz01/sandbox/fp_accel/top_level_tb/top_level_tb.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
+
+
 save_bd_design
 close_bd_design "system"
 
