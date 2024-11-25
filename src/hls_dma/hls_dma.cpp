@@ -12,7 +12,7 @@
  * vec_out: 	AXI-Stream sink of vectors, direct input of the tanimoto_top RTL module.
  */
 
-void vec_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out){
+void vec_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out, volatile bool* done){
 	bus_t tmp;
 
 	ref_loop: for(unsigned int i = 0; i < REF_VEC_NO; i++){
@@ -24,6 +24,8 @@ void vec_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out){
 		tmp = *vec_cmp;
 		*vec_out = tmp;
 	}
+
+	*done = true;
 }
 
 
@@ -37,12 +39,14 @@ void vec_intf(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out){
  * to be read is unknown.
  */
 
-void id_intf(id_pair_t* id_in, id_pair_t* id_out){
+void id_intf(id_pair_t* id_in, id_pair_t* id_out, volatile bool* done){
 
 	id_pair_t tmp;
 
-	tmp = *id_in;
-	*id_out = tmp;
+	while(!(*done)){
+		tmp = *id_in;
+		*id_out = tmp;
+	}
 
 }
 
@@ -56,10 +60,12 @@ void hls_dma(bus_t* vec_ref, bus_t* vec_cmp, bus_t* vec_out, id_pair_t* id_in, i
 #pragma HLS INTERFACE axis port=id_in
 #pragma HLS INTERFACE m_axi port=id_out bundle=gmem2
 
+	volatile bool done = false;
+
 #pragma HLS dataflow
 
-	vec_intf(vec_ref, vec_cmp, vec_out);
-	id_intf(id_in, id_out);
+	vec_intf(vec_ref, vec_cmp, vec_out, &done);
+	id_intf(id_in, id_out, &done);
 
 }
 
