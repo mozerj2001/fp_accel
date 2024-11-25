@@ -15,7 +15,8 @@ ERROR_ON_HOLD_VIOLATION=FALSE
 
 all: platform rtl_ip rtl_xo hls_xo xclbin
 
-kernel: rtl_ip rtl_xo hls_xo
+kernel: rtl_ip rtl_xo hls_xo xclbin
+kernel_debug: rtl_ip rtl_xo hls_xo xclbin_debug
 
 platform:
 	@echo "############################################################################"
