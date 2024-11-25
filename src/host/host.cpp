@@ -48,7 +48,8 @@ int configure_threshold_ram(){
     // Configure threshold RAM
     unsigned int *bram = (unsigned int*) mem;
     for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
-        *(bram + cnt_c) = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+        // *(bram + cnt_c) = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+        *(bram + cnt_c) = 0;
     }
     
     munmap(mem, BRAM_IO_SIZE);
@@ -58,6 +59,8 @@ int configure_threshold_ram(){
 
 
 int main(int argc, char* argv[]) {
+    char dd;    // dummy input char
+
     // TARGET_DEVICE macro needs to be passed from gcc command line
     if (argc != 2) {
         std::cout << "Usage: " << argv[0] << " <xclbin>" << std::endl;
@@ -146,17 +149,18 @@ int main(int argc, char* argv[]) {
     // be used to reference the memory locations on the device.
     uint8_t id_pair_buffer_init[id_pair_size] = {};
 
+    //std::cin >> dd;
     std::cout << "[INFO] Setting up OCL buffer objects.\n";
     OCL_CHECK(err, cl::Buffer vec_ref_buffer(context, CL_MEM_READ_ONLY, ref_buf_size, NULL, &err));
     OCL_CHECK(err, cl::Buffer cmp_ref_buffer(context, CL_MEM_READ_ONLY, cmp_buf_size, NULL, &err));
     OCL_CHECK(err, cl::Buffer id_pair_buffer(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, id_pair_size, id_pair_buffer_init, &err));
+    // OCL_CHECK(err, cl::Buffer id_pair_buffer(context, CL_MEM_WRITE_ONLY, id_pair_size, NULL, &err));
 
     // set the kernel Arguments
+    //std::cin >> dd;
     std::cout << "[INFO] Setting up kernel arguments.\n";
     OCL_CHECK(err, err = tanimoto_krnl.setArg(0, vec_ref_buffer));
     OCL_CHECK(err, err = tanimoto_krnl.setArg(1, cmp_ref_buffer));
-    // TODO: this causes an error. If it isn't called, there is a segfault. If it's called, we get "should be null" (irrespective of
-    // whether id_pair_buffer or NULL is passed).
     OCL_CHECK(err, err = tanimoto_krnl.setArg(4, id_pair_buffer));
 
     // We then need to map our OpenCL buffers to get the pointers
@@ -164,6 +168,7 @@ int main(int argc, char* argv[]) {
     int* ptr_cmp;
     int* ptr_idp;
 
+    //std::cin >> dd;
     std::cout << "[INFO] Mapping OCL buffers to pointers.\n";
     OCL_CHECK(err,
               ptr_ref = (int*)q.enqueueMapBuffer(vec_ref_buffer, CL_TRUE, CL_MAP_WRITE, 0, ref_buf_size, NULL, NULL, &err));
@@ -185,23 +190,27 @@ int main(int argc, char* argv[]) {
 
 
     // Copy buffers to kernel memory space
+    //std::cin >> dd;
     std::cout << "[INFO] Copy input buffers to the kernel's memory space.\n";
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({vec_ref_buffer, cmp_ref_buffer}, 0 /* 0 means from host*/));
 
     // Configure threshold BRAM
+    //std::cin >> dd;
     if(configure_threshold_ram()){
         std::cout << "[ERROR] Someting went wrong when accessing the memory mapped threshold BRAMs.\n";
     }
 
     // Launch the Kernel
+    //std::cin >> dd;
     std::cout << "[INFO] Launch kernel.\n";
     OCL_CHECK(err, err = q.enqueueTask(tanimoto_krnl));
 
     // Cpoy ID pair to host memory space
+    //std::cin >> dd;
     std::cout << "[INFO] Read output into host memory.\n";
-    OCL_CHECK(err, q.enqueueMigrateMemObjects({id_pair_buffer}, CL_MIGRATE_MEM_OBJECT_HOST));
+    OCL_CHECK(err, q.enqueueMigrateMemObjects({id_pair_buffer}, CL_MIGRATE_MEM_OBJECT_HOST));  
 
-    std::cout << "[INFO] Shut down queue.\n";
+    std::cout << "[INFO] Wait for the OpenCL queue to finish.\n";
     OCL_CHECK(err, q.finish());
 
     // Verify the result --> Just check if we are getting data at all for now
