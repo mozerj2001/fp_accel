@@ -27,6 +27,7 @@ endgroup
 
 # Add external clock source, connect clock and reset
 add_files -norecurse ${FP_ROOT}/src/verilog/sources_1/clk_in.v
+set_property is_global_include true [get_files ${FP_ROOT}/src/verilog/sources_1/clk_in.v]
 create_bd_cell -type module -reference clk_in clk_in_0
 
 startgroup
@@ -109,10 +110,12 @@ set_property target_constrs_file ${FP_ROOT}/platform/WorkSpace/zcu106_custom_pla
 save_constraints -force
 
 launch_runs synth_1 -jobs 6
-# launch_runs impl_1 -jobs 6
+wait_on_run synth_1
+launch_runs impl_1 -jobs 6
+wait_on_run impl_1
 
 set_property platform.name {zcu106_custom_platform} [current_project]
-# set_property pfm_name {xilinx:zcu106:zcu106_custom_platform:0.0} [get_files -all {${FP_ROOT}/platform/WorkSpace/zcu106_custom_platform/zcu106_custom_platform.srcs/sources_1/bd/system/system.bd}]
+set_property pfm_name {xilinx:zcu106:zcu106_custom_platform:0.0} [get_files ${FP_ROOT}/platform/WorkSpace/zcu106_custom_platform/zcu106_custom_platform.srcs/sources_1/bd/system/system.bd]
 set_property platform.design_intent.embedded {true} [current_project]
 set_property platform.design_intent.datacenter {false} [current_project]
 set_property platform.design_intent.server_managed {false} [current_project]
