@@ -10,7 +10,7 @@ module top_intf
     #(
         BUS_WIDTH       = 512                   ,
         VECTOR_WIDTH    = 920                   ,
-        SHR_DEPTH       = 32                    ,
+        SHR_DEPTH       = 8                     ,
         //
         SUB_VECTOR_NO   = 2                     ,
         GRANULE_WIDTH   = 6                     ,
