@@ -1,289 +1,231 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
 #include "tanimoto.h"
 
+/*
+ * Declare global arrays. Functions defined within this file assume the
+ * presence of these global arrays to work. Declared as extern in tanimoto.h
+ */
+BinaryVector referenceVectors[REF_VECTOR_NO];
+BinaryVector comparisonVectors[CMP_VECTOR_NO];
+BinaryVector intermediaryVectors[REF_VECTOR_NO*CMP_VECTOR_NO];
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void str_to_hex(char* str, uint_fast32_t* hex){
+TanimotoResult tanimotoResults[REF_VECTOR_NO*CMP_VECTOR_NO];
 
-    unsigned int strLen = strlen(str);
-    int idx;
-    unsigned int currentInt = 0;            // integer value of each 8 neighbouring characters
-    uint_fast32_t currentCharVal;
-    char currentChar;
-    unsigned int i, j;
+/* 
+ * Function: initVectors
+ * ---------------------
+ * Initializes the 115-byte data fields of the global reference and comparison
+ * vectors with random values to be used for testing.
+ */
 
-    if(VECTOR_WIDTH/4 > strLen) { printf("ERROR: Input string too short!\n"); exit(1); }
+void initVectors(void)
+{
+    srand((unsigned) time(NULL));
 
-    for(i = 0; i < WORD_NO; i++){       // Iterate through 32-bit words
-        hex[i] = 0;
-        for(j = 0; j < 8; j++){         // Iterate through 
-            idx = strLen-(i*8+j)-1;
+    /* Initialize reference vectors */
+    for (int i = 0; i < REF_VECTOR_NO; i++) {
+        referenceVectors[i].id = i;       /* Assign a simple ID. */
+        referenceVectors[i].weight = 0;   /* Will be calculated later. */
 
-            if(idx < 0){                // Out of bounds
-                currentChar = '0';
-            } else {
-                currentChar = str[idx];
-            }
-
-            if(currentChar <= '9')  { currentCharVal = (uint_fast32_t) (currentChar-'0'); }
-            else                    { currentCharVal = (uint_fast32_t) (currentChar-'7'); }
-            hex[i] += currentCharVal * pow(16.0, (double) j);
+        for (int j = 0; j < 115; j++) {
+            referenceVectors[i].data[j] = (uint8_t)(rand() % 256);
         }
     }
 
+    /* Initialize comparison vectors */
+    for (int i = 0; i < CMP_VECTOR_NO; i++) {
+        comparisonVectors[i].id = i;      /* Assign a simple ID. */
+        comparisonVectors[i].weight = 0;  /* Will be calculated later. */
+
+        for (int j = 0; j < 115; j++) {
+            comparisonVectors[i].data[j] = (uint8_t)(rand() % 256);
+        }
+    }
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void hex_to_str(uint_fast32_t* hex, char** str){
-    unsigned int strLen = VECTOR_WIDTH/4;
-    int idx;
-    char currentChar;
-    int i, j;
-    uint_fast32_t tmp;
+/*
+ * Function: writeVectorsToFile
+ * ----------------------------
+ * Writes the data[] bytes of the referenceVectors followed immediately
+ * by the data[] bytes of the comparisonVectors to a single binary file,
+ * with no header or extra information.
+ */
+int writeVectorsToFile(const char *filename)
+{
+    FILE *fp = fopen(filename, "wb");
+    if (!fp) {
+        perror("Failed to open output file");
+        return -1;
+    }
 
-    *str = (char*) malloc(strLen+1);
-
-    for(i = 0; i < WORD_NO; i++){           // Iterate 32 bit words
-        tmp = hex[i];
-        for(j = 0; j < 8; j++){             // Iterate 4 bit digits
-            switch(tmp & 0x0000000F){
-                case 0: currentChar = '0'; break;
-                case 1: currentChar = '1'; break;
-                case 2: currentChar = '2'; break;
-                case 3: currentChar = '3'; break;
-                case 4: currentChar = '4'; break;
-                case 5: currentChar = '5'; break;
-                case 6: currentChar = '6'; break;
-                case 7: currentChar = '7'; break;
-                case 8: currentChar = '8'; break;
-                case 9: currentChar = '9'; break;
-                case 10: currentChar = 'A'; break;
-                case 11: currentChar = 'B'; break;
-                case 12: currentChar = 'C'; break;
-                case 13: currentChar = 'D'; break;
-                case 14: currentChar = 'E'; break;
-                case 15: currentChar = 'F';
-            }
-
-            tmp = (tmp >> 4);
-            idx = strLen - (i*8+j) - 1;
-
-            if(idx >= 0){
-                *(*str + idx) = currentChar;
-            } else {
-                return;
-            }
+    /* Write reference vectors' data (115 bytes each) */
+    for (int i = 0; i < REF_VECTOR_NO; i++) {
+        size_t written = fwrite(referenceVectors[i].data, 
+                                sizeof(uint8_t), 
+                                115, 
+                                fp);
+        if (written != 115) {
+            perror("Failed to write reference vector data");
+            fclose(fp);
+            return -1;
         }
     }
 
-    str[i*8] = '\0';
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-unsigned int read_vectors(char* fname, FINGERPRINT** fp_vector_array){
-
-    long int fileSize;                  // no of bytes in vector database
-    long int vectorNo;                  // no of lines in vector database
-    char currentLine[WORD_NO*8+1];      // line currently read from file
-    unsigned int i = 0;
-    FILE* fp = fopen(fname, "r");
-    if(fp == NULL) { exit(-1); }
-
-    // set values necessary for dynamic allocations
-    fseek(fp, 0, SEEK_END);
-    fileSize = ftell(fp);
-    vectorNo = fileSize/(WORD_NO*4+1) + 1;
-    rewind(fp);
-
-    printf("Input file is %ld bytes long...\n", fileSize);
-    printf("Allocating memory for %ld vectors...\n", vectorNo);
-
-    *fp_vector_array = (FINGERPRINT*) malloc(sizeof(FINGERPRINT)*vectorNo);
-
-    while(fgets(currentLine, WORD_NO*8+1, fp)){
-        str_to_hex(currentLine, (*fp_vector_array)[i].vector);
-        if(i == vectorNo){ break; } else { i++; }
-    }
-
-    return i;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void print_fingerprint(FINGERPRINT f_print){
-    unsigned int i;
-    char* str;
-
-    hex_to_str(f_print.vector, &str);
-
-    printf("%s\n", str);
-    printf("WEIGHT: %d\n", f_print.weight);
-    free(str);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-unsigned int  CNT1(uint_fast32_t n){
-    unsigned int cnt = 0;
-
-    while (n) {
-        n &= (n - 1);
-        cnt++;
-    }
-
-    return cnt;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void set_fp_weight(FINGERPRINT* fp){
-    unsigned int i;
-    fp -> weight = 0;
-    for(i = 0; i < WORD_NO; i++){
-        fp -> weight += CNT1(fp -> vector[i]);
-    }
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-FINGERPRINT get_bitwise_and(FINGERPRINT A, FINGERPRINT B){
-    unsigned int i;
-    FINGERPRINT C;
-
-    for(i = 0; i < WORD_NO; i++){
-        C.vector[i] = A.vector[i] & B.vector[i];
-    }
-
-    return C;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-FINGERPRINT get_rand_fp(){
-    unsigned int i;
-    FINGERPRINT fp;
-
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    srand(ts.tv_nsec);
-
-    for(i = 0; i < WORD_NO; i++){
-        fp.vector[i] = (uint_fast32_t) rand();
-    }
-    set_fp_weight(&fp);
-    
-    return fp;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void gen_test_set(FINGERPRINT* A, unsigned int n_A, FINGERPRINT* B, unsigned int n_B, char* fname_ref, char* fname_cmp){
-    char* str;
-    unsigned int i;
-    FILE* f_ptr;
-
-    f_ptr = fopen(fname_ref, "w");
-
-    for(i = 0; i < n_A; i++){
-        A[i] = get_rand_fp();
-        hex_to_str(A[i].vector, &str);
-        fprintf(f_ptr, "%s\n", str);
-        free(str);
-    }
-
-    fclose(f_ptr);
-    f_ptr = fopen(fname_cmp, "w");
-
-    for(i = 0; i < n_B; i++){
-        B[i] = get_rand_fp();
-        hex_to_str(B[i].vector, &str);
-        fprintf(f_ptr, "%s\n", str);
-        free(str);
-    }
-
-    fclose(f_ptr);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// unsigned int calc_tanimoto(FINGERPRINT* A, FINGERPRINT* B, unsigned int thresh, unsigned int* out_arr[][]){
-//     unsigned int i, j;
-//     unsigned int numA = sizeof(A)/sizeof(FINGERPRINT);
-//     unsigned int numB = sizeof(B)/sizeof(FINGERPRINT);
-//     unsigned int cntPair = 0;
-//     double tnDissim;
-//     FINGERPRINT C;
-// 
-//     for(i = 0; i < numA; i++){      // iterate through reference vectors
-//         for(j = 0; j < numB; j++){  // iterate through compare vectors
-//             C = get_bitwise_and(A[i], B[j]);
-//             set_fp_weight(&C);
-// 
-//             tnDissim = (A[i].weight + B[j].weight) / C.weight;
-//             if(tnDissim <= thresh){
-//                 (*out_arr)[cntPair][0] = i;
-//                 (*out_arr)[cntPair][1] = j;
-//                 cntPair++;
-//             }
-//         }
-//     }
-// 
-//     return cntPair;
-// }
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-unsigned int calc_tanimoto_verif(FINGERPRINT* A, FINGERPRINT* B, unsigned int* thresh, unsigned int*** out_arr){
-    unsigned int i, j;
-    unsigned int numA = sizeof(A)/sizeof(FINGERPRINT);
-    unsigned int numB = sizeof(B)/sizeof(FINGERPRINT);
-    unsigned int cntPair = 0;
-    unsigned int tnDissimVerif;
-    FINGERPRINT C;
-
-    for(i = 0; i < numA; i++){      // iterate through reference vectors
-        for(j = 0; j < numB; j++){  // iterate through compare vectors
-            C = get_bitwise_and(A[i], B[j]);
-            set_fp_weight(&C);
-
-            tnDissimVerif = A[i].weight + B[j].weight;
-            if(tnDissimVerif <= thresh[C.weight]){
-                (*out_arr)[cntPair][0] = i;
-                (*out_arr)[cntPair][1] = j;
-                cntPair++;
-            }
+    /* Write comparison vectors' data (115 bytes each) */
+    for (int i = 0; i < CMP_VECTOR_NO; i++) {
+        size_t written = fwrite(comparisonVectors[i].data, 
+                                sizeof(uint8_t), 
+                                115, 
+                                fp);
+        if (written != 115) {
+            perror("Failed to write comparison vector data");
+            fclose(fp);
+            return -1;
         }
     }
 
-    return cntPair;
+    fclose(fp);
+    return 0;
 }
 
 
+/*
+ * Function: createIntermediaryVectors
+ * -----------------------------------
+ * For each pair (ref, cmp), compute the bitwise AND of the 115 data bytes
+ * and store it in intermediaryVectors.
+ * 
+ * The index in intermediaryVectors is (i * CMP_VECTOR_NO + j), where:
+ *   i in [0, REF_VECTOR_NO - 1]
+ *   j in [0, CMP_VECTOR_NO - 1]
+ */
+void createIntermediaryVectors(void)
+{
+    for (int i = 0; i < REF_VECTOR_NO; i++) {
+        for (int j = 0; j < CMP_VECTOR_NO; j++) {
+            int idx = i * CMP_VECTOR_NO + j; 
+
+            /* Initialize weight to 0 (will be calculated later) */
+            intermediaryVectors[idx].weight = 0;
+
+            /* Bitwise AND each byte of the data */
+            for (int k = 0; k < 115; k++) {
+                intermediaryVectors[idx].data[k] = 
+                    referenceVectors[i].data[k] & comparisonVectors[j].data[k];
+            }
+        }
+    }
+}
 
 
+/*
+ * Function: calculateBinaryWeight
+ * ----------------------------------
+ * Counts the number of '1' bits in the data[115] array of the input vector
+ * and stores this value in the vector's weight field.
+ */
+void calculateBinaryWeight(BinaryVector *vec)
+{
+    uint32_t bitCount = 0;
+    for (int i = 0; i < 115; i++) {
+        uint8_t byteVal = vec->data[i];
+        /* Count bits in byteVal */
+        for (int b = 0; b < 8; b++) {
+            bitCount += (byteVal >> b) & 1U;
+        }
+    }
+    vec->weight = bitCount;
+}
 
 
+/*
+ * Function: computeTanimotoSimilarity
+ * --------------------------------------
+ * Calculates the Tanimoto similarity between the reference, comparison,
+ * and their ANDed intermediary vector. We assume weight fields have already
+ * been computed.
+ * 
+ * TanimotoSimilarity = AND_weight / (ref_weight + cmp_weight - AND_weight).
+ */
+double computeTanimotoSimilarity(const BinaryVector *ref,
+                                 const BinaryVector *cmp,
+                                 const BinaryVector *inter)
+{
+    /* Convert to double to avoid integer division */
+    double andWeight  = (double)inter->weight;
+    double refWeight  = (double)ref->weight;
+    double cmpWeight  = (double)cmp->weight;
+
+    double denominator = (refWeight + cmpWeight - andWeight);
+
+    /* Check for zero denominator just in case */
+    if (denominator == 0.0) {
+        return 0.0; 
+    }
+
+    return andWeight / denominator;
+}
 
 
+/*
+ * Function: computeAllTanimotoSimilarities
+ * -------------------------------------------
+ * Iterates over all referenceVector - comparisonVector pairs, along with
+ * their corresponding intermediary vector, to compute and store the Tanimoto
+ * similarity for each pairing in the global tanimotoResults[] array.
+ */
+void computeAllTanimotoSimilarities(void)
+{
+    for (int i = 0; i < REF_VECTOR_NO; i++) {
+        for (int j = 0; j < CMP_VECTOR_NO; j++) {
+            int idx = i * CMP_VECTOR_NO + j;
+            /* Compute Tanimoto using the ref, cmp, and intermediary vectors */
+            tanimotoResults[idx].tanimotoCoefficient = computeTanimotoSimilarity(&referenceVectors[i], 
+                                                                                 &comparisonVectors[j], 
+                                                                                 &intermediaryVectors[idx]);
+            tanimotoResults[idx].referenceVectorID = referenceVectors[i].id;
+            tanimotoResults[idx].comparisonVectorID = comparisonVectors[j].id;
+        }
+    }
+}
 
 
+/*
+ * Function: printResult
+ * ---------------------
+ * Prints the referenceVectorID and comparisonVectorID from a TanimotoResult,
+ * if the calculated coefficient is less than the given threshold
+ */
+void printResult(const TanimotoResult result, double threshold)
+{
+    if(result.tanimotoCoefficient <= threshold) {
+        printf("refID:\t%u\tcmpID:\t%u\tcoeff:\t%f\n",
+               result.referenceVectorID,
+               result.comparisonVectorID,
+               result.tanimotoCoefficient);
+    }
+}
 
+/*
+ * Function: printAllResultsToTxtFile
+ * ----------------------------------
+ * Export all results to TXT file. Comparison with accelerator output to be done
+ * on the targed device
+ */
+void printAllResultsToTxtFile(const char *filename)
+{
+    FILE *fp = fopen(filename, "w");
+    if (!fp) {
+        perror("Error opening output file");
+        return;
+    }
 
+    for (int i = 0; i < REF_VECTOR_NO * CMP_VECTOR_NO; i++) {
+        fprintf(fp, "refID:\t%u\tcmpID:\t%u\tcoeff:\t%f\n",
+                tanimotoResults[i].referenceVectorID,
+                tanimotoResults[i].comparisonVectorID,
+                tanimotoResults[i].tanimotoCoefficient);
+    }
 
-
-
-
-
-
-
-
-
-
-
+    fclose(fp);
+}

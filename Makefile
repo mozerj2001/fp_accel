@@ -93,6 +93,20 @@ xclbin_debug:
     	--save-temps \
     	-o ./build/tanimoto_krnl.xclbin
 
+c:
+	@echo "############################################################################"
+	@echo "# BUILDING C IMPLEMENTATION"
+	@echo "############################################################################"
+	cd src/c_impl; gcc main.c tanimoto.c -o main.o -Wall -Wextra
+	./src/c_impl/main.o
+	cp -f src/c_impl/vectors.bin build/vectors.bin
+	cp -f src/c_impl/results.txt build/results.txt
+
+clean_c:
+	rm src/c_impl/main.o
+	rm src/c_impl/vectors.bin
+	rm src/c_impl/results.txt
+
 clean_platform:
 	rm -rf platform/WorkSpace/zcu106_custom_platform/
 	rm -rf platform/WorkSpace/zcu106_custom/
