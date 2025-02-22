@@ -9,3 +9,5 @@ connect_bd_net [get_bd_pins tanimoto_1/BRAM_PORTA_we_a] [get_bd_pins axi_bram_ct
 endgroup
 
 regenerate_bd_layout
+validate_bd_design
+save_bd_design
