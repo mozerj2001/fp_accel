@@ -25,8 +25,8 @@
 
 static const int VECTOR_WIDTH = 920;
 static const int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
-static const int REF_VECTOR_NO = 32;
-static const int CMP_VECTOR_NO = 128;
+static const int REF_VECTOR_NO = 8;
+static const int CMP_VECTOR_NO = 92;
 static const int ID_SIZE = 1;           // ID_WIDTH in bytes
 
 // See documentation on how this avoids doing division in the PL
