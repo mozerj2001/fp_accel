@@ -6,6 +6,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "host.h"
+#include <CL/cl2.hpp>
+
+/*  ################################
+ *  DEFINES
+ */
 
 // Threshold RAM address limits
 #define BRAM_BASEADDR 0x82000000    // BRAM base address
@@ -23,40 +28,29 @@
         exit(EXIT_FAILURE);                                                                      \
     }
 
+/*  ################################
+ *  GLOBAL CONSTANTS
+ */
+
 static const int VECTOR_WIDTH = 920;
 static const int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
 static const int REF_VECTOR_NO = 8;
 static const int CMP_VECTOR_NO = 92;
 static const int ID_SIZE = 1;           // ID_WIDTH in bytes
 
-// See documentation on how this avoids doing division in the PL
-// Use /dev/mem and mmap to access memory mapped IO in physical memory
-int configure_threshold_ram(){
-    int mem_fp = open("/dev/mem", O_RDWR | O_SYNC);
-    if(mem_fp < 0){
-        std::cout << "[ERROR] Cannot open /dev/mem.\n";
-        return 1;
-    }
+/*  ################################
+ *  FUNCTION DECLARATIONS
+ */
 
-    void *mem = mmap(0, BRAM_IO_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fp, BRAM_BASEADDR);
-    if (mem == MAP_FAILED){
-        std::cout << "[ERROR] mmap() call failed, cannot access BRAM IO!\n";
-        close(mem_fp);
-        return 1;
-    }
+int configure_threshold_ram();
+int readVectorsFromFile(uint8_t *ptr_ref, uint8_t *ptr_cmp, const char *filename);
 
-    // Configure threshold RAM
-    unsigned int *bram = (unsigned int*) mem;
-    for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
-        // *(bram + cnt_c) = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
-        *(bram + cnt_c) = 0;
-    }
-    
-    munmap(mem, BRAM_IO_SIZE);
-    close(mem_fp);
-    return 0;
-}
-
+/*  ################################
+ *  MAIN
+ *  --> read vectors from binary file
+ *  --> push to accelerator
+ *  --> compare results
+ */
 
 int main(int argc, char* argv[]) {
     char dd;    // dummy input char
@@ -168,7 +162,6 @@ int main(int argc, char* argv[]) {
     int* ptr_cmp;
     int* ptr_idp;
 
-    //std::cin >> dd;
     std::cout << "[INFO] Mapping OCL buffers to pointers.\n";
     OCL_CHECK(err,
               ptr_ref = (int*)q.enqueueMapBuffer(vec_ref_buffer, CL_TRUE, CL_MAP_WRITE, 0, ref_buf_size, NULL, NULL, &err));
@@ -177,36 +170,33 @@ int main(int argc, char* argv[]) {
     OCL_CHECK(err, 
               ptr_idp = (int*)q.enqueueMapBuffer(id_pair_buffer, CL_TRUE, CL_MAP_READ, 0, id_pair_size, NULL, NULL, &err));
 
-    // Randomize data (int for now)
-    // TODO: replace randomization with reading binary vectors from a file
+    // Load data/randomize in place
+    if(readVectorsFromFile((uint8_t*) ptr_ref, (uint8_t*) ptr_cmp, "vectors.bin")) {
+        std::cout << "[WARNING] Test data could not be loaded, continuing with random data.\n";
+        for (int i = 0; i < (int) ref_buf_size/sizeof(int); i++) {
+            ptr_ref[i] = rand() % RAND_MAX;
+        }
+        for (int i = 0; i < (int) cmp_buf_size/sizeof(int); i++) {
+            ptr_cmp[i] = rand() % RAND_MAX;
+        }
+    }
 
-    std::cout << "[INFO] Randomize test data.\n";
-    for (int i = 0; i < (int) ref_buf_size/sizeof(int); i++) {
-        ptr_ref[i] = rand() % RAND_MAX;
-    }
-    for (int i = 0; i < (int) cmp_buf_size/sizeof(int); i++) {
-        ptr_cmp[i] = rand() % RAND_MAX;
-    }
 
 
     // Copy buffers to kernel memory space
-    //std::cin >> dd;
     std::cout << "[INFO] Copy input buffers to the kernel's memory space.\n";
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({vec_ref_buffer, cmp_ref_buffer}, 0 /* 0 means from host*/));
 
     // Configure threshold BRAM
-    //std::cin >> dd;
     if(configure_threshold_ram()){
         std::cout << "[ERROR] Someting went wrong when accessing the memory mapped threshold BRAMs.\n";
     }
 
     // Launch the Kernel
-    //std::cin >> dd;
     std::cout << "[INFO] Launch kernel.\n";
     OCL_CHECK(err, err = q.enqueueTask(tanimoto_krnl));
 
     // Cpoy ID pair to host memory space
-    //std::cin >> dd;
     std::cout << "[INFO] Read output into host memory.\n";
     OCL_CHECK(err, q.enqueueMigrateMemObjects({id_pair_buffer}, CL_MIGRATE_MEM_OBJECT_HOST));  
 
@@ -235,4 +225,74 @@ int main(int argc, char* argv[]) {
     int match = 0;
     std::cout << "TEST FINISHED!" << std::endl;
     return (match ? EXIT_FAILURE : EXIT_SUCCESS);
+}
+
+
+/*  ################################
+ *  FUNCTION DEFINITIONS
+ */
+
+// FUNCTION: Load division results to the threshold BRAM in the comparator module
+// See documentation on how this avoids doing division in the PL
+// Use /dev/mem and mmap to access memory mapped IO in physical memory
+int configure_threshold_ram(){
+    int mem_fp = open("/dev/mem", O_RDWR | O_SYNC);
+    if(mem_fp < 0){
+        std::cout << "[ERROR] Cannot open /dev/mem.\n";
+        return 1;
+    }
+
+    void *mem = mmap(0, BRAM_IO_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fp, BRAM_BASEADDR);
+    if (mem == MAP_FAILED){
+        std::cout << "[ERROR] mmap() call failed, cannot access BRAM IO!\n";
+        close(mem_fp);
+        return 1;
+    }
+
+    // Configure threshold RAM
+    unsigned int *bram = (unsigned int*) mem;
+    for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
+        // *(bram + cnt_c) = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+        *(bram + cnt_c) = 0;
+    }
+    
+    munmap(mem, BRAM_IO_SIZE);
+    close(mem_fp);
+    return 0;
+}
+
+
+// FUNCTION: Read pre-generated binary test vectors.
+// Input file "vectors.bin" assumed to be present in working directory for now.
+int readVectorsFromFile(uint8_t *ptr_ref, uint8_t *ptr_cmp, const char *filename)
+{
+    std::cout << "[INFO] Reading test vectors from vectors.bin.\n";
+
+    FILE *fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        perror("[ERROR] Error opening file");
+        return 1;
+    }
+
+    size_t refBytes = REF_VECTOR_NO * 115;
+    size_t cmpBytes = CMP_VECTOR_NO * 115;
+
+    /* Read reference vectors (refBytes total) */
+    size_t bytesRead = fread(ptr_ref, sizeof(uint8_t), refBytes, fp);
+    if (bytesRead != refBytes) {
+        perror("[ERROR] Error reading reference vectors");
+        fclose(fp);
+        return 1;
+    }
+
+    /* Read comparison vectors (cmpBytes total) */
+    bytesRead = fread(ptr_cmp, sizeof(uint8_t), cmpBytes, fp);
+    if (bytesRead != cmpBytes) {
+        perror("[ERROR] Error reading comparison vectors");
+        fclose(fp);
+        return 1;
+    }
+
+    fclose(fp);
+    return 0;
 }
