@@ -20,14 +20,18 @@ module top_intf
     )(
         input wire                          ap_clk              ,
         input wire                          ap_rstn             ,
+
         // S_AXIS_DATA vector input stream
         input wire [BUS_WIDTH-1:0]          S_AXIS_DATA_tdata    ,
         input wire                          S_AXIS_DATA_tvalid   ,
         output wire                         S_AXIS_DATA_tready   ,
+
         // M_AXIS_ID_PAIR ID pair output stream
         output wire [2*VEC_ID_WIDTH-1:0]    M_AXIS_ID_PAIR_tdata ,
         output wire                         M_AXIS_ID_PAIR_tvalid,
+        output wire                         M_AXIS_ID_PAIR_tlast ,
         input wire                          M_AXIS_ID_PAIR_tready,
+
         // Comparator BRAM interface
         input wire                          BRAM_PORTA_clk_a    ,
         input wire                          BRAM_PORTA_rst_a    ,  
@@ -35,7 +39,12 @@ module top_intf
         input wire [CNT_WIDTH-1:0]          BRAM_PORTA_wrdata_a , 
         output wire [CNT_WIDTH-1:0]         BRAM_PORTA_rddata_a , 
         input wire                          BRAM_PORTA_en_a     ,  
-        input wire                          BRAM_PORTA_we_a
+        input wire                          BRAM_PORTA_we_a     ,
+
+        // CMP vector no register handshake interface
+        input wire [VEC_ID_WIDTH-1:0]       AP_HS_CmpVectorNo       ,
+        input wire                          AP_HS_CmpVectorNoValid  ,
+        output wire                         AP_HS_CmpVectorNoWack
     );
 
     // S_AXIS_DATA signals
@@ -51,10 +60,12 @@ module top_intf
     wire [2*VEC_ID_WIDTH-1:0]   o_IDPair_Out    ;
     wire                        o_IDPair_Ready  ;
     wire                        i_IDPair_Read   ;
+    wire                        o_IDPair_Last   ;
 
     assign M_AXIS_ID_PAIR_tdata  = o_IDPair_Out          ;
     assign M_AXIS_ID_PAIR_tvalid = o_IDPair_Ready        ;
-    assign i_IDPair_Read        = M_AXIS_ID_PAIR_tready  ;
+    assign i_IDPair_Read         = M_AXIS_ID_PAIR_tready ;
+    assign M_AXIS_ID_PAIR_tlast  = o_IDPair_Last         ;
 
     // BRAM_PORTA signals
     wire                          i_BRAM_Clk    ;
@@ -72,6 +83,17 @@ module top_intf
     assign i_BRAM_WrEn          = BRAM_PORTA_we_a       ;
     assign BRAM_PORTA_rddata_a  = 0;
 
+    // CMP vector no register handshake interface signals
+    wire [VEC_ID_WIDTH-1:0]       i_CmpVectorNo     ;
+    wire                          i_CmpVectorNoValid;
+    wire                          o_CmpVectorNoWack ;
+
+    assign i_CmpVectorNo            = AP_HS_CmpVectorNo         ;
+    assign i_CmpVectorNoValid       = AP_HS_CmpVectorNoValid    ;
+    assign AP_HS_CmpVectorNoWack    = o_CmpVectorNoWack         ;
+
+
+    // Top level accelerator pipeline
     tanimoto_top #(
         .BUS_WIDTH      (BUS_WIDTH          ),
         .VECTOR_WIDTH   (VECTOR_WIDTH       ),
@@ -80,20 +102,24 @@ module top_intf
         .SHR_DEPTH      (SHR_DEPTH          ),
         .VEC_ID_WIDTH   (VEC_ID_WIDTH       )
     ) u_tanimoto_top (
-        .clk            (ap_clk         ),
-        .rstn           (ap_rstn        ),
-        .i_Vector       (i_Vector       ),
-        .i_Valid        (i_Valid        ),
-        .i_BRAM_Clk     (i_BRAM_Clk     ),
-        .i_BRAM_Rst     (i_BRAM_Rst     ),  
-        .i_BRAM_Addr    (i_BRAM_Addr    ),
-        .i_BRAM_Din     (i_BRAM_Din     ), 
-        .i_BRAM_En      (i_BRAM_En      ),  
-        .i_BRAM_WrEn    (i_BRAM_WrEn    ),
-        .i_IDPair_Read  (i_IDPair_Read  ),
-        .o_Read         (o_Read         ),
-        .o_IDPair_Ready (o_IDPair_Ready ),
-        .o_IDPair_Out   (o_IDPair_Out   ) 
+        .clk                (ap_clk             ),
+        .rstn               (ap_rstn            ),
+        .i_Vector           (i_Vector           ),
+        .i_Valid            (i_Valid            ),
+        .i_BRAM_Clk         (i_BRAM_Clk         ),
+        .i_BRAM_Rst         (i_BRAM_Rst         ),  
+        .i_BRAM_Addr        (i_BRAM_Addr        ),
+        .i_BRAM_Din         (i_BRAM_Din         ), 
+        .i_BRAM_En          (i_BRAM_En          ),  
+        .i_BRAM_WrEn        (i_BRAM_WrEn        ),
+        .i_IDPair_Read      (i_IDPair_Read      ),
+        .o_Read             (o_Read             ),
+        .o_IDPair_Ready     (o_IDPair_Ready     ),
+        .o_IDPair_Out       (o_IDPair_Out       ),
+        .o_IDPair_Last      (o_IDPair_Last      ),
+        .i_CmpVectorNo      (i_CmpVectorNo      ),
+        .i_CmpVectorNoValid (i_CmpVectorNoValid ),
+        .o_CmpVectorNoWack  (o_CmpVectorNoWack  )
     );
 
 endmodule

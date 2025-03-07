@@ -20,16 +20,18 @@ module tanimoto_top
         VECTOR_WIDTH        = 920,
         SUB_VECTOR_NO       = 2,        // how many sub-vectors are in a full vector (NOTE: only 2 is supported)
         GRANULE_WIDTH       = 6,        // width of the first CNT1 tree stage, 6 on Xilinx/AMD FPGA
-        SHR_DEPTH           = 32,       // how many vectors this module is able to store as reference vectors
-        VEC_ID_WIDTH        = 8,
+        SHR_DEPTH           = 8,        // how many vectors this module is able to store as reference vectors
+        VEC_ID_WIDTH        = 16,       // implicitly defines how wide vector counters need to be
         //
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
     )(
         input wire                          clk,
         input wire                          rstn,
+
         // Vector stream
         input wire [BUS_WIDTH-1:0]          i_Vector,
         input wire                          i_Valid,
+
         // Comprator BRAM interface for thresholds
         input wire                          i_BRAM_Clk,
         input wire                          i_BRAM_Rst,  
@@ -37,14 +39,20 @@ module tanimoto_top
         input wire [CNT_WIDTH-1:0]          i_BRAM_Din, 
         input wire                          i_BRAM_En,  
         input wire                          i_BRAM_WrEn,
+
         // Output ID stream
         input wire                          i_IDPair_Read,
         output wire                         o_Read,
         output wire                         o_IDPair_Ready,
-        output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out
+        output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out,
+        output wire                         o_IDPair_Last,
+
+        // CMP vector no register handshake interface
+        input wire [VEC_ID_WIDTH-1:0]       i_CmpVectorNo,
+        input wire                          i_CmpVectorNoValid,
+        output wire                         o_CmpVectorNoWack
     );
 
-    localparam SUB_VEC_CNTR_WIDTH   = 16;   //$clog2(SUB_VECTOR_NO*SHR_DEPTH);
     localparam LOAD_REF             = 1'b0;
     localparam COMPARE              = 1'b1;
     localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
@@ -53,7 +61,7 @@ module tanimoto_top
     // Counts sub-vectors incoming from the input cnt1.
     // Assuming there are two sub-vectors per vector, its LSB
     // is the select signal for the output multiplexers.
-    reg [SUB_VEC_CNTR_WIDTH-1:0] r_SubVecCntr;
+    reg [VEC_ID_WIDTH:0] r_SubVecCntr;
     wire w_Cnt_SubVector_Valid;
 
     always @ (posedge clk)
@@ -65,8 +73,29 @@ module tanimoto_top
         end
     end
 
+    // COMPARE VECTOR LIMIT REGISTER
+    // Emit TLAST signal when the last valid vector has arrived
+    // TODO: Add delay for the pipeline to flush after the last fingerprints are received
+    reg [VEC_ID_WIDTH:0]    r_BVecNoReg;
+    wire                    w_Update_BVecNoReg;
+
+    assign w_Update_BVecNoReg = (r_State == LOAD_REF) && i_CmpVectorNoValid;
+
+    always @(posedge clk)
+    begin
+        if(!rstn) begin
+            r_BVecNoReg <= 0;
+        end else if(w_Update_BVecNoReg) begin
+            r_BVecNoReg <= {i_CmpVectorNo, 1'b0};
+        end
+    end
+
+    assign o_CmpVectorNoWack = w_Update_BVecNoReg;
+    assign o_IDPair_Last = (r_SubVecCntr == (SHR_DEPTH * SUB_VECTOR_NO) + r_BVecNoReg - 1);
 
     // STATE MACHINE
+    //  - LOAD_REF: Load reference vectors into A shiftregisters
+    //  - COMPARE: Load compare vectors into B shiftregisters + calculate tanimoto
     reg r_State;
     wire w_StartCompare;
 
@@ -82,11 +111,10 @@ module tanimoto_top
     end
 
 
-
     // VECTOR CONCATENATOR UNIT
     // If the total vector width is not divisable by BUS_WIDTH, the vec_cat
     // module ensures that vectors aren't mixed up, thus will receive correct
-    // CNT1 values.
+    // CNT1 values. Responsible for emitting read signals and splicing input.
     wire [BUS_WIDTH-1:0]    w_Catted_Vector;
     wire                    w_Catted_Valid;
     wire [VEC_ID_WIDTH-1:0] w_CatOut_VecID;
@@ -108,7 +136,7 @@ module tanimoto_top
 
 
     // INPUT CNT1 UNIT
-    // Calculates input vector weight.
+    // Calculates input vector weight to be loaded into CTN shiftregisters.
     wire [BUS_WIDTH-1:0]    w_Cnted_Vector;
     wire [CNT_WIDTH-1:0]    w_Cnt;
     wire                    w_Cnt_New;
@@ -139,7 +167,7 @@ module tanimoto_top
     reg     [SHR_DEPTH-1:0] r_State_Shr;
     wire    [SHR_DEPTH-1:0] w_OutCnt1_ValidIn;
 
-    // --> valid is only propagated on valid, so pipeline will have to be flushed by pushing zeroes
+    // TODO: --> valid is only propagated on valid, so pipeline will have to be flushed by pushing zeroes
     wire w_PropagateControl;
     assign w_PropagateControl = (r_State == COMPARE) && r_SubVecCntr[0] && w_Cnt_SubVector_Valid;
 
@@ -218,7 +246,7 @@ module tanimoto_top
 
 
     // CNT SHIFTREGISTERS
-    // Store CNT1 reslults from the pre-stage unit in a LUT shiftregister.
+    // Store CNT1 reslults from the input CNT1 unit in a LUT shiftregister.
     // r_State selects whether the results are from A or B vectors, similarly
     // to the VECTOR SHIFTREGISTERS.
     wire w_Shift_CntA;
@@ -413,7 +441,7 @@ module tanimoto_top
 
     // COMPARATOR MODULES
     // Compare CNT1 results to programmed threshold.
-    // o_Dout == 1 --> Current output IDs are over the threshold.
+    // o_Dout == 1 --> Current output IDs are over the threshold, the result can be emitted.
     wire [SHR_DEPTH-1:0]    w_CompareDout;
     wire [SHR_DEPTH-1:0]    w_CompareValid;
 
