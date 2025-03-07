@@ -13,7 +13,7 @@ module tb_tanimoto_top(
     localparam VEC_ID_WIDTH     = $clog2(VECTOR_WIDTH);
     localparam CNT_WIDTH        = $clog2(VECTOR_WIDTH);
 
-    localparam REF_VEC_NO       = 32;
+    localparam REF_VEC_NO       = 8;
     localparam CMP_VEC_NO       = 128;
 
     localparam SHR_DEPTH        = REF_VEC_NO;
@@ -30,9 +30,12 @@ module tb_tanimoto_top(
     reg [CNT_WIDTH-1:0] threshold_addr = 0;
     reg                 wr_threshold;
 
+    reg [VEC_ID_WIDTH-1:0] cmp_vec_no = CMP_VEC_NO;
+    reg                    cmp_vec_no_valid = 0;
+    wire                   cmp_vec_no_wack;
+
 
     // TEST FIFO SIGNALS
-    reg f_write                 = 1'b0;
     reg [BUS_WIDTH-1:0] f_din   = {BUS_WIDTH{1'b0}};
     wire f_read;
     wire [BUS_WIDTH-1:0] f_dout;
@@ -60,6 +63,7 @@ module tb_tanimoto_top(
     // DUT
     wire                        id_pair_read;
     wire [2*VEC_ID_WIDTH-1:0]   id_pair_out;
+    wire                        id_pair_last;
     wire                        id_pair_ready;
 
     assign id_pair_read = id_pair_ready;
@@ -73,23 +77,40 @@ module tb_tanimoto_top(
         .SHR_DEPTH      (SHR_DEPTH      ),
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) dut (
-        .clk                    (clk            ),
-        .rstn                   (rstn           ),
-        .i_Vector               (f_dout         ),
-        .i_Valid                (~f_empty       ),
-        .i_BRAM_Addr            (threshold_addr ),
-        .i_BRAM_Din             (threshold      ),
-        .i_BRAM_En              (1'b1           ),
-        .i_BRAM_WrEn            (wr_threshold   ),
-        .i_IDPair_Read          (id_pair_read   ),
-        .o_Read                 (f_read         ),
-        .o_IDPair_Ready         (id_pair_ready  ),
-        .o_IDPair_Out           (id_pair_out    )
+        .clk                    (clk                ),
+        .rstn                   (rstn               ),
+        .i_Vector               (f_dout             ),
+        .i_Valid                (~f_empty           ),
+        .i_BRAM_Addr            (threshold_addr     ),
+        .i_BRAM_Din             (threshold          ),
+        .i_BRAM_En              (1'b1               ),
+        .i_BRAM_WrEn            (wr_threshold       ),
+        .i_IDPair_Read          (id_pair_read       ),
+        .o_Read                 (f_read             ),
+        .o_IDPair_Ready         (id_pair_ready      ),
+        .o_IDPair_Out           (id_pair_out        ),
+        .o_IDPair_Last          (id_pair_last       ),
+        .i_CmpVectorNo          (cmp_vec_no         ),
+        .i_CmpVectorNoValid     (cmp_vec_no_valid   ),
+        .o_CmpVectorNoWack      (cmp_vec_no_wack    )
     );
 
     always begin 
         clk <= ~clk;
         #HALF_CLK_PERIOD;
+    end
+
+    reg state = 0;
+    reg [31:0] vec_cntr = 0;
+
+    always @ (posedge clk)
+    begin
+        if(state) begin
+            vec_cntr <= vec_cntr + 1;
+        end
+        if(vec_cntr == (REF_VEC_NO + CMP_VEC_NO) * SUB_VECTOR_NO) begin
+            state <= 0;
+        end
     end
 
     // STIMULUS
@@ -106,39 +127,36 @@ module tb_tanimoto_top(
             #CLK_PERIOD;
         end
         wr_threshold <= 0;
+        #CLK_PERIOD;
+        state = 1'b1;
+    end
+
+    // set CMP_VEC_NO
+    initial begin
+        #100;
+        cmp_vec_no_valid <= 1;
+        #CLK_PERIOD;
+        cmp_vec_no_valid <= 0;
     end
 
     // fill FIFOs
-    integer fp_vec;
-    integer scan;
-    reg [BUS_WIDTH-1:0] vec;
-    initial begin
-        $system("/home/jozmoz01/sandbox/fp_accel/src/verilog/sim_1/test_vectors.dat");
-        fp_vec = $fopen("/home/jozmoz01/sandbox/fp_accel/src/verilog/sim_1/test_vectors.dat", "r");
-        if(fp_vec == 0) begin
-            $display("ERROR: File containing test vectors was not found...");
-            $finish;
-        end
-    end
-
     reg f_write_d;
     always @ (posedge clk)
     begin
-        if(!rstn) begin
+        if(!rstn || !state) begin
             f_write_d <= 0;
         end else begin
-            f_write_d <= f_write;
+            f_write_d <= 1'b1;
         end
     end
 
+    // generate random input vectors
+    integer ii;
     always @ (posedge clk)
     begin
-        if(rstn & f_write) begin
-            scan = $fscanf(fp_vec, "%h\n", vec);
-            if(!$feof(fp_vec)) begin
-                f_din <= vec;
-            end else begin
-                $fclose(fp_vec);
+        if(rstn && state) begin
+            for(ii = 0; ii < VECTOR_WIDTH; ii = ii + 32) begin
+                f_din[ii*32 -: 32] <= $urandom();
             end
         end
     end
@@ -147,36 +165,6 @@ module tb_tanimoto_top(
     initial begin
         #100;
         rstn <= 1'b1;
-        #CLK_PERIOD;
-        threshold = 650;
-        #CLK_PERIOD;
-        #500;
-        f_write <= 1'b1;
-        if($feof(fp_vec)) begin
-            f_write <= 1'b0;
-        end
-        #CLK_PERIOD;
     end
-
-    // write results to file
-    integer fp_id;
-    initial begin
-        fp_id = $fopen("./id_out.txt", "w");
-        if(fp_id == 0) begin
-            $display("ERROR: Logfile for ID pairs could not be opened...");
-            $finish;
-        end
-
-        #10000;
-        $fclose(fp_id);
-    end
-
-    always @ (posedge clk)
-    begin
-        if(rstn && id_pair_ready) begin
-            $fdisplay(fp_id, "%h\n", id_pair_out);
-        end
-    end
-
 
 endmodule
