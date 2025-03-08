@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
               ptr_idp = (int*)q.enqueueMapBuffer(id_pair_buffer, CL_TRUE, CL_MAP_READ, 0, id_pair_size, NULL, NULL, &err));
 
     // Load data/randomize in place
-    if(readVectorsFromFile((uint8_t*) ptr_ref, (uint8_t*) ptr_cmp, "vectors.bin")) {
+    if(1/*readVectorsFromFile((uint8_t*) ptr_ref, (uint8_t*) ptr_cmp, "vectors.bin")*/) {
         std::cout << "[WARNING] Test data could not be loaded, continuing with random data.\n";
         for (int i = 0; i < (int) ref_buf_size/sizeof(int); i++) {
             ptr_ref[i] = rand() % RAND_MAX;
@@ -266,8 +266,6 @@ int configure_threshold_ram(){
 // Input file "vectors.bin" assumed to be present in working directory for now.
 int readVectorsFromFile(uint8_t *ptr_ref, uint8_t *ptr_cmp, const char *filename)
 {
-    std::cout << "[INFO] Reading test vectors from vectors.bin.\n";
-
     FILE *fp = fopen(filename, "rb");
     if (fp == NULL) {
         perror("[ERROR] Error opening file");
