@@ -21,7 +21,7 @@ void vec_intf(	bus_t* 				vec_ref,
 {
 
 	axis_vec_t tmp;
-	int unsigned i, j;
+	int unsigned i, j, remaining;
 
 	ref_loop: for(unsigned int i = 0; i < REF_VEC_NO; i++){
 		tmp.data = *(vec_ref++);
@@ -29,15 +29,28 @@ void vec_intf(	bus_t* 				vec_ref,
 	}
 
 	i = 0;
+	remaining = cmp_vec_no_in;
 	while(1){
-		cmp_loop: for(unsigned int j = 0; j < 256; j++){
-			tmp.data = *(vec_cmp++);
-			vec_out.write(tmp);
 
-			i++;
-			if(i == cmp_vec_no_in) break;
+		if(remaining < AXI_BURST_LENGTH){
+
+			cmp_finish_loop: for(unsigned int j = 0; j < remaining; j++){
+				tmp.data = *(vec_cmp++);
+				vec_out.write(tmp);
+			}
+
+			return;
+
+		} else {
+
+			cmp_burst_loop: for(unsigned int j = 0; j < 256; j++){
+				tmp.data = *(vec_cmp++);
+				vec_out.write(tmp);
+			}
+
+			remaining = remaining - AXI_BURST_LENGTH;
 		}
-		if(i == cmp_vec_no_in) break;
+
 	}
 }
 
@@ -67,6 +80,21 @@ void id_intf(	axi_stream_id_pair_t& 	id_in,
 
 }
 
+// Scalar AXI ==> AXI-Stream
+
+/*
+ * cmp_vec_no_in: 	Number of compare (B) vectors in the next batch, written by the PS.
+ * cmp_vec_no_out: 	AXI-Stream port for valid-ready handshake IF in the accelerator.
+ * NOTE: ap_hs could not be used, as it is not supported when running synthesis for Vitis kernels.
+ */
+void vec_no_intf(	vec_no_t 				cmp_vec_no_in,
+					axi_stream_vec_no_t& 	cmp_vec_no_out	)
+{
+	axis_vec_no_t tmp;
+
+	tmp.data = cmp_vec_no_in;
+	cmp_vec_no_out.write(tmp);
+}
 
 // Interface
 
@@ -76,19 +104,18 @@ void hls_dma(	bus_t* 					vec_ref,
 				axi_stream_id_pair_t& 	id_in,
 				id_pair_t* 				id_out,
 				vec_no_t				cmp_vec_no_in,
-				vec_no_t				cmp_vec_no_out	)
+				axi_stream_vec_no_t&	cmp_vec_no_out	)
 {
-#pragma HLS INTERFACE mode=m_axi bundle=gmem1 max_read_burst_length=256 port=vec_ref
-#pragma HLS INTERFACE mode=m_axi bundle=gmem1 max_read_burst_length=256 port=vec_cmp
-#pragma HLS INTERFACE mode=axis register_mode=both port=vec_out register
-#pragma HLS INTERFACE mode=axis register_mode=both port=id_in register
-#pragma HLS INTERFACE mode=m_axi bundle=gmem2 port=id_out
-#pragma HLS INTERFACE mode=ap_hs port=cmp_vec_no_in
-#pragma HLS INTERFACE mode=ap_hs port=cmp_vec_no_out
-
-	cmp_vec_no_out = cmp_vec_no_in;
+#pragma HLS INTERFACE m_axi bundle=gmem1 max_read_burst_length=AXI_BURST_LENGTH port=vec_ref
+#pragma HLS INTERFACE m_axi bundle=gmem1 max_read_burst_length=AXI_BURST_LENGTH port=vec_cmp
+#pragma HLS INTERFACE axis register_mode=both port=vec_out register
+#pragma HLS INTERFACE axis register_mode=both port=id_in register
+#pragma HLS INTERFACE m_axi bundle=gmem2 port=id_out
+#pragma HLS INTERFACE axis register_mode=both port=cmp_vec_no_out register
 
 #pragma HLS DATAFLOW
+
+	vec_no_intf(cmp_vec_no_in, cmp_vec_no_out);
 	vec_intf(vec_ref, vec_cmp, vec_out, cmp_vec_no_in);
 	id_intf(id_in, id_out);
 
