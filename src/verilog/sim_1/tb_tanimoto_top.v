@@ -155,8 +155,8 @@ module tb_tanimoto_top(
     always @ (posedge clk)
     begin
         if(rstn && state) begin
-            for(ii = 0; ii < VECTOR_WIDTH; ii = ii + 32) begin
-                f_din[ii*32 -: 32] <= $urandom();
+            for(ii = 0; ii*32 < VECTOR_WIDTH; ii = ii + 1) begin
+                f_din[ii*32 +: 32] <= $urandom();
             end
         end
     end

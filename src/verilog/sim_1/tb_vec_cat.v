@@ -11,6 +11,9 @@ module tb_vec_cat(
     localparam VECTOR_WIDTH     = 128;
     localparam VEC_ID_WIDTH     = 8;
 
+    localparam REF_VEC_NO       = 8;
+    localparam CMP_VEC_NO       = 128;
+
     localparam CLK_PERIOD       = 10;
     localparam HALF_CLK_PERIOD  = CLK_PERIOD/2;
 
@@ -23,7 +26,6 @@ module tb_vec_cat(
     wire cat_valid;
 
     // FIFO SIGNALS
-    reg f_write                 = 1'b0;
     reg [BUS_WIDTH-1:0] f_din   = {BUS_WIDTH{1'b0}};
     wire f_read;
     wire [BUS_WIDTH-1:0] f_dout;
@@ -33,7 +35,7 @@ module tb_vec_cat(
     reg f_write_d;
     always @ (posedge clk)
     begin
-        f_write_d <= f_write;
+        f_write_d <= !state;
     end
 
     // TEST FIFO
@@ -43,7 +45,7 @@ module tb_vec_cat(
         .DEPTH  (VECTOR_WIDTH   )
     ) test_fifo (
         .clk    (clk        ),
-        .rst    (!rstn      ),
+        .rstn   (rstn       ),
         .wr     (f_write_d  ),
         .d      (f_din      ),
         .full   (f_full     ),
@@ -61,14 +63,17 @@ module tb_vec_cat(
         .VECTOR_WIDTH   (VECTOR_WIDTH   ),
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) uut(
-        .clk        (clk        ),
-        .rstn       (rstn       ),
-        .i_Vector   (f_dout     ),
-        .i_Valid    (~f_empty   ),
-        .o_Vector   (cat_vector ),
-        .o_VecID    (vec_id     ),
-        .o_Valid    (cat_valid  ),
-	    .o_Read     (f_read     )
+        .clk                (clk                ),
+        .rstn               (rstn               ),
+        .i_Vector           (f_dout             ),
+        .i_Valid            (~f_empty           ),
+        .o_Vector           (cat_vector         ),
+        .o_VecID            (vec_id             ),
+        .o_Valid            (cat_valid          ),
+        .o_Read             (f_read             ),
+        .i_CmpVectorNo      (cmp_vec_no         ),
+        .i_CmpVectorNoValid (cmp_vec_no_valid   ),
+        .o_CmpVectorNoWack  (cmp_vec_no_wack    )
     );
 
     always begin 
@@ -77,60 +82,54 @@ module tb_vec_cat(
     end
 
     // FILL FIFO
-    integer fp_vec;
-    integer fp_cat;
     integer scan;
     reg [BUS_WIDTH-1:0] vec;
-    initial begin
-        fp_vec = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/test_vectors.dat", "r");
-        if(fp_vec == 0) begin
-            $display("File containing test vectors was not found...");
-            $finish;
-        end
 
-        fp_cat = $fopen("/home/jozmoz01/Documents/fp_accel/tanimoto_rtl/vec_cat_result.txt", "w");
-        if(fp_cat == 0) begin
-            $display("Output file could not be opened...");
-            $finish;
-        end
-    end
-
-    reg state = 1'b1;
+    // generate random input vectors
+    integer ii;
     always @ (posedge clk)
     begin
-        if(rstn & f_write) begin
-            scan = $fscanf(fp_vec, "%h\n", vec);
-            if(!$feof(fp_vec)) begin
-                f_din <= vec;
-            end else begin
-                $display("End of input file reached!");
-            end
-        end
-
-        if(cat_valid) begin
-            state <= ~state;
-
-            if(state) begin
-                $fwrite(fp_cat, "%h", cat_vector);
-            end else begin
-                $fwrite(fp_cat, "%h\n", cat_vector);
+        if(!state) begin
+            for(ii = 0; ii*32 < VECTOR_WIDTH; ii = ii + 1) begin
+                f_din[ii*32 +: 32] <= $urandom();
             end
         end
     end
 
+    // COUNT INPUT VECTORS
+    reg [15:0] vec_cnt;
+    wire state;
+
+    assign state = (vec_cnt >= REF_VEC_NO + CMP_VEC_NO) && !rstn;
+
+    always @ (posedge clk)
+    begin
+        if(!rstn) begin
+            vec_cnt <= 0;
+        end else begin
+            vec_cnt <= vec_cnt + 1;
+        end
+    end
+
+    // PROGRAM CMP_VEC_NO REGISTER
+    reg [VEC_ID_WIDTH-1:0]  cmp_vec_no = CMP_VEC_NO;
+    reg                     cmp_vec_no_valid = 0;
+    wire cmp_vec_no_wack;
+    initial begin
+        wait(rstn);
+
+    end
+
+    // RESET
     initial begin
         #50;
-        f_write <= 1'b1;
         rstn <= 1'b1;
+        cmp_vec_no_valid <= 1'b1;
+        #CLK_PERIOD;
+        cmp_vec_no_valid <= 1'b0;
 
-        #3500;
+        #4000;
 
-        f_write <= 1'b0;
-
-        #50;
-
-        $fclose(fp_vec);
-        $fclose(fp_cat);
         $finish;
     end
 
