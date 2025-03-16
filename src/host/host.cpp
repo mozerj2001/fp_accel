@@ -16,6 +16,10 @@
 #define BRAM_BASEADDR 0x82000000    // BRAM base address
 #define BRAM_MAXADDR 0x82001FFF     // BRAM region upper limit as integer pointer
 #define BRAM_IO_SIZE 32768          // BRAM region size in bytes
+#define CMP_VEC_NO 92
+
+// CMP_VEC_NO register address
+#define CMP_VEC_NO_REG_BASEADDR 0x80010000
 
 // Define Tanimoto threshold
 #define THRESHOLD 0.33
@@ -43,6 +47,7 @@ static const int ID_SIZE = 1;           // ID_WIDTH in bytes
  */
 
 int configure_threshold_ram();
+// int write_cmp_vec_no_reg(uint32_t cmp_vec_no);
 int readVectorsFromFile(uint8_t *ptr_ref, uint8_t *ptr_cmp, const char *filename);
 
 /*  ################################
@@ -156,6 +161,7 @@ int main(int argc, char* argv[]) {
     OCL_CHECK(err, err = tanimoto_krnl.setArg(0, vec_ref_buffer));
     OCL_CHECK(err, err = tanimoto_krnl.setArg(1, cmp_ref_buffer));
     OCL_CHECK(err, err = tanimoto_krnl.setArg(4, id_pair_buffer));
+    OCL_CHECK(err, err = tanimoto_krnl.setArg(5, (uint8_t) CMP_VECTOR_NO));
 
     // We then need to map our OpenCL buffers to get the pointers
     int* ptr_ref;
@@ -180,6 +186,9 @@ int main(int argc, char* argv[]) {
             ptr_cmp[i] = rand() % RAND_MAX;
         }
     }
+
+    // Write expected number of compare vectors to configuration register.
+    // write_cmp_vec_no_reg(CMP_VECTOR_NO);
 
 
 
@@ -260,6 +269,24 @@ int configure_threshold_ram(){
     close(mem_fp);
     return 0;
 }
+
+// FUNCTION: Write number of compare vectors to the corresponding HW register.
+// --> Writes to the "s_axi_control" interface of hls_dma.
+/* int write_cmp_vec_no_reg(uint32_t cmp_vec_no)
+{
+    int mem_fp = open("/dev/mem", O_RDWR | O_SYNC);
+    if(mem_fp < 0){
+        std::cout << "[ERROR] Cannot open /dev/mem.\n";
+        return 1;
+    }
+
+    unsigned int* reg = (unsigned int*) mmap(0, 1, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fp, CMP_VEC_NO_REG_BASEADDR);
+    *reg = cmp_vec_no;
+
+    munmap(reg, 1);
+    close(mem_fp);
+    return 0;
+} */
 
 
 // FUNCTION: Read pre-generated binary test vectors.
