@@ -26,18 +26,22 @@ endgroup
 startgroup
 make_bd_pins_external [get_bd_pins top_intf_0/ap_clk]
 make_bd_pins_external [get_bd_pins top_intf_0/ap_rstn]
-make_bd_intf_pins_external  [get_bd_intf_pins top_intf_0/S_AXIS_DATA] [get_bd_intf_pins top_intf_0/M_AXIS_ID_PAIR]
+make_bd_intf_pins_external \
+ [get_bd_intf_pins top_intf_0/S_AXIS_DATA] \
+ [get_bd_intf_pins top_intf_0/M_AXIS_ID_PAIR] \
+ [get_bd_intf_pins top_intf_0/S_AXIS_CMP_VEC_NO]
 endgroup
 
 # Rename external interfaces and pins.
 startgroup
 set_property name S_AXIS_DATA [get_bd_intf_ports S_AXIS_DATA_0]
 set_property name M_AXIS_ID_PAIR [get_bd_intf_ports M_AXIS_ID_PAIR_0]
+set_property name S_AXIS_CMP_VEC_NO [get_bd_intf_ports S_AXIS_CMP_VEC_NO_0]
 set_property name ap_clk [get_bd_ports ap_clk_0]
 set_property name ap_rstn [get_bd_ports ap_rstn_0]
 endgroup
 
-set_property CONFIG.ASSOCIATED_BUSIF S_AXIS_DATA:M_AXIS_ID_PAIR [get_bd_pins /top_intf_0/ap_clk]
+set_property CONFIG.ASSOCIATED_BUSIF S_AXIS_DATA:M_AXIS_ID_PAIR:S_AXIS_CMP_VEC_NO [get_bd_pins /top_intf_0/ap_clk]
 
 # Create HDL wrapper.
 make_wrapper -files [get_files {./src/tanimoto_rtl/tanimoto_rtl.srcs/sources_1/bd/tanimoto/tanimoto.bd}] -top
@@ -51,6 +55,7 @@ ipx::edit_ip_in_project -upgrade true -name tmp_edit_project -directory ./build/
 update_compile_order -fileset sources_1
 ipx::associate_bus_interfaces -busif S_AXIS_DATA -clock ap_clk [ipx::current_core]
 ipx::associate_bus_interfaces -busif M_AXIS_ID_PAIR -clock ap_clk [ipx::current_core]
+ipx::associate_bus_interfaces -busif S_AXIS_CMP_VEC_NO -clock ap_clk [ipx::current_core]
 set_property xpm_libraries {XPM_CDC XPM_MEMORY XPM_FIFO} [ipx::current_core]
 set_property sdx_kernel true [ipx::current_core]
 set_property sdx_kernel_type rtl [ipx::current_core]

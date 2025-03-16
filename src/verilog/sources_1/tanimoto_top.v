@@ -68,30 +68,24 @@ module tanimoto_top
     begin
         if(!rstn) begin
             r_SubVecCntr <= 0;
+        end else if(w_ProcessingOver) begin
+            r_SubVecCntr <= 0;
         end else if(w_Cnt_SubVector_Valid) begin
             r_SubVecCntr <= r_SubVecCntr + 1;
         end
     end
+    
+    // ODD-EVEN CLK REGISTER
+    reg r_Osc; // 1-0 oscillation to differentiate between odd and even clk periods
 
-    // COMPARE VECTOR LIMIT REGISTER
-    // Emit TLAST signal when the last valid vector has arrived
-    // TODO: Add delay for the pipeline to flush after the last fingerprints are received
-    reg [VEC_ID_WIDTH:0]    r_BVecNoReg;
-    wire                    w_Update_BVecNoReg;
-
-    assign w_Update_BVecNoReg = (r_State == LOAD_REF) && i_CmpVectorNoValid;
-
-    always @(posedge clk)
+    always @ (posedge clk)
     begin
         if(!rstn) begin
-            r_BVecNoReg <= 0;
-        end else if(w_Update_BVecNoReg) begin
-            r_BVecNoReg <= {i_CmpVectorNo, 1'b0};
+            r_Osc        <= 0;
+        end else if(w_Cnt_SubVector_Valid || r_Catted_Last_Observed) begin
+            r_Osc <= ~r_Osc;
         end
     end
-
-    assign o_CmpVectorNoWack = w_Update_BVecNoReg;
-    assign o_IDPair_Last = (r_SubVecCntr == (SHR_DEPTH * SUB_VECTOR_NO) + r_BVecNoReg - 1);
 
     // STATE MACHINE
     //  - LOAD_REF: Load reference vectors into A shiftregisters
@@ -104,6 +98,8 @@ module tanimoto_top
     always @ (posedge clk)
     begin
         if(!rstn) begin
+            r_State <= LOAD_REF;
+        end else if(w_ProcessingOver) begin
             r_State <= LOAD_REF;
         end else if(w_StartCompare) begin
             r_State <= COMPARE;
@@ -118,20 +114,36 @@ module tanimoto_top
     wire [BUS_WIDTH-1:0]    w_Catted_Vector;
     wire                    w_Catted_Valid;
     wire [VEC_ID_WIDTH-1:0] w_CatOut_VecID;
+    wire                    w_Catted_Last;
+    reg                     r_Catted_Last_Observed;
+
+    always @(posedge clk)
+    begin
+        if(!rstn) begin
+            r_Catted_Last_Observed <= 1'b0;
+        end else if(w_Catted_Last) begin
+            r_Catted_Last_Observed <= 1'b1;
+        end
+    end
 
     vec_cat #(
         .BUS_WIDTH      (BUS_WIDTH      ),
         .VECTOR_WIDTH   (VECTOR_WIDTH   ),
-        .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
+        .VEC_ID_WIDTH   (VEC_ID_WIDTH   ),
+        .REF_VECTOR_NO  (SHR_DEPTH      )
     ) u_vec_cat_0 (
-        .clk            (clk            ),
-        .rstn           (rstn            ),
-        .i_Vector       (i_Vector       ),
-        .i_Valid        (i_Valid        ),
-        .o_Vector       (w_Catted_Vector),
-        .o_VecID        (w_CatOut_VecID ),
-        .o_Valid        (w_Catted_Valid ),
-        .o_Read         (o_Read         )
+        .clk                (clk                ),
+        .rstn               (rstn               ),
+        .i_Vector           (i_Vector           ),
+        .i_Valid            (i_Valid            ),
+        .o_Vector           (w_Catted_Vector    ),
+        .o_VecID            (w_CatOut_VecID     ),
+        .o_Valid            (w_Catted_Valid     ),
+        .o_Read             (o_Read             ),
+        .o_Last             (w_Catted_Last      ),
+        .i_CmpVectorNo      (i_CmpVectorNo      ),
+        .i_CmpVectorNoValid (i_CmpVectorNoValid ),
+        .o_CmpVectorNoWack  (o_CmpVectorNoWack  )
     );
 
 
@@ -169,7 +181,7 @@ module tanimoto_top
 
     // TODO: --> valid is only propagated on valid, so pipeline will have to be flushed by pushing zeroes
     wire w_PropagateControl;
-    assign w_PropagateControl = (r_State == COMPARE) && r_SubVecCntr[0] && w_Cnt_SubVector_Valid;
+    assign w_PropagateControl = (r_State == COMPARE) && r_Osc && (w_Cnt_SubVector_Valid || r_Catted_Last_Observed);
 
     genvar vv;
     generate
@@ -590,9 +602,20 @@ module tanimoto_top
     endgenerate
 
     // Connect the root of the FIFO-tree with IO ports
-    assign o_IDPair_Out         = w_fifo_dout   [1];
-    assign o_IDPair_Ready       = ~w_fifo_empty [1];
+    assign o_IDPair_Out         = w_ProcessingOver ? 0 : w_fifo_dout[1];
+    assign o_IDPair_Ready       = ~w_fifo_empty[1];
     assign w_fifo_rd_en[1]      = i_IDPair_Read;
+
+    // TODO: This is not exhaustive, it is 100% possible that something is stuck in the pipeline...
+    wire w_ProcessingOver;
+    assign w_ProcessingOver =   r_Catted_Last_Observed                          &&  // last CMP vector observed by vec_cat
+                                (|r_Valid_Shr == 0)                             &&  // no more valid vectors in the pipeline
+                                (&w_fifo_empty[2**FIFO_TREE_DEPTH-1 : 1] == 1)  &&  // all FIFOs empty
+                                (|w_CompareValid == 0)                          &&  // comparators empty (not an actual proper test TODO)
+                                (|w_CntOutNew_AnB == 0)                         &&  // output CNT1s empty (not an actual proper test TODO)
+                                (r_State == COMPARE);
+
+    assign o_IDPair_Last = w_ProcessingOver;
 
 
 endmodule // tanimoto_top

@@ -32,6 +32,11 @@ module top_intf
         output wire                         M_AXIS_ID_PAIR_tlast ,
         input wire                          M_AXIS_ID_PAIR_tready,
 
+        // CMP vector no register handshake interface
+        input wire [VEC_ID_WIDTH-1:0]       S_AXIS_CMP_VEC_NO_tdata ,
+        input wire                          S_AXIS_CMP_VEC_NO_tvalid,
+        output wire                         S_AXIS_CMP_VEC_NO_tready,
+
         // Comparator BRAM interface
         input wire                          BRAM_PORTA_clk_a    ,
         input wire                          BRAM_PORTA_rst_a    ,  
@@ -39,12 +44,7 @@ module top_intf
         input wire [CNT_WIDTH-1:0]          BRAM_PORTA_wrdata_a , 
         output wire [CNT_WIDTH-1:0]         BRAM_PORTA_rddata_a , 
         input wire                          BRAM_PORTA_en_a     ,  
-        input wire                          BRAM_PORTA_we_a     ,
-
-        // CMP vector no register handshake interface
-        input wire [VEC_ID_WIDTH-1:0]       AP_HS_CmpVectorNo       ,
-        input wire                          AP_HS_CmpVectorNoValid  ,
-        output wire                         AP_HS_CmpVectorNoWack
+        input wire                          BRAM_PORTA_we_a
     );
 
     // S_AXIS_DATA signals
@@ -88,9 +88,9 @@ module top_intf
     wire                          i_CmpVectorNoValid;
     wire                          o_CmpVectorNoWack ;
 
-    assign i_CmpVectorNo            = AP_HS_CmpVectorNo         ;
-    assign i_CmpVectorNoValid       = AP_HS_CmpVectorNoValid    ;
-    assign AP_HS_CmpVectorNoWack    = o_CmpVectorNoWack         ;
+    assign i_CmpVectorNo            = S_AXIS_CMP_VEC_NO_tdata   ;
+    assign i_CmpVectorNoValid       = S_AXIS_CMP_VEC_NO_tvalid  ;
+    assign S_AXIS_CMP_VEC_NO_tready = o_CmpVectorNoWack         ;
 
 
     // Top level accelerator pipeline

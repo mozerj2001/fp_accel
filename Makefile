@@ -127,7 +127,7 @@ clean_workspace:
 				! -name 'platform_creation.py' \
 				! -name 'sysroot' \
 				! -name 'system-user.dtsi' \
-				! -name 'xilinx-zcu106-v2023.2-10140544.bsp' \
+				! -name 'zcu106_2023.2.bsp' \
 				! -name 'xilinx-zynqmp-common-v2023.2' \
 				! -name 'zcu106_custom' \
 				! -name 'zcu106_custom_platform' \
