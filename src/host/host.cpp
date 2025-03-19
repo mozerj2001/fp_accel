@@ -16,7 +16,6 @@
 #define BRAM_BASEADDR 0x82000000    // BRAM base address
 #define BRAM_MAXADDR 0x82001FFF     // BRAM region upper limit as integer pointer
 #define BRAM_IO_SIZE 32768          // BRAM region size in bytes
-#define CMP_VEC_NO 92
 
 // CMP_VEC_NO register address
 #define CMP_VEC_NO_REG_BASEADDR 0x80010000
@@ -36,11 +35,11 @@
  *  GLOBAL CONSTANTS
  */
 
-static const int VECTOR_WIDTH = 920;
-static const int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
-static const int REF_VECTOR_NO = 8;
-static const int CMP_VECTOR_NO = 92;
-static const int ID_SIZE = 1;           // ID_WIDTH in bytes
+static const unsigned int VECTOR_WIDTH = 920;
+static const unsigned int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
+static const unsigned int REF_VEC_NO = 8;
+static const unsigned int CMP_VEC_NO = 92;
+static const unsigned int ID_SIZE = 1;           // ID_WIDTH in bytes
 
 /*  ################################
  *  FUNCTION DECLARATIONS
@@ -69,9 +68,9 @@ int main(int argc, char* argv[]) {
     std::string xclbinFilename = argv[1];
 
     // Vector buffer sizes in bytes
-    size_t ref_buf_size = REF_VECTOR_NO * VECTOR_SIZE;
-    size_t cmp_buf_size = CMP_VECTOR_NO * VECTOR_SIZE;
-    size_t id_pair_size = REF_VECTOR_NO * CMP_VECTOR_NO * ID_SIZE * 2;
+    size_t ref_buf_size = REF_VEC_NO * VECTOR_SIZE;
+    size_t cmp_buf_size = CMP_VEC_NO * VECTOR_SIZE;
+    size_t id_pair_size = REF_VEC_NO * CMP_VEC_NO * ID_SIZE * 2;
 
     // Creates a vector of DATA_SIZE elements with an initial value of 10 and 32
     // using customized allocator for getting buffer alignment to 4k boundary
@@ -161,7 +160,7 @@ int main(int argc, char* argv[]) {
     OCL_CHECK(err, err = tanimoto_krnl.setArg(0, vec_ref_buffer));
     OCL_CHECK(err, err = tanimoto_krnl.setArg(1, cmp_ref_buffer));
     OCL_CHECK(err, err = tanimoto_krnl.setArg(4, id_pair_buffer));
-    OCL_CHECK(err, err = tanimoto_krnl.setArg(5, (uint8_t) CMP_VECTOR_NO));
+    OCL_CHECK(err, err = tanimoto_krnl.setArg(5, CMP_VEC_NO));
 
     // We then need to map our OpenCL buffers to get the pointers
     int* ptr_ref;
@@ -188,7 +187,6 @@ int main(int argc, char* argv[]) {
     }
 
     // Write expected number of compare vectors to configuration register.
-    // write_cmp_vec_no_reg(CMP_VECTOR_NO);
 
 
 
@@ -230,7 +228,6 @@ int main(int argc, char* argv[]) {
     OCL_CHECK(err, err = q.enqueueUnmapMemObject(id_pair_buffer, ptr_idp));
     OCL_CHECK(err, err = q.finish());
 
-    // std::cout << "TEST " << (match ? "FAILED" : "PASSED") << std::endl;
     int match = 0;
     std::cout << "TEST FINISHED!" << std::endl;
     return (match ? EXIT_FAILURE : EXIT_SUCCESS);
@@ -270,25 +267,6 @@ int configure_threshold_ram(){
     return 0;
 }
 
-// FUNCTION: Write number of compare vectors to the corresponding HW register.
-// --> Writes to the "s_axi_control" interface of hls_dma.
-/* int write_cmp_vec_no_reg(uint32_t cmp_vec_no)
-{
-    int mem_fp = open("/dev/mem", O_RDWR | O_SYNC);
-    if(mem_fp < 0){
-        std::cout << "[ERROR] Cannot open /dev/mem.\n";
-        return 1;
-    }
-
-    unsigned int* reg = (unsigned int*) mmap(0, 1, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fp, CMP_VEC_NO_REG_BASEADDR);
-    *reg = cmp_vec_no;
-
-    munmap(reg, 1);
-    close(mem_fp);
-    return 0;
-} */
-
-
 // FUNCTION: Read pre-generated binary test vectors.
 // Input file "vectors.bin" assumed to be present in working directory for now.
 int readVectorsFromFile(uint8_t *ptr_ref, uint8_t *ptr_cmp, const char *filename)
@@ -299,8 +277,8 @@ int readVectorsFromFile(uint8_t *ptr_ref, uint8_t *ptr_cmp, const char *filename
         return 1;
     }
 
-    size_t refBytes = REF_VECTOR_NO * 115;
-    size_t cmpBytes = CMP_VECTOR_NO * 115;
+    size_t refBytes = REF_VEC_NO * 115;
+    size_t cmpBytes = CMP_VEC_NO * 115;
 
     /* Read reference vectors (refBytes total) */
     size_t bytesRead = fread(ptr_ref, sizeof(uint8_t), refBytes, fp);
