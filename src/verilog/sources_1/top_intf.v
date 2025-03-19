@@ -71,7 +71,7 @@ module top_intf
     wire                          i_BRAM_Clk    ;
     wire                          i_BRAM_Rst    ;
     wire [CNT_WIDTH-1:0]          i_BRAM_Addr   ;
-    wire [CNT_WIDTH:0]            i_BRAM_Din    ;
+    wire [CNT_WIDTH-1:0]          i_BRAM_Din    ;
     wire                          i_BRAM_En     ;
     wire                          i_BRAM_WrEn   ;
 

@@ -56,6 +56,7 @@ module tanimoto_top
     localparam LOAD_REF             = 1'b0;
     localparam COMPARE              = 1'b1;
     localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
+    localparam TOTAL_FLUSH_TIME     = CNT1_DELAY + SHR_DEPTH + CNT1_DELAY;      // flush time until FIFO tree is the only factor
 
     // SUB VECTOR COUNTER
     // Counts sub-vectors incoming from the input cnt1.
@@ -63,6 +64,14 @@ module tanimoto_top
     // is the select signal for the output multiplexers.
     reg [VEC_ID_WIDTH:0] r_SubVecCntr;
     wire w_Cnt_SubVector_Valid;
+    wire w_ProcessingOver;      // all REF - CMP comparisons were made, all ID pairs are emitted
+
+    // TODO: This is not exhaustive, it is 100% possible that something is stuck in the pipeline...
+    assign w_ProcessingOver =   r_Catted_Last_Observed                          &&  // last CMP vector observed by vec_cat
+                                (&w_fifo_empty[2**FIFO_TREE_DEPTH-1 : 1] == 1)  &&  // all FIFOs empty
+                                (r_FlushCntr >= TOTAL_FLUSH_TIME)               &&
+                                (r_State == COMPARE);
+
 
     always @ (posedge clk)
     begin
@@ -76,7 +85,8 @@ module tanimoto_top
     end
     
     // ODD-EVEN CLK REGISTER
-    reg r_Osc; // 1-0 oscillation to differentiate between odd and even clk periods
+    reg r_Catted_Last_Observed; // vec_cat has counted as many input CMP vectors as expected
+    reg r_Osc;                  // 1-0 oscillation to differentiate between odd and even clk periods
 
     always @ (posedge clk)
     begin
@@ -84,6 +94,20 @@ module tanimoto_top
             r_Osc        <= 0;
         end else if(w_Cnt_SubVector_Valid || r_Catted_Last_Observed) begin
             r_Osc <= ~r_Osc;
+        end
+    end
+
+    // FLUSH COUNTER
+    // Count number of cycles during pipeline flush.
+    // Used to emit TLAST on the output AXI Stream.
+    reg [VEC_ID_WIDTH:0] r_FlushCntr;
+
+    always @(posedge clk)
+    begin
+        if(!rstn) begin
+            r_FlushCntr <= 0;
+        end else if(r_Catted_Last_Observed) begin
+            r_FlushCntr <= r_FlushCntr + 1;
         end
     end
 
@@ -115,7 +139,6 @@ module tanimoto_top
     wire                    w_Catted_Valid;
     wire [VEC_ID_WIDTH-1:0] w_CatOut_VecID;
     wire                    w_Catted_Last;
-    reg                     r_Catted_Last_Observed;
 
     always @(posedge clk)
     begin
@@ -602,20 +625,10 @@ module tanimoto_top
     endgenerate
 
     // Connect the root of the FIFO-tree with IO ports
-    assign o_IDPair_Out         = w_ProcessingOver ? 0 : w_fifo_dout[1];
-    assign o_IDPair_Ready       = ~w_fifo_empty[1];
-    assign w_fifo_rd_en[1]      = i_IDPair_Read;
-
-    // TODO: This is not exhaustive, it is 100% possible that something is stuck in the pipeline...
-    wire w_ProcessingOver;
-    assign w_ProcessingOver =   r_Catted_Last_Observed                          &&  // last CMP vector observed by vec_cat
-                                (|r_Valid_Shr == 0)                             &&  // no more valid vectors in the pipeline
-                                (&w_fifo_empty[2**FIFO_TREE_DEPTH-1 : 1] == 1)  &&  // all FIFOs empty
-                                (|w_CompareValid == 0)                          &&  // comparators empty (not an actual proper test TODO)
-                                (|w_CntOutNew_AnB == 0)                         &&  // output CNT1s empty (not an actual proper test TODO)
-                                (r_State == COMPARE);
-
-    assign o_IDPair_Last = w_ProcessingOver;
+    assign o_IDPair_Out     = w_ProcessingOver ? 0 : w_fifo_dout[1];
+    assign o_IDPair_Ready   = w_ProcessingOver ? 1'b1 : ~w_fifo_empty[1];
+    assign w_fifo_rd_en[1]  = i_IDPair_Read;
+    assign o_IDPair_Last    = w_ProcessingOver;
 
 
 endmodule // tanimoto_top
