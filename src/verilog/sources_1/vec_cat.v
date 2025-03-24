@@ -29,18 +29,14 @@ module vec_cat
         // input vector stream interface
         input wire [BUS_WIDTH-1:0]      i_Vector,       // continuous stream of unseparated vectors
         input wire                      i_Valid,        // external FIFO not empty
+        input wire                      i_Last,         // last sub-vector to arrive
 	    output wire                     o_Read,         // signal that no new vector can be processed in the next cycle
 
         // output concatenated vector interface
         output wire [BUS_WIDTH-1:0]     o_Vector,       // stream of separated vectors, only one vector per output word
         output wire [VEC_ID_WIDTH-1:0]  o_VecID,
         output wire                     o_Valid,        // o_Vector is valid
-        output wire                     o_Last,         // last subvector un current compare batch
-
-        // input expected vector number interface
-        input wire  [VEC_ID_WIDTH-1:0]  i_CmpVectorNo,
-        input wire                      i_CmpVectorNoValid,
-        output wire                     o_CmpVectorNoWack
+        output wire                     o_Last          // last subvector un current compare batch
 
     );
 
@@ -77,35 +73,24 @@ module vec_cat
 
 
     /////////////////////////////////////////////////////////////////////////////////////
-    // CMP_VECTOR_NO REGISTER
-    // number of expected vectors in the CMP vector batch (after the REF batch)
-    reg [VEC_ID_WIDTH-1:0] r_CmpVecNo;
-
-    always @ (posedge clk)
-    begin
-        if(!rstn) begin
-            r_CmpVecNo <= 0;
-        end else if(i_CmpVectorNoValid) begin
-            r_CmpVecNo <= i_CmpVectorNo;
-        end
-    end
-
-    assign o_CmpVectorNoWack = i_CmpVectorNoValid;
-
-
-    /////////////////////////////////////////////////////////////////////////////////////
     // VALID DELAY SHIFT --> delay the i_Valid signal for scheduling and
-    // output valid
+    // output valid, also delay TLAST
     reg [2:0] r_ValidShr;
+    reg [2:0] r_LastShr;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
             r_ValidShr <= 0;
+            r_LastShr <= 0;
         end else begin
             r_ValidShr[0] <= i_Valid;
             r_ValidShr[1] <= r_ValidShr[0];
             r_ValidShr[2] <= r_ValidShr[1];
+
+            r_LastShr[0] <= i_Last;
+            r_LastShr[1] <= r_LastShr[0];
+            r_LastShr[2] <= r_LastShr[1];
         end
     end
 
@@ -167,14 +152,12 @@ module vec_cat
     /////////////////////////////////////////////////////////////////////////////////////
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
-    wire [VEC_ID_WIDTH-1:0] w_VecID_Limit;
-    assign w_VecID_Limit = REF_VECTOR_NO + r_CmpVecNo - 1;
 
     assign o_Vector = (r_State == FULL) ? w_PermArray[r_IdxReg] : {w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA], {DELTA{1'b0}}};
     assign o_VecID  = r_IDCntr;
-    assign o_Valid  = r_ValidShr[0] && (r_IDCntr <= w_VecID_Limit);
-    assign o_Read   = i_Valid && ~w_Overflow && (r_IDCntr < w_VecID_Limit);
-    assign o_Last   = (r_IDCntr == w_VecID_Limit);
+    assign o_Valid  = r_ValidShr[0];
+    assign o_Read   = i_Valid && ~w_Overflow;
+    assign o_Last   = r_LastShr[0];
 
     
     endmodule
