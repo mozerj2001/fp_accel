@@ -23,7 +23,8 @@ module tanimoto_top
         SHR_DEPTH           = 8,        // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 16,       // implicitly defines how wide vector counters need to be
         //
-        CNT_WIDTH           = $clog2(VECTOR_WIDTH)
+        CNT_WIDTH           = $clog2(VECTOR_WIDTH),
+        FIFO_TREE_DEPTH          = ($clog2(SHR_DEPTH) + 1)
     )(
         input wire                          clk,
         input wire                          rstn,
@@ -31,6 +32,7 @@ module tanimoto_top
         // Vector stream
         input wire [BUS_WIDTH-1:0]          i_Vector,
         input wire                          i_Valid,
+        input wire                          i_Last,
 
         // Comprator BRAM interface for thresholds
         input wire                          i_BRAM_Clk,
@@ -45,18 +47,30 @@ module tanimoto_top
         output wire                         o_Read,
         output wire                         o_IDPair_Ready,
         output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out,
-        output wire                         o_IDPair_Last,
+        output wire                         o_IDPair_Last
 
-        // CMP vector no register handshake interface
-        input wire [VEC_ID_WIDTH-1:0]       i_CmpVectorNo,
-        input wire                          i_CmpVectorNoValid,
-        output wire                         o_CmpVectorNoWack
+        // DEBUG PORTS
+        // output wire o_Catted_Last_Observed,
+        // output wire o_FifoTreeEmtpy,
+        // output wire [31:0] o_FlushCntr,
+        // output wire o_State,
+        // output wire o_ProcessingOver,
+        // output wire [2**FIFO_TREE_DEPTH-1:1] o_FifoEmpty
     );
 
     localparam LOAD_REF             = 1'b0;
     localparam COMPARE              = 1'b1;
     localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
     localparam TOTAL_FLUSH_TIME     = CNT1_DELAY + SHR_DEPTH + CNT1_DELAY;      // flush time until FIFO tree is the only factor
+
+
+    // assign o_Catted_Last_Observed = r_Catted_Last_Observed;
+    // assign o_FifoTreeEmtpy = w_FifoTreeEmpty;
+    // assign o_FlushCntr = r_FlushCntr;
+    // assign o_State = r_State;
+    // assign o_ProcessingOver = w_ProcessingOver;
+    // assign o_FifoEmpty = r_FifoEmpty;
+
 
     // SUB VECTOR COUNTER
     // Counts sub-vectors incoming from the input cnt1.
@@ -67,9 +81,10 @@ module tanimoto_top
     wire w_ProcessingOver;      // all REF - CMP comparisons were made, all ID pairs are emitted
 
     // TODO: This is not exhaustive, it is 100% possible that something is stuck in the pipeline...
-    assign w_ProcessingOver =   r_Catted_Last_Observed                          &&  // last CMP vector observed by vec_cat
-                                (&w_fifo_empty[2**FIFO_TREE_DEPTH-1 : 1] == 1)  &&  // all FIFOs empty
-                                (r_FlushCntr >= TOTAL_FLUSH_TIME)               &&
+    //      -- IMPROVEMENT: add busy signals to the CNT1 module
+    assign w_ProcessingOver =   r_Catted_Last_Observed              &&
+                                w_FifoTreeEmpty                     &&
+                                (r_FlushCntr >= TOTAL_FLUSH_TIME)   &&
                                 (r_State == COMPARE);
 
 
@@ -100,7 +115,7 @@ module tanimoto_top
     // FLUSH COUNTER
     // Count number of cycles during pipeline flush.
     // Used to emit TLAST on the output AXI Stream.
-    reg [VEC_ID_WIDTH:0] r_FlushCntr;
+    reg [31:0] r_FlushCntr;
 
     always @(posedge clk)
     begin
@@ -159,14 +174,12 @@ module tanimoto_top
         .rstn               (rstn               ),
         .i_Vector           (i_Vector           ),
         .i_Valid            (i_Valid            ),
+        .i_Last             (i_Last             ),
         .o_Vector           (w_Catted_Vector    ),
         .o_VecID            (w_CatOut_VecID     ),
         .o_Valid            (w_Catted_Valid     ),
         .o_Read             (o_Read             ),
-        .o_Last             (w_Catted_Last      ),
-        .i_CmpVectorNo      (i_CmpVectorNo      ),
-        .i_CmpVectorNoValid (i_CmpVectorNoValid ),
-        .o_CmpVectorNoWack  (o_CmpVectorNoWack  )
+        .o_Last             (w_Catted_Last      )
     );
 
 
@@ -202,7 +215,7 @@ module tanimoto_top
     reg     [SHR_DEPTH-1:0] r_State_Shr;
     wire    [SHR_DEPTH-1:0] w_OutCnt1_ValidIn;
 
-    // TODO: --> valid is only propagated on valid, so pipeline will have to be flushed by pushing zeroes
+    // Propagate control signals and vectors when: a) vectors are compared, b) when the pipeline is being flushed
     wire w_PropagateControl;
     assign w_PropagateControl = (r_State == COMPARE) && r_Osc && (w_Cnt_SubVector_Valid || r_Catted_Last_Observed);
 
@@ -509,7 +522,8 @@ module tanimoto_top
     localparam FIFO_DATA_WIDTH          = 2*VEC_ID_WIDTH;
     localparam FIFO_DEPTH               = 32;
     localparam FIFO_DATA_COUNT_WIDTH    = $clog2(FIFO_DEPTH);
-    localparam FIFO_TREE_DEPTH          = $clog2(SHR_DEPTH) + 1;
+    // localparam FIFO_TREE_DEPTH          = $clog2(SHR_DEPTH) + 1;
+    localparam FIFO_NUM                 = (2**FIFO_TREE_DEPTH) - 1;     // binary tree node number
 
     // CNT1 outputs are valid for 2 clk long --> wr_en needs to be one clk
     // pulse wide.
@@ -541,6 +555,10 @@ module tanimoto_top
     wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_wr_en                                        ;
                                         
     wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_FifoDin_Sel                                       ;
+
+    // reg for empty signals
+    reg  [2**FIFO_TREE_DEPTH-1:1]           r_FifoEmpty                                         ;
+    wire                                    w_FifoTreeEmpty                                     ;
 
     genvar tt, uu;
     generate
@@ -619,10 +637,18 @@ module tanimoto_top
                     // FIFO port tie-offs
                     assign w_fifo_sleep[2**tt + uu] = 1'b0;
 
+                    // intermediate reg for empty signals
+                    always @(posedge clk)
+                    begin
+                        r_FifoEmpty[2**tt + uu] <= w_fifo_empty[2**tt + uu];
+                    end
+
                 end
             end
         end
     endgenerate
+
+    assign w_FifoTreeEmpty = (r_FifoEmpty == {((2**FIFO_TREE_DEPTH) - 1){1'b1}});
 
     // Connect the root of the FIFO-tree with IO ports
     assign o_IDPair_Out     = w_ProcessingOver ? 0 : w_fifo_dout[1];

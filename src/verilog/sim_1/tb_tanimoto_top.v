@@ -30,9 +30,7 @@ module tb_tanimoto_top(
     reg [CNT_WIDTH-1:0] threshold_addr = 0;
     reg                 wr_threshold;
 
-    reg [VEC_ID_WIDTH-1:0] cmp_vec_no = CMP_VEC_NO;
-    reg                    cmp_vec_no_valid = 0;
-    wire                   cmp_vec_no_wack;
+    reg input_last = 0;
 
 
     // TEST FIFO SIGNALS
@@ -81,6 +79,7 @@ module tb_tanimoto_top(
         .rstn                   (rstn               ),
         .i_Vector               (f_dout             ),
         .i_Valid                (~f_empty           ),
+        .i_Last                 (input_last         ),
         .i_BRAM_Addr            (threshold_addr     ),
         .i_BRAM_Din             (threshold          ),
         .i_BRAM_En              (1'b1               ),
@@ -89,10 +88,7 @@ module tb_tanimoto_top(
         .o_Read                 (f_read             ),
         .o_IDPair_Ready         (id_pair_ready      ),
         .o_IDPair_Out           (id_pair_out        ),
-        .o_IDPair_Last          (id_pair_last       ),
-        .i_CmpVectorNo          (cmp_vec_no         ),
-        .i_CmpVectorNoValid     (cmp_vec_no_valid   ),
-        .o_CmpVectorNoWack      (cmp_vec_no_wack    )
+        .o_IDPair_Last          (id_pair_last       )
     );
 
     always begin 
@@ -108,6 +104,13 @@ module tb_tanimoto_top(
         if(state) begin
             vec_cntr <= vec_cntr + 1;
         end
+
+        if(vec_cntr == (REF_VEC_NO + CMP_VEC_NO) * SUB_VECTOR_NO - 1) begin
+            input_last <= 1'b1;
+        end else begin
+            input_last <= 1'b0;
+        end
+
         if(vec_cntr == (REF_VEC_NO + CMP_VEC_NO) * SUB_VECTOR_NO) begin
             state <= 0;
         end
@@ -129,14 +132,6 @@ module tb_tanimoto_top(
         wr_threshold <= 0;
         #CLK_PERIOD;
         state = 1'b1;
-    end
-
-    // set CMP_VEC_NO
-    initial begin
-        #100;
-        cmp_vec_no_valid <= 1;
-        #CLK_PERIOD;
-        cmp_vec_no_valid <= 0;
     end
 
     // fill FIFOs

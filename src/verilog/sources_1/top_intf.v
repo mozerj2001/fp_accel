@@ -16,7 +16,8 @@ module top_intf
         GRANULE_WIDTH   = 6                     ,
         VEC_ID_WIDTH    = 8                     ,
         //
-        CNT_WIDTH       = $clog2(VECTOR_WIDTH)
+        CNT_WIDTH       = $clog2(VECTOR_WIDTH),
+        FIFO_TREE_DEPTH          = ($clog2(SHR_DEPTH) + 1)
     )(
         input wire                          ap_clk              ,
         input wire                          ap_rstn             ,
@@ -24,6 +25,7 @@ module top_intf
         // S_AXIS_DATA vector input stream
         input wire [BUS_WIDTH-1:0]          S_AXIS_DATA_tdata    ,
         input wire                          S_AXIS_DATA_tvalid   ,
+        input wire                          S_AXIS_DATA_tlast    ,
         output wire                         S_AXIS_DATA_tready   ,
 
         // M_AXIS_ID_PAIR ID pair output stream
@@ -31,11 +33,6 @@ module top_intf
         output wire                         M_AXIS_ID_PAIR_tvalid,
         output wire                         M_AXIS_ID_PAIR_tlast ,
         input wire                          M_AXIS_ID_PAIR_tready,
-
-        // CMP vector no register handshake interface
-        input wire [VEC_ID_WIDTH-1:0]       S_AXIS_CMP_VEC_NO_tdata ,
-        input wire                          S_AXIS_CMP_VEC_NO_tvalid,
-        output wire                         S_AXIS_CMP_VEC_NO_tready,
 
         // Comparator BRAM interface
         input wire                          BRAM_PORTA_clk_a    ,
@@ -45,16 +42,26 @@ module top_intf
         output wire [CNT_WIDTH-1:0]         BRAM_PORTA_rddata_a , 
         input wire                          BRAM_PORTA_en_a     ,  
         input wire                          BRAM_PORTA_we_a
+
+        // DEBUG PORTS
+        // output wire o_Catted_Last_Observed,
+        // output wire o_FifoTreeEmtpy,
+        // output wire [31:0] o_FlushCntr,
+        // output wire o_State,
+        // output wire o_ProcessingOver,
+        // output wire [2**FIFO_TREE_DEPTH-1:1] o_FifoEmpty
     );
 
     // S_AXIS_DATA signals
     wire [BUS_WIDTH-1:0]    i_Vector;
     wire                    i_Valid ;
+    wire                    i_Last  ;
     wire                    o_Read  ;
 
-    assign i_Vector             = S_AXIS_DATA_tdata  ;
-    assign i_Valid              = S_AXIS_DATA_tvalid ;
-    assign S_AXIS_DATA_tready    = o_Read            ;
+    assign i_Vector             = S_AXIS_DATA_tdata ;
+    assign i_Valid              = S_AXIS_DATA_tvalid;
+    assign i_Last               = S_AXIS_DATA_tlast ;
+    assign S_AXIS_DATA_tready   = o_Read            ;
 
     // M_AXIS_ID_PAIR signals
     wire [2*VEC_ID_WIDTH-1:0]   o_IDPair_Out    ;
@@ -83,14 +90,6 @@ module top_intf
     assign i_BRAM_WrEn          = BRAM_PORTA_we_a       ;
     assign BRAM_PORTA_rddata_a  = 0;
 
-    // CMP vector no register handshake interface signals
-    wire [VEC_ID_WIDTH-1:0]       i_CmpVectorNo     ;
-    wire                          i_CmpVectorNoValid;
-    wire                          o_CmpVectorNoWack ;
-
-    assign i_CmpVectorNo            = S_AXIS_CMP_VEC_NO_tdata   ;
-    assign i_CmpVectorNoValid       = S_AXIS_CMP_VEC_NO_tvalid  ;
-    assign S_AXIS_CMP_VEC_NO_tready = o_CmpVectorNoWack         ;
 
 
     // Top level accelerator pipeline
@@ -106,6 +105,7 @@ module top_intf
         .rstn               (ap_rstn            ),
         .i_Vector           (i_Vector           ),
         .i_Valid            (i_Valid            ),
+        .i_Last             (i_Last             ),
         .i_BRAM_Clk         (i_BRAM_Clk         ),
         .i_BRAM_Rst         (i_BRAM_Rst         ),  
         .i_BRAM_Addr        (i_BRAM_Addr        ),
@@ -116,10 +116,14 @@ module top_intf
         .o_Read             (o_Read             ),
         .o_IDPair_Ready     (o_IDPair_Ready     ),
         .o_IDPair_Out       (o_IDPair_Out       ),
-        .o_IDPair_Last      (o_IDPair_Last      ),
-        .i_CmpVectorNo      (i_CmpVectorNo      ),
-        .i_CmpVectorNoValid (i_CmpVectorNoValid ),
-        .o_CmpVectorNoWack  (o_CmpVectorNoWack  )
+        .o_IDPair_Last      (o_IDPair_Last      )
+        // DEBUG PORTS
+        // .o_Catted_Last_Observed(o_Catted_Last_Observed),
+        // .o_FifoTreeEmtpy(o_FifoTreeEmtpy),
+        // .o_FlushCntr(o_FlushCntr),
+        // .o_State(o_State),
+        // .o_ProcessingOver(o_ProcessingOver),
+        // .o_FifoEmpty(o_FifoEmpty)
     );
 
 endmodule

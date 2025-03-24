@@ -7,64 +7,66 @@
 // AXI ==> AXI Stream
 
 /*
- * vec_ref:     AXI source of reference vectors.
- * vec_cmp:     AXI source of vectors to be compared against reference vectors.
- * REF_READ_NO:    Number of bus cycles carrying reference vectors. Corresponds to the SHR_DEPTH RTL parameter.
- * CMP_READ_NO:    Number of bus cycles carrying compare vectors, passed through to the corresponding register in the RTL.
+ * vec_in:      AXI vector source, one word is 1 sub-vector sized (e. g. 512 bits)
  * vec_out:     AXI-Stream sink of vectors, direct input of the tanimoto_top RTL module.
- * --> buffering used to enable AXI bursts
+ * sub_vec_no:  Number of data words to read and push.
+ * --> constant size buffering used to promote the usage of AXI bursts wherever possible
  */
 
-void vec_intf(    bus_t*                 vec_ref,
-                bus_t*                 vec_cmp,
+void mm2stream( bus_t*                vec_in,
                 axi_stream_vec_t&     vec_out,
-                vec_no_t            cmp_vec_no_in    )
+                unsigned int          sub_vec_no    )
 {
 
-    axis_vec_t ref_buffer[REF_VEC_NO];
-    axis_vec_t cmp_buffer[AXI_BURST_LENGTH];
-    unsigned int remaining = cmp_vec_no_in;
+    axis_vec_t      buffer[AXI_BURST_LENGTH];
+    unsigned int    remaining = sub_vec_no;
 
-    /*
-     *    READ & WRITE REF VECTORS
-     */
-
-    ref_read_loop: for(unsigned int i = 0; i < REF_VEC_NO; i++){
-        ref_buffer[i].data = *(vec_ref++);
-    }
-
-    ref_write_loop: for(unsigned int i = 0; i < REF_VEC_NO; i++){
-        vec_out.write(ref_buffer[i]);
-    }
-
-    /*
-     *    READ & WRITE CMP VECTORS
-     */
-
-    while(remaining >= AXI_BURST_LENGTH){
-        
-        cmp_read_loop: for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
-            cmp_buffer[i].data = *(vec_cmp++);
+    while (remaining > AXI_BURST_LENGTH)
+    {
+        // Read into buffer
+        for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
+            buffer[i].data = *(vec_in++);
         }
 
-        cmp_write_loop: for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
-            vec_out.write(cmp_buffer[i]);
+        // Write to sink
+        for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
+            vec_out.write(buffer[i]);
         }
 
-        remaining = remaining - AXI_BURST_LENGTH;
+        remaining -= AXI_BURST_LENGTH;
     }
 
-    // Write remaining CMP vectors
-    cmp_read_remaining_loop: for(unsigned int i = 0; i < remaining; i++){
-        cmp_buffer[i].data = *(vec_cmp++);
+    // Read remaining into buffer
+    buffer[remaining-1].last = 1;
+
+    for(unsigned int i = 0; i < remaining; i++){
+        buffer[i].data = *(vec_in++);
     }
 
-    cmp_write_remaining_loop: for(unsigned int i = 0; i < remaining; i++){
-        vec_out.write(cmp_buffer[i]);
+    for(unsigned int i = 0; i < remaining; i++){
+        vec_out.write(buffer[i]);
     }
+    
+    // All vectors were pushed, return
+}
 
-    // RETURN: all vectors were pushed to the accelerator.
+/*
+ * ref_vec:         AXI vector source for reference vectors.
+ * cmp_vec:         AXI vector source for compare vectors.
+ * ref_sub_vec_no:  Number of data words that are part of reference vectors.
+ * cmp_sub_vec_no:  Number of data words that are part of compare vectors.
+ * --> constant size buffering used to promote the usage of AXI bursts wherever possible
+ */
 
+void vec_intf(  bus_t*              ref_vec,
+                bus_t*              cmp_vec,
+                axi_stream_vec_t&   vec_out,
+                unsigned int        ref_sub_vec_no,
+                unsigned int        cmp_sub_vec_no
+            )
+{
+    mm2stream(ref_vec, vec_out, ref_sub_vec_no);
+    mm2stream(cmp_vec, vec_out, cmp_sub_vec_no);
 }
 
 
@@ -92,22 +94,6 @@ void id_intf(   axi_stream_id_pair_t&  id_in,
 
 }
 
-// Scalar AXI ==> AXI-Stream
-
-/*
- * cmp_vec_no_in:     Number of compare (B) vectors in the next batch, written by the PS.
- * cmp_vec_no_out:     AXI-Stream port for valid-ready handshake IF in the accelerator.
- * NOTE: ap_hs could not be used, as it is not supported when running synthesis for Vitis kernels.
- */
-void vec_no_intf(   vec_no_t                 cmp_vec_no_in,
-                    axi_stream_vec_no_t&     cmp_vec_no_out    )
-{
-    axis_vec_no_t tmp;
-
-    tmp.data = cmp_vec_no_in;
-    cmp_vec_no_out.write(tmp);
-}
-
 // Interface
 
 void hls_dma(   bus_t*                  vec_ref,
@@ -115,20 +101,18 @@ void hls_dma(   bus_t*                  vec_ref,
                 axi_stream_vec_t&       vec_out,
                 axi_stream_id_pair_t&   id_in,
                 id_pair_t*              id_out,
-                vec_no_t                cmp_vec_no_in,
-                axi_stream_vec_no_t&    cmp_vec_no_out    )
+                unsigned int            ref_sub_vec_no,
+                unsigned int            cmp_sub_vec_no  )
 {
 #pragma HLS INTERFACE m_axi bundle=gmem1 max_read_burst_length=AXI_BURST_LENGTH port=vec_ref
 #pragma HLS INTERFACE m_axi bundle=gmem1 max_read_burst_length=AXI_BURST_LENGTH port=vec_cmp
 #pragma HLS INTERFACE axis register_mode=both port=vec_out register
 #pragma HLS INTERFACE axis register_mode=both port=id_in register
 #pragma HLS INTERFACE m_axi bundle=gmem2 port=id_out
-#pragma HLS INTERFACE axis register_mode=both port=cmp_vec_no_out register
 
 #pragma HLS DATAFLOW
 
-    vec_no_intf(cmp_vec_no_in, cmp_vec_no_out);
-    vec_intf(vec_ref, vec_cmp, vec_out, cmp_vec_no_in);
+    vec_intf(vec_ref, vec_cmp, vec_out, ref_sub_vec_no, cmp_sub_vec_no);
     id_intf(id_in, id_out);
 
 }

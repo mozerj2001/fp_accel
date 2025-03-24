@@ -24,6 +24,7 @@ module tb_vec_cat(
     wire [VEC_ID_WIDTH-1:0] vec_id;
     wire [BUS_WIDTH-1:0] cat_vector;
     wire cat_valid;
+    wire cat_last;
 
     // FIFO SIGNALS
     reg [BUS_WIDTH-1:0] f_din   = {BUS_WIDTH{1'b0}};
@@ -63,17 +64,16 @@ module tb_vec_cat(
         .VECTOR_WIDTH   (VECTOR_WIDTH   ),
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) uut(
-        .clk                (clk                ),
-        .rstn               (rstn               ),
-        .i_Vector           (f_dout             ),
-        .i_Valid            (~f_empty           ),
-        .o_Vector           (cat_vector         ),
-        .o_VecID            (vec_id             ),
-        .o_Valid            (cat_valid          ),
-        .o_Read             (f_read             ),
-        .i_CmpVectorNo      (cmp_vec_no         ),
-        .i_CmpVectorNoValid (cmp_vec_no_valid   ),
-        .o_CmpVectorNoWack  (cmp_vec_no_wack    )
+        .clk        (clk                                    ),
+        .rstn       (rstn                                   ),
+        .i_Vector   (f_dout                                 ),
+        .i_Valid    ((~f_empty && !state)                   ),
+        .i_Last     ((vec_cnt == REF_VEC_NO + CMP_VEC_NO)   ),
+        .o_Vector   (cat_vector                             ),
+        .o_VecID    (vec_id                                 ),
+        .o_Valid    (cat_valid                              ),
+        .o_Read     (f_read                                 ),
+        .o_Last     (cat_last                               )
     );
 
     always begin 
