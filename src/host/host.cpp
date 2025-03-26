@@ -40,6 +40,8 @@ static const unsigned int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
 static const unsigned int REF_VEC_NO = 8;
 static const unsigned int CMP_VEC_NO = 92;
 static const unsigned int ID_SIZE = 1;           // ID_WIDTH in bytes
+static const unsigned int MEMORY_BUS_WIDTH_BYTES = 64;
+static const unsigned int MEMORY_BUS_WIDTH_BITS = 512;
 
 /*  ################################
  *  FUNCTION DECLARATIONS
@@ -57,7 +59,7 @@ int readVectorsFromFile(uint8_t *ptr_ref, uint8_t *ptr_cmp, const char *filename
  */
 
 int main(int argc, char* argv[]) {
-    char dd;    // dummy input char
+
 
     // TARGET_DEVICE macro needs to be passed from gcc command line
     if (argc != 2) {
@@ -71,6 +73,10 @@ int main(int argc, char* argv[]) {
     size_t ref_buf_size = REF_VEC_NO * VECTOR_SIZE;
     size_t cmp_buf_size = CMP_VEC_NO * VECTOR_SIZE;
     size_t id_pair_size = REF_VEC_NO * CMP_VEC_NO * ID_SIZE * 2;
+
+    // how many bus cycles are required to transfer REF_VEC_NO + CMP_VEC_NO vectors? (round up)
+    unsigned int ref_bus_cycle_no = (ref_buf_size + MEMORY_BUS_WIDTH_BYTES -1)*8 / MEMORY_BUS_WIDTH_BITS;
+    unsigned int cmp_bus_cycle_no = (cmp_buf_size + MEMORY_BUS_WIDTH_BYTES -1)*8 / MEMORY_BUS_WIDTH_BITS;
 
     // Creates a vector of DATA_SIZE elements with an initial value of 10 and 32
     // using customized allocator for getting buffer alignment to 4k boundary
@@ -147,20 +153,18 @@ int main(int argc, char* argv[]) {
     // be used to reference the memory locations on the device.
     uint8_t id_pair_buffer_init[id_pair_size] = {};
 
-    //std::cin >> dd;
-    std::cout << "[INFO] Setting up OCL buffer objects.\n";
+    printf("[INFO] Setting up OCL buffer objects with buffer sizes:\nref_buf_size = %d\tcmp_buf_size = %d\tid_pair_size = %d\n", ref_buf_size, cmp_buf_size, id_pair_size);
     OCL_CHECK(err, cl::Buffer vec_ref_buffer(context, CL_MEM_READ_ONLY, ref_buf_size, NULL, &err));
     OCL_CHECK(err, cl::Buffer cmp_ref_buffer(context, CL_MEM_READ_ONLY, cmp_buf_size, NULL, &err));
     OCL_CHECK(err, cl::Buffer id_pair_buffer(context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, id_pair_size, id_pair_buffer_init, &err));
-    // OCL_CHECK(err, cl::Buffer id_pair_buffer(context, CL_MEM_WRITE_ONLY, id_pair_size, NULL, &err));
 
     // set the kernel Arguments
-    //std::cin >> dd;
     std::cout << "[INFO] Setting up kernel arguments.\n";
     OCL_CHECK(err, err = tanimoto_krnl.setArg(0, vec_ref_buffer));
     OCL_CHECK(err, err = tanimoto_krnl.setArg(1, cmp_ref_buffer));
     OCL_CHECK(err, err = tanimoto_krnl.setArg(4, id_pair_buffer));
-    OCL_CHECK(err, err = tanimoto_krnl.setArg(5, CMP_VEC_NO));
+    OCL_CHECK(err, err = tanimoto_krnl.setArg(5, ref_bus_cycle_no));
+    OCL_CHECK(err, err = tanimoto_krnl.setArg(6, cmp_bus_cycle_no));
 
     // We then need to map our OpenCL buffers to get the pointers
     int* ptr_ref;
@@ -200,7 +204,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Launch the Kernel
-    std::cout << "[INFO] Launch kernel.\n";
+    printf("[INFO] Launch kernel with arguments:\nref_bus_cycle_no = %d\tcmp_bus_cycle_no = %d\n", ref_bus_cycle_no, cmp_bus_cycle_no);
     OCL_CHECK(err, err = q.enqueueTask(tanimoto_krnl));
 
     // Cpoy ID pair to host memory space
