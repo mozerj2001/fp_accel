@@ -48,28 +48,12 @@ module tanimoto_top
         output wire                         o_IDPair_Ready,
         output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out,
         output wire                         o_IDPair_Last
-
-        // DEBUG PORTS
-        // output wire o_Catted_Last_Observed,
-        // output wire o_FifoTreeEmtpy,
-        // output wire [31:0] o_FlushCntr,
-        // output wire o_State,
-        // output wire o_ProcessingOver,
-        // output wire [2**FIFO_TREE_DEPTH-1:1] o_FifoEmpty
     );
 
     localparam LOAD_REF             = 1'b0;
     localparam COMPARE              = 1'b1;
     localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
     localparam TOTAL_FLUSH_TIME     = CNT1_DELAY + SHR_DEPTH + CNT1_DELAY;      // flush time until FIFO tree is the only factor
-
-
-    // assign o_Catted_Last_Observed = r_Catted_Last_Observed;
-    // assign o_FifoTreeEmtpy = w_FifoTreeEmpty;
-    // assign o_FlushCntr = r_FlushCntr;
-    // assign o_State = r_State;
-    // assign o_ProcessingOver = w_ProcessingOver;
-    // assign o_FifoEmpty = r_FifoEmpty;
 
 
     // SUB VECTOR COUNTER

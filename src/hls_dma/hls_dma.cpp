@@ -36,12 +36,12 @@ void mm2stream( bus_t*                vec_in,
         remaining -= AXI_BURST_LENGTH;
     }
 
-    // Read remaining into buffer
-    buffer[remaining-1].last = 1;
-
     for(unsigned int i = 0; i < remaining; i++){
         buffer[i].data = *(vec_in++);
     }
+
+    // Read remaining into buffer
+    buffer[remaining-1].last = 1;
 
     for(unsigned int i = 0; i < remaining; i++){
         vec_out.write(buffer[i]);

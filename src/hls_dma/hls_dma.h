@@ -25,7 +25,7 @@ typedef hls::stream<axis_id_pair_t>     axi_stream_id_pair_t;
 
 void mm2stream( bus_t*             vec_in,
                 axi_stream_vec_t&  vec_out,
-				unsigned int       sub_vec_no
+				    unsigned int       sub_vec_no
             );
 
 void vec_intf(  bus_t*              ref_vec,
