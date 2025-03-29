@@ -66,15 +66,15 @@ module tb_vec_cat(
     ) dut(
         .clk        (clk                                    ),
         .rstn       (rstn                                   ),
-        .i_Vector   (f_dout                                 ),
-        .i_Valid    ((~f_empty && !state)                   ),
-        .i_Last     ((vec_cnt == REF_VEC_NO + CMP_VEC_NO)   ),
-        .o_Read     (f_read                                 ),
-        .o_Vector   (cat_vector                             ),
-        .o_VecID    (vec_id                                 ),
-        .o_Valid    (cat_valid                              ),
-        .o_Last     (cat_last                               ),
-        .i_Ready    (cat_ready                              )
+        .up_Vector  (f_dout                                 ),
+        .up_Valid   ((~f_empty && !state)                   ),
+        .up_Last    ((vec_cnt == REF_VEC_NO + CMP_VEC_NO)   ),
+        .up_Ready   (f_read                                 ),
+        .dn_Vector  (cat_vector                             ),
+        .dn_VecID   (vec_id                                 ),
+        .dn_Valid   (cat_valid                              ),
+        .dn_Last    (cat_last                               ),
+        .dn_Ready   (cat_ready                              )
     );
 
     always begin 

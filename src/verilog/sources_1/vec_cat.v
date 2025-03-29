@@ -28,17 +28,17 @@ module vec_cat
         input wire                      rstn,
 
         // input vector stream interface
-        input wire [BUS_WIDTH-1:0]      i_Vector,       // continuous stream of unseparated vectors
-        input wire                      i_Valid,        // external FIFO not empty
-        input wire                      i_Last,         // last sub-vector to arrive
-	    output wire                     o_Read,         // signal that no new vector can be processed in the next cycle
+        input wire [BUS_WIDTH-1:0]      up_Vector,       // continuous stream of unseparated vectors
+        input wire                      up_Valid,        // external FIFO not empty
+        input wire                      up_Last,         // last sub-vector to arrive
+	    output wire                     up_Ready,         // signal that no new vector can be processed in the next cycle
 
         // output concatenated vector interface
-        output wire [BUS_WIDTH-1:0]     o_Vector,       // stream of separated vectors, only one vector per output word
-        output wire [VEC_ID_WIDTH-1:0]  o_VecID,
-        output wire                     o_Valid,        // o_Vector is valid
-        output wire                     o_Last,         // last subvector un current compare batch
-        input wire                      i_Ready         // read next sub-vector
+        output wire [BUS_WIDTH-1:0]     dn_Vector,       // stream of separated vectors, only one vector per output word
+        output wire [VEC_ID_WIDTH-1:0]  dn_VecID,
+        output wire                     dn_Valid,        // dn_Vector is valid
+        output wire                     dn_Last,         // last subvector un current compare batch
+        input wire                      dn_Ready         // read next sub-vector
 
     );
 
@@ -50,7 +50,7 @@ module vec_cat
     
     // internal valid signal
     wire w_DoShift;
-    assign w_DoShift = i_Valid && i_Ready;
+    assign w_DoShift = up_Valid && dn_Ready;
 
     /////////////////////////////////////////////////////////////////////////////////////
     // VECTOR SHIFT --> store current and previous CAT_REG_NO number of input vectors
@@ -63,7 +63,7 @@ module vec_cat
             if(ii == 1) begin
                 always @ (posedge clk) begin
                     if(w_DoShift && ~w_Overflow) begin
-                        r_InnerVector[BUS_WIDTH-1:0] <= i_Vector;
+                        r_InnerVector[BUS_WIDTH-1:0] <= up_Vector;
                     end
                 end
             end else begin
@@ -78,7 +78,7 @@ module vec_cat
 
 
     /////////////////////////////////////////////////////////////////////////////////////
-    // VALID DELAY SHIFT --> delay the i_Valid signal for scheduling and
+    // VALID DELAY SHIFT --> delay the up_Valid signal for scheduling and
     // output valid, also delay TLAST
     reg [2:0] r_ValidShr;
     reg [2:0] r_LastShr;
@@ -88,12 +88,12 @@ module vec_cat
         if(!rstn) begin
             r_ValidShr <= 0;
             r_LastShr <= 0;
-        end else if(i_Ready) begin
-            r_ValidShr[0] <= i_Valid;
+        end else if(dn_Ready) begin
+            r_ValidShr[0] <= up_Valid;
             r_ValidShr[1] <= r_ValidShr[0];
             r_ValidShr[2] <= r_ValidShr[1];
 
-            r_LastShr[0] <= i_Last;
+            r_LastShr[0] <= up_Last;
             r_LastShr[1] <= r_LastShr[0];
             r_LastShr[2] <= r_LastShr[1];
         end
@@ -137,9 +137,9 @@ module vec_cat
     begin
         if(!rstn) begin
             r_IdxReg = 0;
-        end else if(w_State == PAD && ~w_Overflow && r_ValidShr[1] && i_Ready) begin
+        end else if(w_State == PAD && ~w_Overflow && r_ValidShr[1] && dn_Ready) begin
             r_IdxReg = r_IdxReg + DELTA;
-        end else if(w_Overflow && i_Ready) begin
+        end else if(w_Overflow && dn_Ready) begin
             r_IdxReg = r_IdxReg - (BUS_WIDTH-DELTA);                            // no shift due to information loss --> step back
         end
     end
@@ -163,11 +163,11 @@ module vec_cat
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
 
-    assign o_Vector = (w_State == FULL) ? w_PermArray[r_IdxReg] : {w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA], {DELTA{1'b0}}};
-    assign o_VecID  = r_IDCntr;
-    assign o_Valid  = r_ValidShr[0];
-    assign o_Read   = w_DoShift && ~w_Overflow;
-    assign o_Last   = r_LastShr[0];
+    assign dn_Vector = (w_State == FULL) ? w_PermArray[r_IdxReg] : {w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA], {DELTA{1'b0}}};
+    assign dn_VecID  = r_IDCntr;
+    assign dn_Valid  = r_ValidShr[0];
+    assign up_Ready  = w_DoShift && ~w_Overflow;
+    assign dn_Last   = r_LastShr[0];
 
     
     endmodule

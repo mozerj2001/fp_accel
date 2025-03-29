@@ -81,16 +81,16 @@ module tb_cnt1(
         .GRANULE_WIDTH  (GRANULE_WIDTH  )
     )
     uut(
-        .clk        (clk                ),
-        .rstn       (rstn               ),
-        .i_Vector   (input_Vector       ),
-        .i_Valid    (input_Valid        ),
-        .o_Ready    (input_Ready        ),
-        .o_SubVector(output_SubVector   ),
-        .o_Valid    (output_Valid       ),
-        .o_Cnt      (output_Cnt         ),
-        .o_CntNew   (output_CntNew      ),
-        .i_Ready    (output_Ready       )
+        .clk            (clk                ),
+        .rstn           (rstn               ),
+        .up_Vector      (input_Vector       ),
+        .up_Valid       (input_Valid        ),
+        .up_Ready       (input_Ready        ),
+        .dn_SubVector   (output_SubVector   ),
+        .dn_Valid       (output_Valid       ),
+        .dn_Cnt         (output_Cnt         ),
+        .dn_CntNew      (output_CntNew      ),
+        .dn_Ready       (output_Ready       )
     );
 
     // STIMULUS
