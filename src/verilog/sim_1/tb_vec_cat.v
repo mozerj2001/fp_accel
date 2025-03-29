@@ -7,8 +7,8 @@ module tb_vec_cat(
 
     );
 
-    localparam BUS_WIDTH        = 96;
-    localparam VECTOR_WIDTH     = 128;
+    localparam BUS_WIDTH        = 128;
+    localparam VECTOR_WIDTH     = 920;
     localparam VEC_ID_WIDTH     = 8;
 
     localparam REF_VEC_NO       = 8;
@@ -25,6 +25,7 @@ module tb_vec_cat(
     wire [BUS_WIDTH-1:0] cat_vector;
     wire cat_valid;
     wire cat_last;
+    reg  cat_ready = 1'b0;
 
     // FIFO SIGNALS
     reg [BUS_WIDTH-1:0] f_din   = {BUS_WIDTH{1'b0}};
@@ -56,24 +57,24 @@ module tb_vec_cat(
     );
 
 
-
     // DUT
     vec_cat
     #(
         .BUS_WIDTH      (BUS_WIDTH      ),
         .VECTOR_WIDTH   (VECTOR_WIDTH   ),
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
-    ) uut(
+    ) dut(
         .clk        (clk                                    ),
         .rstn       (rstn                                   ),
         .i_Vector   (f_dout                                 ),
         .i_Valid    ((~f_empty && !state)                   ),
         .i_Last     ((vec_cnt == REF_VEC_NO + CMP_VEC_NO)   ),
+        .o_Read     (f_read                                 ),
         .o_Vector   (cat_vector                             ),
         .o_VecID    (vec_id                                 ),
         .o_Valid    (cat_valid                              ),
-        .o_Read     (f_read                                 ),
-        .o_Last     (cat_last                               )
+        .o_Last     (cat_last                               ),
+        .i_Ready    (cat_ready                              )
     );
 
     always begin 
@@ -111,25 +112,28 @@ module tb_vec_cat(
         end
     end
 
-    // PROGRAM CMP_VEC_NO REGISTER
-    reg [VEC_ID_WIDTH-1:0]  cmp_vec_no = CMP_VEC_NO;
-    reg                     cmp_vec_no_valid = 0;
-    wire cmp_vec_no_wack;
-    initial begin
-        wait(rstn);
+    // RANDOMIZE READY
 
+    integer ready_off;
+    integer ready_on ;
+
+    initial begin
+        ready_off = $urandom_range(5);
+        ready_on = $urandom_range(10);
+    end
+
+    always begin
+        cat_ready = 1'b1;
+        #(ready_on * CLK_PERIOD);
+        cat_ready = 1'b0;
+        #(ready_off * CLK_PERIOD);
     end
 
     // RESET
     initial begin
         #50;
         rstn <= 1'b1;
-        cmp_vec_no_valid <= 1'b1;
-        #CLK_PERIOD;
-        cmp_vec_no_valid <= 1'b0;
-
-        #4000;
-
+        #6000;
         $finish;
     end
 
