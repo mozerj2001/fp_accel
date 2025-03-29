@@ -19,6 +19,7 @@ module bit_cntr
         input wire                              clk,
         input wire                              rstn,
         input wire [VECTOR_WIDTH-1:0]           i_Vector,
+        input wire                              i_CntrEn,
 
         output wire [$clog2(VECTOR_WIDTH):0]    o_Sum 
     );
@@ -77,7 +78,7 @@ module bit_cntr
                     begin
                         if(!rstn) begin
                             r_Pipeline[3**jj + kk] <= 0;
-                        end else begin
+                        end else if(i_CntrEn) begin
                             r_Pipeline[3**jj + kk] <= w_GranuleSum[3*kk]    +
                                                     w_GranuleSum[3*kk + 1]  +
                                                     w_GranuleSum[3*kk + 2];
@@ -91,7 +92,7 @@ module bit_cntr
                     begin
                         if(!rstn) begin
                             r_Pipeline[3**jj + kk] <= 0;
-                        end else begin
+                        end else if(i_CntrEn) begin
                             r_Pipeline[3**jj + kk] <= r_Pipeline[3**(jj+1) + 3*kk]    +
                                                     r_Pipeline[3**(jj+1) + 3*kk + 1]  +
                                                     r_Pipeline[3**(jj+1) + 3*kk + 2];

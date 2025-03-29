@@ -15,32 +15,82 @@ module tb_cnt1(
     localparam T_RESET = 30;
 
     localparam BUS_WIDTH = 128;
-    localparam SUB_VECTOR_NO = 2;
+    localparam VECTOR_WIDTH = 920;
     localparam GRANULE_WIDTH = 6;
+    localparam SUB_VECTOR_NO = $ceil($itor(VECTOR_WIDTH)/$itor(BUS_WIDTH));
     localparam OUTPUT_VECTOR_WIDTH = BUS_WIDTH*SUB_VECTOR_NO;
     localparam BIT_NO_OUTPUT_WIDTH = $clog2(OUTPUT_VECTOR_WIDTH);
 
     // UUT
     reg                            clk = 0;
-    reg                            rstn = 0;
-    reg [BUS_WIDTH-1:0]            test_Vector;
-    reg                            test_Valid;
-    wire [BUS_WIDTH-1:0]           o_SubVector;
-    wire [BIT_NO_OUTPUT_WIDTH-1:0] o_Cnt;
+    reg                            rstn = 1;
+    wire [BUS_WIDTH-1:0]           input_Vector;
+    wire                           input_Valid;
+    wire                           input_Ready;
+    wire                           output_Valid;
+    wire [BUS_WIDTH-1:0]           output_SubVector;
+    wire [BIT_NO_OUTPUT_WIDTH-1:0] output_Cnt;
+    wire                           output_CntNew;
+    reg                            output_Ready;
+
+    // generate random input vectors
+    integer i;
+    always @ (posedge clk)
+    begin
+        if(rstn && ~f_full) begin
+            for(i = 0; i*32 < VECTOR_WIDTH; i = i + 1) begin
+                f_din[i*32 +: 32] <= $urandom();
+            end
+
+            f_write <= 1'b1;
+        end else begin
+            f_write <= 1'b0;
+        end
+    end
+
+    // TEST FIFO
+    reg                     f_write;
+    reg [BUS_WIDTH-1:0]     f_din;
+    wire                    f_full;
+    wire                    f_read;
+    wire [BUS_WIDTH-1:0]    f_dout;
+    wire                    f_empty;
+
+    srl_fifo
+    #(
+        .WIDTH  (BUS_WIDTH      ),
+        .DEPTH  (VECTOR_WIDTH   )
+    ) test_fifo (
+        .clk    (clk        ),
+        .rstn   (rstn       ),
+        .wr     (f_write    ),
+        .d      (f_din      ),
+        .full   (f_full     ),
+        .rd     (f_read     ),
+        .q      (f_dout     ),
+        .empty  (f_empty    )
+    );
+
+    assign f_read = input_Ready;
+    assign input_Vector = f_dout;
+    assign input_Valid = ~f_empty;
 
     cnt1#(
-        .VECTOR_WIDTH(2*BUS_WIDTH),
-        .BUS_WIDTH(BUS_WIDTH),
-        .SUB_VECTOR_NO(SUB_VECTOR_NO),
-        .GRANULE_WIDTH(GRANULE_WIDTH)
+        .VECTOR_WIDTH   (VECTOR_WIDTH   ),
+        .BUS_WIDTH      (BUS_WIDTH      ),
+        .GRANULE_WIDTH  (GRANULE_WIDTH  )
     )
     uut(
-        .clk(clk),
-        .rstn(rstn),
-        .i_Vector(test_Vector),
-        .i_Valid(test_Valid),
-        .o_SubVector(o_SubVector),
-        .o_Cnt(o_Cnt)
+        .clk        (clk                ),
+        .rstn       (rstn               ),
+        .i_Vector   (input_Vector       ),
+        .i_Valid    (input_Valid        ),
+        .o_Ready    (input_Ready        ),
+        .o_SubVector(output_SubVector   ),
+        .o_Valid    (output_Valid       ),
+        .o_Cnt      (output_Cnt         ),
+        .o_CntNew   (output_CntNew      ),
+        .i_Ready    (output_Ready       )
     );
 
     // STIMULUS
@@ -50,113 +100,28 @@ module tb_cnt1(
         #HALF_CLK_PERIOD;
     end
 
+    // RANDOMIZE output_Ready
+    integer en_off;
+    integer en_on ;
+
+    initial begin
+        en_off = $urandom_range(1, 5);
+        en_on = $urandom_range(1, 10);
+    end
+
+    always begin
+        output_Ready = 1'b1;
+        #(en_on * CLK_PERIOD);
+        output_Ready = 1'b0;
+        #(en_off * CLK_PERIOD);
+    end
+
     initial
     begin
         #T_RESET;
-        rstn <= 1'b1;
-        test_Vector <= 128'h00000000000000000000000000000000;
-        test_Valid <= 1'b0;
-
-        #(CLK_PERIOD * 10);
-
-        test_Valid <= 1'b1;
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-        #CLK_PERIOD;
-        test_Vector <= 128'hFFFFFFFF00000000FFFFFFFF00000000;   // 64
-        #CLK_PERIOD;
-        // sum = 96
-
-        test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
-        #CLK_PERIOD;
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-        // sum = 160
-
-        #CLK_PERIOD;
-        test_Vector <= 128'h33333333333333333333333333333333;   // 64
-        #CLK_PERIOD;
-        test_Vector <= 128'h77777777777777777777777777777777;   // 96
-        // sum = 160
-
-        #CLK_PERIOD;
-        test_Vector <= 128'h00000000000000000000000000000000;   // 0
-        #CLK_PERIOD;
-        test_Vector <= 128'h00000000000000000000000000000000;   // 0
-        // sum = 0
-
-        #CLK_PERIOD;
-        test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
-        #CLK_PERIOD;
-        test_Vector <= 128'hEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE;   // 96
-        // sum = 224
-
-        #CLK_PERIOD;
-        test_Vector <= 128'h55555555555555555555555555555555;   // 64
-        #CLK_PERIOD;
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-        // sum = 96
-
-        #CLK_PERIOD;
-        test_Vector <= 128'hF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0;   // 64
-        #CLK_PERIOD;
-        test_Vector <= 128'hE070E070E070E070E070E070E070E070;   // 48
-        // sum = 112
-
-        #CLK_PERIOD;
-        test_Vector <= 128'h12341234123412341234123412341234;   // 40
-        #CLK_PERIOD;
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-        // sum = 72
-        
-        #CLK_PERIOD;
-        test_Vector <= 128'h00000000000000000000000000000000;   // 0
-        #CLK_PERIOD;
-        test_Vector <= 128'hFFFFFFFF00000000FFFFFFFF00000000;   // 64
-        // sum = 64
-
-        #CLK_PERIOD;
-        test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
-        #CLK_PERIOD;
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-        // sum = 160
-
-        #CLK_PERIOD;
-        test_Vector <= 128'h33333333333333333333333333333333;   // 64
-        #CLK_PERIOD;
-        test_Vector <= 128'h77777777777777777777777777777777;   // 96
-        // sum = 160
-
-        #CLK_PERIOD;
-        test_Vector <= 128'h00000000000000000000000000000000;   // 0
-        #CLK_PERIOD;
-        test_Vector <= 128'h00000000000000000000000000000000;   // 0
-        // sum = 0
-
-        #CLK_PERIOD;
-        test_Vector <= 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;   // 128
-        #CLK_PERIOD;
-        test_Vector <= 128'hEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE;   // 96
-        // sum = 224
-
-        #CLK_PERIOD;
-        test_Vector <= 128'h55555555555555555555555555555555;   // 64
-        #CLK_PERIOD;
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-        // sum = 96
-
-        #CLK_PERIOD;
-        test_Vector <= 128'hF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0;   // 64
-        #CLK_PERIOD;
-        test_Vector <= 128'hE070E070E070E070E070E070E070E070;   // 48
-        // sum = 112
-
-        #CLK_PERIOD;
-        test_Vector <= 128'h12341234123412341234123412341234;   // 40
-        #CLK_PERIOD;
-        test_Vector <= 128'h11111111111111111111111111111111;   // 32
-        // sum = 72
-        //
-        #CLK_PERIOD;
-        test_Valid <= 1'b0;
+        rstn <= 0;
+        #T_RESET;
+        rstn <= 1;
     end
 
 
