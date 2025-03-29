@@ -35,14 +35,14 @@ module cnt1
     (
         input wire                              clk,
         input wire                              rstn,
-        input wire [BUS_WIDTH-1:0]              i_Vector,
-        input wire                              i_Valid,
-        output wire                             o_Ready,
-        output wire [BUS_WIDTH-1:0]             o_SubVector,
-	    output wire				                o_Valid,
-        output wire [CNT_WIDTH-1:0]             o_Cnt,
-        output wire                             o_CntNew,
-        input wire                              i_Ready
+        input wire [BUS_WIDTH-1:0]              up_Vector,
+        input wire                              up_Valid,
+        output wire                             up_Ready,
+        output wire [BUS_WIDTH-1:0]             dn_SubVector,
+	    output wire				                dn_Valid,
+        output wire [CNT_WIDTH-1:0]             dn_Cnt,
+        output wire                             dn_CntNew,
+        input wire                              dn_Ready
     );
 
     localparam WORD_CNTR_WIDTH      = $clog2(SUB_VECTOR_NO);
@@ -63,9 +63,9 @@ module cnt1
     begin
         if(!rstn) begin
             r_WordCntr <= 0;
-        end else if(w_LastWordOfVector && i_Ready) begin
+        end else if(w_LastWordOfVector && dn_Ready) begin
             r_WordCntr <= 0;
-        end else if(w_ValidDel && i_Ready) begin
+        end else if(w_ValidDel && dn_Ready) begin
             r_WordCntr <= r_WordCntr + 1;
         end
     end
@@ -85,8 +85,8 @@ module cnt1
     ) u_bit_cntr (
         .clk            (clk            ),
         .rstn           (rstn           ),
-        .i_Vector       (i_Vector       ),
-        .i_CntrEn       (i_Ready        ),
+        .i_Vector       (up_Vector      ),
+        .i_CntrEn       (dn_Ready       ),
 
         .o_Sum          (w_Sum          ) 
     );
@@ -103,10 +103,10 @@ module cnt1
         if(!rstn) begin
             r_Accumulator <= 0;
         end
-        else if(w_CntNew && i_Ready) begin
+        else if(w_CntNew && dn_Ready) begin
             r_Accumulator <= w_Sum;
         end
-        else if(w_Valid && i_Ready) begin
+        else if(w_Valid && dn_Ready) begin
             r_Accumulator <= r_Accumulator + {{PAD_WIDTH{1'b0}}, w_Sum};
         end
     end
@@ -126,8 +126,8 @@ module cnt1
                 .WIDTH  (DELAY                  )
             ) vector_shr (
                 .clk    (clk                    ),
-                .sh_en  (i_Valid && i_Ready     ),
-                .din    (i_Vector[jj]           ),
+                .sh_en  (up_Valid && dn_Ready   ),
+                .din    (up_Vector[jj]          ),
                 .addr   (                       ),
                 .q_msb  (w_DelayedSubVector[jj] ),
                 .q_sel  (                       )
@@ -139,8 +139,8 @@ module cnt1
 	    .WIDTH      (DELAY      )
     ) valid_shr (
 	    .clk		(clk        ),
-	    .sh_en		(i_Ready    ),
-	    .din		(i_Valid    ),
+	    .sh_en		(dn_Ready   ),
+	    .din		(up_Valid   ),
 	    .addr		(3'b0       ),
 	    .q_msb		(w_Valid    ),
 	    .q_sel		(w_ValidDel )
@@ -149,22 +149,22 @@ module cnt1
     lut_shr #(
 	    .WIDTH      (DELAY      )
     ) last_word_shr (
-	    .clk		(clk                    ),
-	    .sh_en		(i_Ready                ),
-	    .din		(w_LastWordOfVector     ),
-	    .addr		(                       ),
-	    .q_msb		(w_CntNew               ),
-	    .q_sel		(                       )
+	    .clk		(clk               ),
+	    .sh_en		(dn_Ready          ),
+	    .din		(w_LastWordOfVector),
+	    .addr		(                  ),
+	    .q_msb		(w_CntNew          ),
+	    .q_sel		(                  )
         );
 
 
     /////////////////////////////////////////////////////////////////////////////////////
     // ASSIGN OUTPUTS
-    assign o_Cnt        = r_Accumulator;
-    assign o_SubVector  = w_DelayedSubVector;
-    assign o_CntNew     = w_CntNew;
-    assign o_Valid      = w_Valid;
-    assign o_Ready      = i_Ready;
+    assign dn_Cnt        = r_Accumulator;
+    assign dn_SubVector  = w_DelayedSubVector;
+    assign dn_CntNew     = w_CntNew;
+    assign dn_Valid      = w_Valid;
+    assign up_Ready      = dn_Ready;
     
 
 endmodule
