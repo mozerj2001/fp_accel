@@ -37,18 +37,20 @@ module cnt1
         input wire                              rstn,
         input wire [BUS_WIDTH-1:0]              up_Vector,
         input wire                              up_Valid,
+        input wire                              up_Last,
         output wire                             up_Ready,
         output wire [BUS_WIDTH-1:0]             dn_SubVector,
 	    output wire				                dn_Valid,
         output wire [CNT_WIDTH-1:0]             dn_Cnt,
         output wire                             dn_CntNew,
+        output wire                             dn_Last,
         input wire                              dn_Ready
     );
 
     localparam WORD_CNTR_WIDTH      = $clog2(SUB_VECTOR_NO);
     localparam BIT_CNTR_OUT_WIDTH   = $clog2(BUS_WIDTH);
     localparam PAD_WIDTH            = CNT_WIDTH-BIT_CNTR_OUT_WIDTH;
-    localparam DELAY                = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
+    localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
 
     /////////////////////////////////////////////////////////////////////////////////////
     // DATA WORD COUNTER
@@ -65,7 +67,7 @@ module cnt1
             r_WordCntr <= 0;
         end else if(w_LastWordOfVector && dn_Ready) begin
             r_WordCntr <= 0;
-        end else if(w_ValidDel && dn_Ready) begin
+        end else if(r_DelaySubVector_SHR[CNT1_DELAY-1] && dn_Ready) begin
             r_WordCntr <= r_WordCntr + 1;
         end
     end
@@ -95,18 +97,16 @@ module cnt1
     /////////////////////////////////////////////////////////////////////////////////////
     // ACCUMULATOR
     reg [CNT_WIDTH-1:0]     r_Accumulator;
-    wire                    w_CntNew;   // current sum is the full weight of the last vector
-    wire                    w_Valid;    // current counter output data is valid
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
             r_Accumulator <= 0;
         end
-        else if(w_CntNew && dn_Ready) begin
+        else if(w_LastWordOfVector && dn_Ready) begin
             r_Accumulator <= w_Sum;
         end
-        else if(w_Valid && dn_Ready) begin
+        else if(r_DelaySubVector_SHR[CNT1_DELAY-2] && dn_Ready) begin
             r_Accumulator <= r_Accumulator + {{PAD_WIDTH{1'b0}}, w_Sum};
         end
     end
@@ -117,53 +117,40 @@ module cnt1
     // --> delay input vector as well as valid signal and signal marking the last word
     // of the vector, until the corresponding sum is calculated and can be
     // read from the accumulator register.
-    wire [BUS_WIDTH-1:0] w_DelayedSubVector;
+    reg [BUS_WIDTH-1:0]  r_DelaySubVector_SHR[CNT1_DELAY-1:0];
+    reg [CNT1_DELAY-1:0] r_DelayValid_SHR;
+    reg [CNT1_DELAY-1:0] r_DelayLast_SHR;
 
-    genvar jj;
+    genvar ii;
     generate
-        for(jj = 0; jj < BUS_WIDTH; jj = jj + 1) begin
-            lut_shr #(
-                .WIDTH  (DELAY                  )
-            ) vector_shr (
-                .clk    (clk                    ),
-                .sh_en  (up_Valid && dn_Ready   ),
-                .din    (up_Vector[jj]          ),
-                .addr   (                       ),
-                .q_msb  (w_DelayedSubVector[jj] ),
-                .q_sel  (                       )
-            );
+        for(ii = 0; ii < CNT1_DELAY; ii = ii + 1) begin
+            always @ (posedge clk)
+            begin
+                if(ii == 0) begin
+                    if(dn_Ready) begin
+                        r_DelaySubVector_SHR[ii] <= up_Vector;
+                        r_DelayValid_SHR[ii] <= up_Valid;
+                        r_DelayLast_SHR[ii] <= up_Last;
+                    end
+                end else begin
+                    if(dn_Ready) begin
+                        r_DelaySubVector_SHR[ii] <= r_DelaySubVector_SHR[ii-1];
+                        r_DelayValid_SHR[ii] <= r_DelayValid_SHR[ii-1];
+                        r_DelayLast_SHR[ii] <= r_DelayLast_SHR[ii-1];
+                    end
+                end
+            end
         end
     endgenerate
-
-    lut_shr #(
-	    .WIDTH      (DELAY      )
-    ) valid_shr (
-	    .clk		(clk        ),
-	    .sh_en		(dn_Ready   ),
-	    .din		(up_Valid   ),
-	    .addr		(3'b0       ),
-	    .q_msb		(w_Valid    ),
-	    .q_sel		(w_ValidDel )
-        );
-
-    lut_shr #(
-	    .WIDTH      (DELAY      )
-    ) last_word_shr (
-	    .clk		(clk               ),
-	    .sh_en		(dn_Ready          ),
-	    .din		(w_LastWordOfVector),
-	    .addr		(                  ),
-	    .q_msb		(w_CntNew          ),
-	    .q_sel		(                  )
-        );
 
 
     /////////////////////////////////////////////////////////////////////////////////////
     // ASSIGN OUTPUTS
     assign dn_Cnt        = r_Accumulator;
-    assign dn_SubVector  = w_DelayedSubVector;
-    assign dn_CntNew     = w_CntNew;
-    assign dn_Valid      = w_Valid;
+    assign dn_SubVector  = r_DelaySubVector_SHR[CNT1_DELAY-1];
+    assign dn_CntNew     = w_LastWordOfVector;
+    assign dn_Valid      = r_DelayValid_SHR[CNT1_DELAY-1];
+    assign dn_Last       = r_DelayLast_SHR[CNT1_DELAY-1];
     assign up_Ready      = dn_Ready;
     
 
