@@ -8,7 +8,7 @@
 
 module top_intf
     #(
-        BUS_WIDTH       = 512                   ,
+        BUS_WIDTH       = 128                   ,
         VECTOR_WIDTH    = 920                   ,
         SHR_DEPTH       = 8                     ,
         //
@@ -17,7 +17,7 @@ module top_intf
         VEC_ID_WIDTH    = 8                     ,
         //
         CNT_WIDTH       = $clog2(VECTOR_WIDTH),
-        FIFO_TREE_DEPTH          = ($clog2(SHR_DEPTH) + 1)
+        FIFO_TREE_DEPTH = ($clog2(SHR_DEPTH) + 1)
     )(
         input wire                          ap_clk              ,
         input wire                          ap_rstn             ,
@@ -43,13 +43,6 @@ module top_intf
         input wire                          BRAM_PORTA_en_a     ,  
         input wire                          BRAM_PORTA_we_a
 
-        // DEBUG PORTS
-        // output wire o_Catted_Last_Observed,
-        // output wire o_FifoTreeEmtpy,
-        // output wire [31:0] o_FlushCntr,
-        // output wire o_State,
-        // output wire o_ProcessingOver,
-        // output wire [2**FIFO_TREE_DEPTH-1:1] o_FifoEmpty
     );
 
     // S_AXIS_DATA signals
@@ -117,13 +110,6 @@ module top_intf
         .o_IDPair_Ready     (o_IDPair_Ready     ),
         .o_IDPair_Out       (o_IDPair_Out       ),
         .o_IDPair_Last      (o_IDPair_Last      )
-        // DEBUG PORTS
-        // .o_Catted_Last_Observed(o_Catted_Last_Observed),
-        // .o_FifoTreeEmtpy(o_FifoTreeEmtpy),
-        // .o_FlushCntr(o_FlushCntr),
-        // .o_State(o_State),
-        // .o_ProcessingOver(o_ProcessingOver),
-        // .o_FifoEmpty(o_FifoEmpty)
     );
 
 endmodule

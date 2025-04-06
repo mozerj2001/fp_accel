@@ -123,7 +123,7 @@ module vec_cat
     always @ (posedge clk)
     begin
         if(!rstn) begin
-            r_SubVecCntr <= 0;
+            r_SubVecCntr <= {$clog2(SUB_VEC_NO){1'b1}};
         end else if(w_DoShift && (w_State == PAD)) begin
             r_SubVecCntr <= 0;
         end else if(w_DoShift) begin

@@ -36,7 +36,11 @@ module comparator
         
         // Valid signal
         input wire                  i_Valid,
-        output wire                 o_Valid
+        output wire                 o_Valid,
+
+        // Last signal
+        input wire                  i_Last,
+        output wire                 o_Last
     );
 
     // Similarity calc
@@ -69,8 +73,19 @@ module comparator
         .dout   (w_Result   )
     );
 
-    assign o_Dout = (r_Sum >= {1'b0, w_Result});
-    assign o_Valid = i_Valid;       // no delay
+    // Valid delay register
+    reg r_ValidDelay;
+    reg r_LastDelay;
+
+    always @ (posedge clk)
+    begin
+        r_ValidDelay <= i_Valid;
+        r_LastDelay <= i_Last;
+    end
+
+    assign o_Dout = i_BRAM_WrEn ? 0 : (r_Sum >= {1'b0, w_Result});
+    assign o_Valid = r_ValidDelay;
+    assign o_Last = r_LastDelay;
 
 endmodule
 

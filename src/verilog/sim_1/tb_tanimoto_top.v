@@ -6,15 +6,28 @@ module tb_tanimoto_top(
 
     );
 
-    localparam BUS_WIDTH        = 512;
-    localparam VECTOR_WIDTH     = 920;
-    localparam SUB_VECTOR_NO    = 2;
+    localparam BUS_WIDTH          = 128;
+    localparam BUS_WIDTH_BYTES    = BUS_WIDTH/8;
+    localparam VECTOR_WIDTH       = 920;
+    localparam VECTOR_WIDTH_BYTES = 115;
+    localparam SUB_VECTOR_NO      = 8;
+    localparam REF_VEC_NO         = 8;
+    localparam CMP_VEC_NO         = 128;
+
+    localparam BUS_WIDTH_r          = $itor(BUS_WIDTH         );
+    localparam BUS_WIDTH_BYTES_r    = $itor(BUS_WIDTH_BYTES   );
+    localparam VECTOR_WIDTH_r       = $itor(VECTOR_WIDTH      );
+    localparam VECTOR_WIDTH_BYTES_r = $itor(VECTOR_WIDTH_BYTES);
+    localparam SUB_VECTOR_NO_r      = $itor(SUB_VECTOR_NO     );
+    localparam REF_VEC_NO_r         = $itor(REF_VEC_NO        );
+    localparam CMP_VEC_NO_r         = $itor(CMP_VEC_NO        );
+
+    localparam NUM_REF_BUS_CYCLES = $rtoi(((REF_VEC_NO_r*VECTOR_WIDTH_BYTES_r) + BUS_WIDTH_BYTES_r - 1)*8 / BUS_WIDTH_r);
+    localparam NUM_CMP_BUS_CYCLES = $rtoi(((CMP_VEC_NO_r*VECTOR_WIDTH_BYTES_r) + BUS_WIDTH_BYTES_r - 1)*8 / BUS_WIDTH_r);
+
     localparam GRANULE_WIDTH    = 6;
     localparam VEC_ID_WIDTH     = $clog2(VECTOR_WIDTH);
     localparam CNT_WIDTH        = $clog2(VECTOR_WIDTH);
-
-    localparam REF_VEC_NO       = 8;
-    localparam CMP_VEC_NO       = 128;
 
     localparam SHR_DEPTH        = REF_VEC_NO;
 
@@ -49,7 +62,7 @@ module tb_tanimoto_top(
     ) test_fifo (
         .clk    (clk            ),
         .rstn   (rstn           ),
-        .wr     (f_write_d      ),
+        .wr     (f_write        ),
         .d      (f_din          ),
         .full   (f_full         ),
         .rd     (f_read         ),
@@ -78,7 +91,7 @@ module tb_tanimoto_top(
         .clk                    (clk                ),
         .rstn                   (rstn               ),
         .i_Vector               (f_dout             ),
-        .i_Valid                (~f_empty           ),
+        .i_Valid                (~f_empty && state  ),
         .i_Last                 (input_last         ),
         .i_BRAM_Addr            (threshold_addr     ),
         .i_BRAM_Din             (threshold          ),
@@ -101,18 +114,18 @@ module tb_tanimoto_top(
 
     always @ (posedge clk)
     begin
-        if(state) begin
+        if(f_read && ~f_empty) begin
             vec_cntr <= vec_cntr + 1;
         end
 
-        if(vec_cntr == (REF_VEC_NO + CMP_VEC_NO) * SUB_VECTOR_NO - 1) begin
+        if(vec_cntr == (NUM_REF_BUS_CYCLES-1) || vec_cntr == (NUM_REF_BUS_CYCLES+NUM_CMP_BUS_CYCLES-1)) begin
             input_last <= 1'b1;
         end else begin
             input_last <= 1'b0;
         end
 
-        if(vec_cntr == (REF_VEC_NO + CMP_VEC_NO) * SUB_VECTOR_NO) begin
-            state <= 0;
+        if(vec_cntr == (NUM_REF_BUS_CYCLES + NUM_CMP_BUS_CYCLES)) begin
+            state <= 1'b0;
         end
     end
 
@@ -135,13 +148,13 @@ module tb_tanimoto_top(
     end
 
     // fill FIFOs
-    reg f_write_d;
+    reg f_write;
     always @ (posedge clk)
     begin
         if(!rstn || !state) begin
-            f_write_d <= 0;
+            f_write <= 0;
         end else begin
-            f_write_d <= 1'b1;
+            f_write <= 1'b1;
         end
     end
 
