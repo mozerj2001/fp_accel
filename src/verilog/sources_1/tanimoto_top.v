@@ -16,15 +16,15 @@
 // (ID is the position in the database, so vec_cat counts input vectors.)
 module tanimoto_top
     #(
-        BUS_WIDTH           = 512,      // system bus data width
+        BUS_WIDTH           = 128,      // system bus data width
         VECTOR_WIDTH        = 920,
-        SUB_VECTOR_NO       = 2,        // how many sub-vectors are in a full vector (NOTE: only 2 is supported)
         GRANULE_WIDTH       = 6,        // width of the first CNT1 tree stage, 6 on Xilinx/AMD FPGA
         SHR_DEPTH           = 8,        // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 16,       // implicitly defines how wide vector counters need to be
         //
+        SUB_VECTOR_NO       = $rtoi($ceil($itor(VECTOR_WIDTH)/$itor(BUS_WIDTH))),
         CNT_WIDTH           = $clog2(VECTOR_WIDTH),
-        FIFO_TREE_DEPTH          = ($clog2(SHR_DEPTH) + 1)
+        FIFO_TREE_DEPTH     = ($clog2(SHR_DEPTH) + 1)
     )(
         input wire                          clk,
         input wire                          rstn,
@@ -50,103 +50,67 @@ module tanimoto_top
         output wire                         o_IDPair_Last
     );
 
-    localparam LOAD_REF             = 1'b0;
-    localparam COMPARE              = 1'b1;
-    localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
-    localparam TOTAL_FLUSH_TIME     = CNT1_DELAY + SHR_DEPTH + CNT1_DELAY;      // flush time until FIFO tree is the only factor
+    // States
+    localparam LOAD_REF     = 2'b00;
+    localparam COMPARE      = 2'b01;
+    localparam FLUSH        = 2'b10;
+    // Delays
+    localparam CNT1_DELAY   = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 3;
+    localparam FLUSH_DELAY  = CNT1_DELAY + SHR_DEPTH*SUB_VECTOR_NO + CNT1_DELAY;      // flush time until FIFO tree is the only factor
 
-
-    // SUB VECTOR COUNTER
-    // Counts sub-vectors incoming from the input cnt1.
-    // Assuming there are two sub-vectors per vector, its LSB
-    // is the select signal for the output multiplexers.
-    reg [VEC_ID_WIDTH:0] r_SubVecCntr;
-    wire w_Cnt_SubVector_Valid;
-    wire w_ProcessingOver;      // all REF - CMP comparisons were made, all ID pairs are emitted
-
-    // TODO: This is not exhaustive, it is 100% possible that something is stuck in the pipeline...
-    //      -- IMPROVEMENT: add busy signals to the CNT1 module
-    assign w_ProcessingOver =   r_Catted_Last_Observed              &&
-                                w_FifoTreeEmpty                     &&
-                                (r_FlushCntr >= TOTAL_FLUSH_TIME)   &&
-                                (r_State == COMPARE);
-
+    // SUB_VECTOR_COUNTER
+    // Counts backwards due to SHR_A indexing considerations
+    reg [VEC_ID_WIDTH-1:0] r_SubVectorCntr;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
-            r_SubVecCntr <= 0;
-        end else if(w_ProcessingOver) begin
-            r_SubVecCntr <= 0;
-        end else if(w_Cnt_SubVector_Valid) begin
-            r_SubVecCntr <= r_SubVecCntr + 1;
-        end
-    end
-    
-    // ODD-EVEN CLK REGISTER
-    reg r_Catted_Last_Observed; // vec_cat has counted as many input CMP vectors as expected
-    reg r_Osc;                  // 1-0 oscillation to differentiate between odd and even clk periods
-
-    always @ (posedge clk)
-    begin
-        if(!rstn) begin
-            r_Osc        <= 0;
-        end else if(w_Cnt_SubVector_Valid || r_Catted_Last_Observed) begin
-            r_Osc <= ~r_Osc;
-        end
-    end
-
-    // FLUSH COUNTER
-    // Count number of cycles during pipeline flush.
-    // Used to emit TLAST on the output AXI Stream.
-    reg [31:0] r_FlushCntr;
-
-    always @(posedge clk)
-    begin
-        if(!rstn) begin
-            r_FlushCntr <= 0;
-        end else if(r_Catted_Last_Observed) begin
-            r_FlushCntr <= r_FlushCntr + 1;
+            r_SubVectorCntr <= SUB_VECTOR_NO-1;
+        end else if(w_CNT1_New && !w_HaltPipeline) begin
+            r_SubVectorCntr <= SUB_VECTOR_NO-1;
+        end else if(w_CNT1_Valid && !w_HaltPipeline) begin
+            r_SubVectorCntr <= r_SubVectorCntr - 1;
         end
     end
 
     // STATE MACHINE
-    //  - LOAD_REF: Load reference vectors into A shiftregisters
-    //  - COMPARE: Load compare vectors into B shiftregisters + calculate tanimoto
-    reg r_State;
-    wire w_StartCompare;
+    reg [1:0] r_State;
+    wire      w_StartCompare;
+    wire      w_StartFlush;
+    wire      w_ProcessingOver;
 
-    assign w_StartCompare = (r_SubVecCntr == (SHR_DEPTH*SUB_VECTOR_NO-1)) && w_Cnt_SubVector_Valid;
+    assign w_StartCompare   = ( w_CNT1_New                              &&
+                               (r_ShrID_0[CNT1_DELAY-1] == SHR_DEPTH)   &&
+                                !w_HaltPipeline                           );
+
+    assign w_StartFlush     = (w_CNT1_Last && !w_HaltPipeline);
+    
+    assign w_ProcessingOver = ( r_State_Shr[SHR_DEPTH-1] == FLUSH   &&
+                                w_PropagateControl                  &&
+                                w_ComparationOver                   &&
+                                w_FifoTreeEmpty                     );
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
             r_State <= LOAD_REF;
-        end else if(w_ProcessingOver) begin
-            r_State <= LOAD_REF;
         end else if(w_StartCompare) begin
             r_State <= COMPARE;
+        end else if(w_StartFlush) begin
+            r_State <= FLUSH;
+        end else if(w_ProcessingOver) begin
+            r_State <= LOAD_REF;
         end
     end
-
 
     // VECTOR CONCATENATOR UNIT
     // If the total vector width is not divisable by BUS_WIDTH, the vec_cat
     // module ensures that vectors aren't mixed up, thus will receive correct
     // CNT1 values. Responsible for emitting read signals and splicing input.
-    wire [BUS_WIDTH-1:0]    w_Catted_Vector;
-    wire                    w_Catted_Valid;
-    wire [VEC_ID_WIDTH-1:0] w_CatOut_VecID;
-    wire                    w_Catted_Last;
-
-    always @(posedge clk)
-    begin
-        if(!rstn) begin
-            r_Catted_Last_Observed <= 1'b0;
-        end else if(w_Catted_Last) begin
-            r_Catted_Last_Observed <= 1'b1;
-        end
-    end
+    wire [BUS_WIDTH-1:0]    w_CatVector;
+    wire                    w_CatValid;
+    wire [VEC_ID_WIDTH-1:0] w_CatVecID;
+    wire                    w_CatLast;
 
     vec_cat #(
         .BUS_WIDTH      (BUS_WIDTH      ),
@@ -154,38 +118,47 @@ module tanimoto_top
         .VEC_ID_WIDTH   (VEC_ID_WIDTH   ),
         .REF_VECTOR_NO  (SHR_DEPTH      )
     ) u_vec_cat_0 (
-        .clk                (clk                ),
-        .rstn               (rstn               ),
-        .i_Vector           (i_Vector           ),
-        .i_Valid            (i_Valid            ),
-        .i_Last             (i_Last             ),
-        .o_Vector           (w_Catted_Vector    ),
-        .o_VecID            (w_CatOut_VecID     ),
-        .o_Valid            (w_Catted_Valid     ),
-        .o_Read             (o_Read             ),
-        .o_Last             (w_Catted_Last      )
+        .clk        (clk            ),
+        .rstn       (rstn           ),
+        .up_Vector  (i_Vector       ),
+        .up_Valid   (i_Valid        ),
+        .up_Last    (i_Last         ),
+        .up_Ready   (o_Read         ),
+        .dn_Vector  (w_CatVector    ),
+        .dn_VecID   (w_CatVecID     ),
+        .dn_Valid   (w_CatValid     ),
+        .dn_Last    (w_CatLast      ),
+        .dn_Ready   (w_CNT1_Ready   )
     );
 
 
     // INPUT CNT1 UNIT
-    // Calculates input vector weight to be loaded into CTN shiftregisters.
-    wire [BUS_WIDTH-1:0]    w_Cnted_Vector;
-    wire [CNT_WIDTH-1:0]    w_Cnt;
-    wire                    w_Cnt_New;
+    // Calculates input vector weight to be loaded into CNT shiftregisters.
+    wire [BUS_WIDTH-1:0]    w_CNT1_Vector;
+    wire [CNT_WIDTH-1:0]    w_CNT1_Cnt;
+    wire                    w_CNT1_Valid;
+    wire                    w_CNT1_New;
+    wire                    w_CNT1_Last;
+    wire                    w_CNT1_Ready;
+
     cnt1 #(
-        .VECTOR_WIDTH   (VECTOR_WIDTH           ),
-        .BUS_WIDTH      (BUS_WIDTH              ),
-        .SUB_VECTOR_NO  (SUB_VECTOR_NO          ),
-        .GRANULE_WIDTH  (GRANULE_WIDTH          )
+        .VECTOR_WIDTH   (VECTOR_WIDTH   ),
+        .BUS_WIDTH      (BUS_WIDTH      ),
+        .SUB_VECTOR_NO  (SUB_VECTOR_NO  ),
+        .GRANULE_WIDTH  (GRANULE_WIDTH  )
     ) u_cnt1_in (
-        .clk            (clk                    ),
-        .rstn           (rstn                   ),
-        .i_Vector       (w_Catted_Vector        ),
-        .i_Valid        (w_Catted_Valid         ),
-        .o_SubVector    (w_Cnted_Vector         ),
-        .o_Valid        (w_Cnt_SubVector_Valid  ),
-        .o_Cnt          (w_Cnt                  ),
-        .o_CntNew       (w_Cnt_New              )
+        .clk            (clk                ),
+        .rstn           (rstn               ),
+        .up_Vector      (w_CatVector        ),
+        .up_Valid       (w_CatValid         ),
+        .up_Last        (w_CatLast          ),
+        .up_Ready       (w_CNT1_Ready       ),
+        .dn_SubVector   (w_CNT1_Vector      ),
+        .dn_Valid       (w_CNT1_Valid       ),
+        .dn_Cnt         (w_CNT1_Cnt         ),
+        .dn_CntNew      (w_CNT1_New         ),
+        .dn_Last        (w_CNT1_Last        ),
+        .dn_Ready       (~w_HaltPipeline    )
     );
 
 
@@ -194,14 +167,16 @@ module tanimoto_top
     // COMPARE: Shift all subvectors, propagate state and 
     // valid gradually along the shiftregisters, so
     // the out cnt1s start counting at the appropriate time.
-    // SUB_VEC_NO = 2 is assumed.
     reg     [SHR_DEPTH-1:0] r_Valid_Shr;
-    reg     [SHR_DEPTH-1:0] r_State_Shr;
-    wire    [SHR_DEPTH-1:0] w_OutCnt1_ValidIn;
+    reg     [1:0]           r_State_Shr[SHR_DEPTH-1:0];
+    wire    [SHR_DEPTH-1:0] w_SHR2CNT1_Valid;
+    wire    [SHR_DEPTH-1:0] w_SHR2CNT1_Last;
 
     // Propagate control signals and vectors when: a) vectors are compared, b) when the pipeline is being flushed
     wire w_PropagateControl;
-    assign w_PropagateControl = (r_State == COMPARE) && r_Osc && (w_Cnt_SubVector_Valid || r_Catted_Last_Observed);
+    assign w_PropagateControl = (  (r_State > LOAD_REF) &&
+                                    w_CNT1_New          &&
+                                    !w_HaltPipeline         );
 
     genvar vv;
     generate
@@ -211,9 +186,9 @@ module tanimoto_top
                 begin
                     if(!rstn) begin
                         r_Valid_Shr[vv] <= 1'b0;
-                        r_State_Shr[vv] <= 1'b0;
+                        r_State_Shr[vv] <= LOAD_REF;
                     end else if(w_PropagateControl) begin
-                        r_Valid_Shr[vv] <= w_Cnt_SubVector_Valid;
+                        r_Valid_Shr[vv] <= w_CNT1_Valid;
                         r_State_Shr[vv] <= r_State;
                     end
                 end
@@ -222,7 +197,7 @@ module tanimoto_top
                 begin
                     if(!rstn) begin
                         r_Valid_Shr[vv] <= 1'b0;
-                        r_State_Shr[vv] <= 1'b0;
+                        r_State_Shr[vv] <= LOAD_REF;
                     end else if(w_PropagateControl) begin
                         r_Valid_Shr[vv] <= r_Valid_Shr[vv-1];
                         r_State_Shr[vv] <= r_State_Shr[vv-1];
@@ -240,41 +215,56 @@ module tanimoto_top
     // the sub_vectors needs to be delayed by one clk before being
     // fed to the output CNT1 module.
     wire w_Shift_A;
-    assign w_Shift_A = w_Cnt_SubVector_Valid && (r_State == LOAD_REF);
+    assign w_Shift_A = w_CNT1_Valid && ((r_State == LOAD_REF) && !w_StartCompare);
 
     wire w_Shift_B;
-    assign w_Shift_B = w_Cnt_SubVector_Valid && (r_State == COMPARE);
+    assign w_Shift_B = w_CNT1_Valid && ((r_State > LOAD_REF) || w_StartCompare);
 
-    reg [BUS_WIDTH-1:0] r_Vector_Array_A    [SHR_DEPTH*SUB_VECTOR_NO-1:0];
-    reg [BUS_WIDTH-1:0] r_Vector_Array_B    [SHR_DEPTH*SUB_VECTOR_NO-1:0];
-    reg [BUS_WIDTH-1:0] r_Vector_Array_B_Del[SHR_DEPTH-1:0];
+    reg [BUS_WIDTH-1:0] r_Vector_Array_A[SHR_DEPTH-1:0][SUB_VECTOR_NO-1:0];
+    reg [BUS_WIDTH-1:0] r_Vector_Array_B[SHR_DEPTH-1:0][SUB_VECTOR_NO-1:0];
 
-    integer ii;
+    integer ii, jj;
     always @ (posedge clk)
     begin
-    if(w_Shift_A) begin
-        r_Vector_Array_A[0] <= w_Cnted_Vector;
-        for(ii = 1; ii < SHR_DEPTH*SUB_VECTOR_NO; ii = ii + 1) begin
-            r_Vector_Array_A[ii] <= r_Vector_Array_A[ii-1];
-        end
-    end else if(w_Shift_B) begin
-        r_Vector_Array_B[0] <= w_Cnted_Vector;
-        for(ii = 1; ii < SHR_DEPTH*SUB_VECTOR_NO; ii = ii + 1) begin
-            r_Vector_Array_B[ii] <= r_Vector_Array_B[ii-1];
-        end
-    end
-    end
-
-    // Delay one of the sub-vectors for the clk, in which sub-vectors
-    // are not aligned in the shr.
-    always @ (posedge clk)
-    begin
-        if(w_Shift_B) begin
-            for(ii = 0; ii < SHR_DEPTH; ii = ii+1) begin
-                r_Vector_Array_B_Del[ii] <= r_Vector_Array_B[2*ii];
+        if(w_Shift_A) begin
+            for(ii = 0; ii < SHR_DEPTH; ii = ii + 1) begin
+                for(jj = 0; jj < SUB_VECTOR_NO; jj = jj + 1) begin
+                    if(ii == 0 && jj == 0) begin
+                        r_Vector_Array_A[ii][jj] <= w_CNT1_Vector;
+                    end else if(jj == 0) begin
+                        r_Vector_Array_A[ii][jj] <= r_Vector_Array_A[ii-1][SUB_VECTOR_NO-1];
+                    end else begin
+                        r_Vector_Array_A[ii][jj] <= r_Vector_Array_A[ii][jj-1];
+                    end
+                end
+            end
+        end else if(w_Shift_B) begin
+            for(ii = 0; ii < SHR_DEPTH; ii = ii + 1) begin
+                for(jj = 0; jj < SUB_VECTOR_NO; jj = jj + 1) begin
+                    if(ii == 0 && jj == 0) begin
+                        r_Vector_Array_B[ii][jj] <= w_CNT1_Vector;
+                    end else if(jj == 0) begin
+                        r_Vector_Array_B[ii][jj] <= r_Vector_Array_B[ii-1][SUB_VECTOR_NO-1];
+                    end else begin
+                        r_Vector_Array_B[ii][jj] <= r_Vector_Array_B[ii][jj-1];
+                    end
+                end
             end
         end
     end
+
+
+    // AnB MUX
+    // Select which SubVector of A is in an and gate with the current
+    // B sub-vector in this stage of the pipeline.
+    wire [BUS_WIDTH-1:0] w_SHR2CNT1_AnB[SHR_DEPTH-1:0];
+
+    genvar mm;
+    generate
+        for(mm = 0; mm < SHR_DEPTH; mm = mm + 1) begin
+            assign w_SHR2CNT1_AnB[mm] = r_Vector_Array_A[mm][r_SubVectorCntr] & r_Vector_Array_B[mm][SUB_VECTOR_NO-1];
+        end
+    endgenerate
 
 
     // CNT SHIFTREGISTERS
@@ -282,26 +272,35 @@ module tanimoto_top
     // r_State selects whether the results are from A or B vectors, similarly
     // to the VECTOR SHIFTREGISTERS.
     wire w_Shift_CntA;
-    wire [BUS_WIDTH-1:0] w_Shr_A_Cnt_Out;
-    assign w_Shift_CntA = w_Cnt_New && (r_State == LOAD_REF);
+    assign w_Shift_CntA = w_CNT1_New && (r_State == LOAD_REF);
 
     wire w_Shift_CntB;
-    wire [BUS_WIDTH-1:0] w_Shr_B_Vec_Out;
-    assign w_Shift_CntB = w_Cnt_New && (r_State == COMPARE);
+    assign w_Shift_CntB = w_CNT1_New && (r_State == COMPARE);
+
+    reg [CNT_WIDTH-1:0] r_Cnt_Array_A[SHR_DEPTH-1:0];
+
+    // CNT SHIFTREGISTERS
+    // Store CNT1 reslults from the input CNT1 unit in a LUT shiftregister.
+    // r_State selects whether the results are from A or B vectors, similarly
+    // to the VECTOR SHIFTREGISTERS.
+    wire w_Shift_CntA;
+    assign w_Shift_CntA = w_CNT1_New && (r_State == LOAD_REF);
+
+    wire w_Shift_CntB;
+    assign w_Shift_CntB = w_CNT1_New && (r_State == COMPARE);
 
     reg [CNT_WIDTH-1:0] r_Cnt_Array_A[SHR_DEPTH-1:0];
     reg [CNT_WIDTH-1:0] r_Cnt_Array_B[SHR_DEPTH-1:0];
 
-    integer jj;
     always @ (posedge clk)
     begin
         if(w_Shift_CntA) begin
-            r_Cnt_Array_A[0] <= w_Cnt;
+            r_Cnt_Array_A[0] <= w_CNT1_Cnt;
             for(jj = 1; jj < SHR_DEPTH; jj = jj + 1) begin
                 r_Cnt_Array_A[jj] <= r_Cnt_Array_A[jj-1];
             end
         end else if(w_Shift_CntB) begin
-            r_Cnt_Array_B[0] <= w_Cnt;
+            r_Cnt_Array_B[0] <= w_CNT1_Cnt;
             for(jj = 1; jj < SHR_DEPTH; jj = jj + 1) begin
                 r_Cnt_Array_B[jj] <= r_Cnt_Array_B[jj-1];
             end
@@ -317,8 +316,8 @@ module tanimoto_top
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_0   [CNT1_DELAY-1:0];
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_1_A [SHR_DEPTH-1:0];
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_1_B [SHR_DEPTH-1:0];
-    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_A [SHR_DEPTH-1:0][CNT1_DELAY+2:0];
-    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_B [SHR_DEPTH-1:0][CNT1_DELAY+2:0];
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_A [SHR_DEPTH-1:0][CNT1_DELAY:0];  // +1 for CMP delay
+    reg [VEC_ID_WIDTH-1:0]  r_ShrID_2_B [SHR_DEPTH-1:0][CNT1_DELAY:0];  // +1 for CMP delay
 
     genvar dd;
     generate
@@ -326,7 +325,7 @@ module tanimoto_top
             always @ (posedge clk)
             begin
                 if(dd == 0) begin
-                    r_ShrID_0[dd] <= w_CatOut_VecID;
+                    r_ShrID_0[dd] <= w_CatVecID;
                 end else begin
                     r_ShrID_0[dd] <= r_ShrID_0[dd-1];
                 end
@@ -340,7 +339,7 @@ module tanimoto_top
             always @ (posedge clk)
             begin
                 if(ee == 0) begin
-                    if(w_Cnt_New) begin
+                    if(w_CNT1_New) begin
                         if(r_State == LOAD_REF) begin
                             r_ShrID_1_A[ee] <= r_ShrID_0[CNT1_DELAY-1];
                         end else begin
@@ -348,7 +347,7 @@ module tanimoto_top
                         end
                     end
                 end else begin
-                    if(w_Cnt_New) begin
+                    if(w_CNT1_New) begin
                         if(r_State == LOAD_REF) begin
                             r_ShrID_1_A[ee] <= r_ShrID_1_A[ee-1];
                         end else begin
@@ -368,7 +367,7 @@ module tanimoto_top
                 if(gg == 0) begin
                     always @ (posedge clk)
                     begin
-                        if(w_OutCnt1_ValidIn[ff]) begin
+                        if(w_SHR2CNT1_Valid[ff]) begin
                             r_ShrID_2_A[ff][gg] <= r_ShrID_1_A[ff];
                             r_ShrID_2_B[ff][gg] <= r_ShrID_1_B[ff];
                         end
@@ -376,7 +375,7 @@ module tanimoto_top
                 end else begin
                     always @ (posedge clk)
                     begin
-                        if(w_OutCnt1_ValidIn[ff]) begin
+                        if(w_SHR2CNT1_Valid[ff]) begin
                             r_ShrID_2_A[ff][gg] <= r_ShrID_2_A[ff][gg-1];
                             r_ShrID_2_B[ff][gg] <= r_ShrID_2_B[ff][gg-1];
                         end
@@ -388,55 +387,116 @@ module tanimoto_top
 
 
 
-    // STAGE OUT MUX
-    // Selects which sub_vector is on the input of the output cnt1
-    // for each level of shiftregister blocks.
-    // Assuming there are two sub-vectors, the select signal is the
-    // LSB of the SubVecCntr.
-    // Vectors are perfectly aligned in the shiftregisters every second clk
-    // (when r_SubVecCntr == 1),
-    // what needs to be multiplexed between is the higher-index
-    // sub_vector and the delayed lower index sub_vector.
-    wire [BUS_WIDTH-1:0] w_OutPreStageIn_AnB[SHR_DEPTH-1:0];
 
-    genvar mm;
+    // CNT1 A&B
+    // Calculates the weight of A&B vectors.
+    wire [CNT_WIDTH-1:0] w_AnB_CNT1_Cnt[SHR_DEPTH-1:0];
+    wire [SHR_DEPTH-1:0] w_AnB_CNT1_Valid;
+    wire [SHR_DEPTH-1:0] w_AnB_CNT1_New;
+    wire [SHR_DEPTH-1:0] w_AnB_CNT1_Last;
+    wire [SHR_DEPTH-1:0] w_PipelineReady;
+
+    wire w_HaltPipeline;
+    assign w_HaltPipeline = ~r_PipelineReadyTree[0][0];
+
+    // Or-tree for pipeline ready
+    reg [SHR_DEPTH-1:0] r_PipelineReadyTree[FIFO_TREE_DEPTH-1:0];
+
+    genvar xx, yy;
     generate
-        for(mm = 0; mm < SHR_DEPTH; mm = mm + 1) begin
-            assign w_OutPreStageIn_AnB[mm] = (~r_SubVecCntr[0]) ?   (r_Vector_Array_A[2*mm+1] & r_Vector_Array_B[2*mm+1]) : 
-                                                                    (r_Vector_Array_A[2*mm] & r_Vector_Array_B_Del[mm]);
+        for(xx = 0; xx < FIFO_TREE_DEPTH; xx = xx + 1) begin
+            for(yy = 0; yy < SHR_DEPTH; yy = yy + 1) begin
+                localparam LOCAL_DEPTH = SHR_DEPTH/(2**(FIFO_TREE_DEPTH-1-xx));
+
+                always @ (posedge clk) begin
+                    if(xx == FIFO_TREE_DEPTH-1) begin
+                        r_PipelineReadyTree[xx][yy] <= w_PipelineReady[yy];
+                    end else if(yy < LOCAL_DEPTH) begin
+                        r_PipelineReadyTree[xx][yy] <= r_PipelineReadyTree[xx+1][yy*2] || r_PipelineReadyTree[xx+1][yy*2+1];
+                    end
+                end
+            end
         end
     endgenerate
 
 
-    // CNT1 A&B
-    // Calculates the weight of A&B vectors.
-    wire [CNT_WIDTH-1:0] w_Cnt_AnB[SHR_DEPTH-1:0];
-    wire [SHR_DEPTH-1:0] w_PreStageOut_Valid;
-    wire [SHR_DEPTH-1:0] w_CntOutNew_AnB;
-
-    assign w_OutCnt1_ValidIn = r_Valid_Shr & r_State_Shr;
-
     genvar kk;
     generate
-    for(kk = 0; kk < SHR_DEPTH; kk = kk + 1) begin
-        cnt1 #(
-            .VECTOR_WIDTH   (VECTOR_WIDTH               ),
-            .BUS_WIDTH      (BUS_WIDTH                  ),
-            .SUB_VECTOR_NO  (SUB_VECTOR_NO              ),
-            .GRANULE_WIDTH  (GRANULE_WIDTH              )
-        ) u_cnt1_out (
-            .clk            (clk                        ),
-            .rstn           (rstn                       ),
-            .i_Vector       (w_OutPreStageIn_AnB[kk]    ),
-            .i_Valid        (w_OutCnt1_ValidIn[kk]  ),
-            .o_SubVector    (                           ),
-            .o_Valid        (w_PreStageOut_Valid[kk]    ),
-            .o_Cnt          (w_Cnt_AnB[kk]              ),
-            .o_CntNew       (w_CntOutNew_AnB[kk]        )
-        );
-    end
+        for(kk = 0; kk < SHR_DEPTH; kk = kk + 1) begin
+
+            assign w_SHR2CNT1_Valid[kk] = r_Valid_Shr[kk] && (r_State_Shr[kk] > LOAD_REF);
+            assign w_SHR2CNT1_Last[kk] = (r_State_Shr[kk] == FLUSH) && w_PropagateControl;
+
+            cnt1 #(
+                .VECTOR_WIDTH   (VECTOR_WIDTH               ),
+                .BUS_WIDTH      (BUS_WIDTH                  ),
+                .SUB_VECTOR_NO  (SUB_VECTOR_NO              ),
+                .GRANULE_WIDTH  (GRANULE_WIDTH              )
+            ) u_cnt1_out (
+                .clk            (clk                                        ),
+                .rstn           (rstn                                       ),
+                .up_Vector      (w_SHR2CNT1_AnB[kk]                         ),
+                .up_Valid       (w_SHR2CNT1_Valid[kk]                       ),
+                .up_Last        (w_SHR2CNT1_Last[kk]                        ),
+                .up_Ready       (w_PipelineReady[kk]                        ),
+                .dn_SubVector   (                                           ),
+                .dn_Valid       (w_AnB_CNT1_Valid[kk]                       ),
+                .dn_Cnt         (w_AnB_CNT1_Cnt[kk]                         ),
+                .dn_CntNew      (w_AnB_CNT1_New[kk]                         ),
+                .dn_Last        (w_AnB_CNT1_Last[kk]                        ),
+                .dn_Ready       (~w_fifo_full[2**(FIFO_TREE_DEPTH-1) + kk]  )
+            );
+        end
     endgenerate
 
+    // COMPARATOR MODULES
+    // Compare CNT1 results to programmed threshold.
+    // o_Dout == 1 --> Current output IDs are over the threshold, the result can be emitted.
+    wire [SHR_DEPTH-1:0]    w_CompareDout;
+    wire [SHR_DEPTH-1:0]    w_CompareValid;
+    wire [SHR_DEPTH-1:0]    w_CompareLast;
+    reg  [SHR_DEPTH-1:0]    r_CompareLastObserved;
+    wire                    w_ComparationOver;
+
+    assign w_ComparationOver = &r_CompareLastObserved;
+
+    genvar cc;
+    generate
+        for(cc = 0; cc < SHR_DEPTH; cc = cc + 1) begin
+            comparator#(
+                .VECTOR_WIDTH   (VECTOR_WIDTH)
+            ) u_comparator (
+                .clk            (clk                                        ),
+                .rstn           (rstn                                       ),
+                .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY-1]        ),
+                .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY-1]        ),
+                .i_CntC         (w_AnB_CNT1_Cnt[cc]                         ),
+                .i_BRAM_Clk     (i_BRAM_Clk                                 ),
+                .i_BRAM_Rst     (i_BRAM_Rst                                 ),
+                .i_BRAM_Addr    (i_BRAM_Addr                                ),
+                .i_BRAM_Din     (i_BRAM_Din                                 ),
+                .i_BRAM_En      (i_BRAM_En                                  ),
+                .i_BRAM_WrEn    (i_BRAM_WrEn                                ),
+                .i_Valid        (w_AnB_CNT1_New[cc] && w_AnB_CNT1_Valid[cc] ),
+                .o_Valid        (w_CompareValid[cc]                         ),
+                .i_Last         (w_AnB_CNT1_Last[cc]                        ),
+                .o_Last         (w_CompareLast[cc]                          ),
+                .o_Dout         (w_CompareDout[cc]                          )
+            );
+
+            always @ (posedge clk)
+            begin
+                if(!rstn) begin
+                    r_CompareLastObserved[cc] <= 1'b0;
+                end else if(w_StartCompare) begin
+                    r_CompareLastObserved <= 1'b0;
+                end else if(w_CompareLast[cc]) begin
+                    r_CompareLastObserved[cc] <= 1'b1;
+                end
+            end
+
+        end
+    endgenerate
 
     // CNT OUT CNT1_DELAY SHIFTREGISTER
     // CNT values read from the shiftregisters need to be delayed until the
@@ -452,7 +512,7 @@ module tanimoto_top
                 if(oo == 0) begin
                     always @ (posedge clk)
                     begin
-                        if(w_OutCnt1_ValidIn[nn]) begin
+                        if(w_SHR2CNT1_Valid[nn]) begin
                             r_CntDelayedOut_A[nn][oo] <= r_Cnt_Array_A[nn];     // required in case new ref vectors are loaded on the fly
                             r_CntDelayedOut_B[nn][oo] <= r_Cnt_Array_B[nn];
                         end
@@ -460,7 +520,7 @@ module tanimoto_top
                 end else begin
                     always @ (posedge clk)
                     begin
-                        if(w_OutCnt1_ValidIn[nn]) begin
+                        if(w_SHR2CNT1_Valid[nn]) begin
                             r_CntDelayedOut_A[nn][oo] <= r_CntDelayedOut_A[nn][oo-1];     // required in case new ref vectors are loaded on the fly
                             r_CntDelayedOut_B[nn][oo] <= r_CntDelayedOut_B[nn][oo-1];
                         end
@@ -469,44 +529,13 @@ module tanimoto_top
             end
         end
     endgenerate
-
-
-    // COMPARATOR MODULES
-    // Compare CNT1 results to programmed threshold.
-    // o_Dout == 1 --> Current output IDs are over the threshold, the result can be emitted.
-    wire [SHR_DEPTH-1:0]    w_CompareDout;
-    wire [SHR_DEPTH-1:0]    w_CompareValid;
-
-    genvar cc;
-    generate
-        for(cc = 0; cc < SHR_DEPTH; cc = cc + 1) begin
-            comparator#(
-                .VECTOR_WIDTH   (VECTOR_WIDTH)
-            ) u_comparator (
-                .clk            (clk                                    ),
-                .rstn           (rstn                                   ),
-                .i_CntA         (r_CntDelayedOut_A[cc][CNT1_DELAY]      ),
-                .i_CntB         (r_CntDelayedOut_B[cc][CNT1_DELAY]      ),
-                .i_CntC         (w_Cnt_AnB[cc]                          ),
-                .i_BRAM_Clk     (i_BRAM_Clk                             ),
-                .i_BRAM_Rst     (i_BRAM_Rst                             ),
-                .i_BRAM_Addr    (i_BRAM_Addr                            ),
-                .i_BRAM_Din     (i_BRAM_Din                             ),
-                .i_BRAM_En      (i_BRAM_En                              ),
-                .i_BRAM_WrEn    (i_BRAM_WrEn                            ),
-                .i_Valid        (w_PreStageOut_Valid[cc]                ),
-                .o_Valid        (w_CompareValid[cc]                     ),
-                .o_Dout         (w_CompareDout[cc]                      )
-            );
-        end
-    endgenerate
+    
 
 
     // OUTPUT FIFO TREE
     localparam FIFO_DATA_WIDTH          = 2*VEC_ID_WIDTH;
     localparam FIFO_DEPTH               = 32;
     localparam FIFO_DATA_COUNT_WIDTH    = $clog2(FIFO_DEPTH);
-    // localparam FIFO_TREE_DEPTH          = $clog2(SHR_DEPTH) + 1;
     localparam FIFO_NUM                 = (2**FIFO_TREE_DEPTH) - 1;     // binary tree node number
 
     // CNT1 outputs are valid for 2 clk long --> wr_en needs to be one clk
@@ -608,10 +637,11 @@ module tanimoto_top
                     // previous levels, priorizing FIFOs that are closer to being
                     // full.
                     if(tt == FIFO_TREE_DEPTH-1) begin           // CNT1 output to lowest FIFO-level
-                        assign w_fifo_din   [2**tt + uu]        = {r_ShrID_2_A[uu][CNT1_DELAY+1], r_ShrID_2_B[uu][CNT1_DELAY+1]};
+                        assign w_fifo_din   [2**tt + uu]        = {r_ShrID_2_A[uu][CNT1_DELAY], r_ShrID_2_B[uu][CNT1_DELAY]};
                         assign w_fifo_wr_en [2**tt + uu]        = (w_CompareDout[uu] && w_CompareValid[uu]);
                     end else if(uu < LOCAL_DEPTH) begin         // other FIFO levels
-                        assign w_FifoDin_Sel[2**tt + uu]        = (w_fifo_wr_data_count[2**(tt+1) + 2*uu] > w_fifo_wr_data_count[2**(tt+1) + 2*uu+1]) ? 1'b1 : 1'b0;
+                        assign w_FifoDin_Sel[2**tt + uu]        = ((w_fifo_wr_data_count[2**(tt+1) + 2*uu] > w_fifo_wr_data_count[2**(tt+1) + 2*uu+1]) ||
+                                                                  (r_State == FLUSH && ~w_fifo_empty[2**(tt+1) + 2*uu])) ? 1'b1 : 1'b0;
                         assign w_fifo_din   [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? w_fifo_dout[2**(tt+1) + 2*uu] : w_fifo_dout[2**(tt+1) + 2*uu+1];
                         assign w_fifo_wr_en [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_empty[2**(tt+1) + 2*uu] : ~w_fifo_empty[2**(tt+1) + 2*uu+1];
                         assign w_fifo_rd_en [2**(tt+1) + 2*uu]  = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_full[2**tt + uu] : 1'b0;
@@ -632,7 +662,7 @@ module tanimoto_top
         end
     endgenerate
 
-    assign w_FifoTreeEmpty = (r_FifoEmpty == {((2**FIFO_TREE_DEPTH) - 1){1'b1}});
+    assign w_FifoTreeEmpty = &r_FifoEmpty;
 
     // Connect the root of the FIFO-tree with IO ports
     assign o_IDPair_Out     = w_ProcessingOver ? 0 : w_fifo_dout[1];
