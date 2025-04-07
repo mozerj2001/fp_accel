@@ -7,7 +7,7 @@
 #include "hls_dma.h"
 
 
-#define BUS_WIDTH 512
+#define BUS_WIDTH 128
 #define VEC_ID_WIDTH 8
 #define REF_VEC_NO 8                            // how many ref_vecs can be pushed before the comparison vectors (SHR_DEPTH)
 #define AXI_BURST_LENGTH 16

@@ -40,8 +40,8 @@ static const unsigned int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
 static const unsigned int REF_VEC_NO = 8;
 static const unsigned int CMP_VEC_NO = 92;
 static const unsigned int ID_SIZE = 1;           // ID_WIDTH in bytes
-static const unsigned int MEMORY_BUS_WIDTH_BYTES = 64;
-static const unsigned int MEMORY_BUS_WIDTH_BITS = 512;
+static const unsigned int MEMORY_BUS_WIDTH_BYTES = 16;
+static const unsigned int MEMORY_BUS_WIDTH_BITS = 128;
 
 /*  ################################
  *  FUNCTION DECLARATIONS
