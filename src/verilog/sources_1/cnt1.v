@@ -26,7 +26,7 @@ module cnt1
     #(
         VECTOR_WIDTH        = 920,
         BUS_WIDTH           = 128,
-        SUB_VECTOR_NO       = $ceil($itor(VECTOR_WIDTH)/$itor(BUS_WIDTH)),
+        SUB_VECTOR_NO       = $rtoi($ceil($itor(VECTOR_WIDTH)/$itor(BUS_WIDTH))),
         GRANULE_WIDTH       = 6,
 
         //
