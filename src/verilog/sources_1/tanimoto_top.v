@@ -115,8 +115,7 @@ module tanimoto_top
     vec_cat #(
         .BUS_WIDTH      (BUS_WIDTH      ),
         .VECTOR_WIDTH   (VECTOR_WIDTH   ),
-        .VEC_ID_WIDTH   (VEC_ID_WIDTH   ),
-        .REF_VECTOR_NO  (SHR_DEPTH      )
+        .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
     ) u_vec_cat_0 (
         .clk        (clk            ),
         .rstn       (rstn           ),
@@ -489,7 +488,7 @@ module tanimoto_top
                 if(!rstn) begin
                     r_CompareLastObserved[cc] <= 1'b0;
                 end else if(w_StartCompare) begin
-                    r_CompareLastObserved <= 1'b0;
+                    r_CompareLastObserved[cc] <= 1'b0;
                 end else if(w_CompareLast[cc]) begin
                     r_CompareLastObserved[cc] <= 1'b1;
                 end

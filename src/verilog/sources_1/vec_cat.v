@@ -21,7 +21,7 @@ module vec_cat
         VECTOR_WIDTH    = 920,
         VEC_ID_WIDTH    = 8,
         //
-        SUB_VEC_NO      = $ceil($itor(VECTOR_WIDTH)/$itor(BUS_WIDTH))
+        SUB_VEC_NO      = $rtoi($ceil($itor(VECTOR_WIDTH)/$itor(BUS_WIDTH)))
     )
     (
         input wire                      clk,
@@ -43,7 +43,7 @@ module vec_cat
     );
 
     localparam CAT_REG_NO		    = 2                                  ;  // min. 2
-    localparam DELTA 			    = $rtoi(SUB_VEC_NO*BUS_WIDTH - VECTOR_WIDTH);  // step distance in each iterateion
+    localparam DELTA 			    = SUB_VEC_NO*BUS_WIDTH - VECTOR_WIDTH;  // step distance in each iterateion
     localparam IDX_REG_WIDTH        = $clog2((CAT_REG_NO-1)*BUS_WIDTH)+1 ;
     localparam FULL                 = 0                                  ;
     localparam PAD                  = 1                                  ;
