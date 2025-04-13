@@ -52,6 +52,27 @@ module vec_cat
     wire w_DoShift;
     assign w_DoShift = up_Valid && dn_Ready;
 
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // STATE
+    reg r_State;
+    wire w_PadNext;
+    wire w_FullNext;
+
+    assign w_PadNext = (r_State == FULL) && (r_SubVecCntr == SUB_VEC_NO-2) && w_ValidOut && dn_Ready; // current emitted subvec is next-to-last
+    assign w_FullNext = (r_State == PAD) && w_ValidOut && dn_Ready;              // current emitted subvec is padded
+
+    always @ (posedge clk)
+    begin
+        if(!rstn) begin
+            r_State <= FULL;
+        end else if(w_PadNext) begin
+            r_State <= PAD;
+        end else if(w_FullNext) begin
+            r_State <= FULL;
+        end
+    end
+
     /////////////////////////////////////////////////////////////////////////////////////
     // VECTOR SHIFT --> store current and previous CAT_REG_NO number of input vectors
     reg [CAT_REG_NO*BUS_WIDTH-1:0]  r_InnerVector;
@@ -116,30 +137,39 @@ module vec_cat
     /////////////////////////////////////////////////////////////////////////////////////
     // CREATE OUTPUT
     reg [IDX_REG_WIDTH-1:0]         r_IdxReg;
-    wire                            w_State;
     reg [$clog2(SUB_VEC_NO)-1:0]    r_SubVecCntr;
-    assign w_Overflow = ((r_IdxReg + DELTA) > (CAT_REG_NO-1)*BUS_WIDTH) && (w_State == PAD);    // 1, when information from the next vector would be shifted out
+    wire                            w_ValidOut;
+    
+    // 1 when unemitted parts of the next word would be shifted out of the input shift-register
+    assign w_Overflow = ((r_IdxReg + DELTA) > (CAT_REG_NO-1)*BUS_WIDTH) &&
+                          (r_State == PAD);
+
+    assign w_ValidOut = r_ValidShr[0] || w_Overflow;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
             r_SubVecCntr <= {$clog2(SUB_VEC_NO){1'b1}};
-        end else if(w_DoShift && (w_State == PAD)) begin
+        end else if(w_DoShift && (r_State == PAD)) begin
             r_SubVecCntr <= 0;
         end else if(w_DoShift) begin
             r_SubVecCntr <= r_SubVecCntr + 1;
         end
     end
 
-    assign w_State = (r_SubVecCntr == (SUB_VEC_NO-1)) ? PAD : FULL;
+    wire                            w_StepIdxUp;
+    wire                            w_StepIdxDown;
+
+    assign w_StepIdxUp      = w_FullNext && ~w_Overflow;    // increment when state goes PAD --> FULL
+    assign w_StepIdxDown    = w_Overflow && dn_Ready;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
             r_IdxReg = 0;
-        end else if(w_State == PAD && ~w_Overflow && r_ValidShr[1] && dn_Ready) begin
+        end else if(w_StepIdxUp) begin
             r_IdxReg = r_IdxReg + DELTA;
-        end else if(w_Overflow && dn_Ready) begin
+        end else if(w_StepIdxDown) begin
             r_IdxReg = r_IdxReg - (BUS_WIDTH-DELTA);                            // no shift due to information loss --> step back
         end
     end
@@ -153,7 +183,7 @@ module vec_cat
     begin
         if(!rstn) begin
             r_IDCntr <= 0;
-        end else if(w_DoShift && (w_State == PAD)) begin
+        end else if(w_FullNext) begin
             r_IDCntr <= r_IDCntr + 1;
         end
     end
@@ -163,9 +193,9 @@ module vec_cat
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
 
-    assign dn_Vector = (w_State == FULL) ? w_PermArray[r_IdxReg] : {w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA], {DELTA{1'b0}}};
+    assign dn_Vector = (r_State == FULL) ? w_PermArray[r_IdxReg] : {w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA], {DELTA{1'b0}}};
     assign dn_VecID  = r_IDCntr;
-    assign dn_Valid  = r_ValidShr[0];
+    assign dn_Valid  = w_ValidOut;
     assign up_Ready  = w_DoShift && ~w_Overflow;
     assign dn_Last   = r_LastShr[0];
 

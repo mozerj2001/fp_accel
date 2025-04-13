@@ -111,6 +111,13 @@ module tb_tanimoto_top(
 
     reg state = 0;
     reg [31:0] vec_cntr = 0;
+    reg [1:0] sparsity_cntr = 0;
+    wire input_valid = (sparsity_cntr == 2'b11);
+
+    always @ (posedge clk)
+    begin
+        sparsity_cntr <= sparsity_cntr + 1;
+    end
 
     always @ (posedge clk)
     begin
@@ -118,7 +125,7 @@ module tb_tanimoto_top(
             vec_cntr <= vec_cntr + 1;
         end
 
-        if(vec_cntr == (NUM_REF_BUS_CYCLES-1) || vec_cntr == (NUM_REF_BUS_CYCLES+NUM_CMP_BUS_CYCLES-1)) begin
+        if(vec_cntr == (NUM_REF_BUS_CYCLES+NUM_CMP_BUS_CYCLES-1)) begin
             input_last <= 1'b1;
         end else begin
             input_last <= 1'b0;
@@ -154,7 +161,11 @@ module tb_tanimoto_top(
         if(!rstn || !state) begin
             f_write <= 0;
         end else begin
-            f_write <= 1'b1;
+            if(input_valid) begin
+                f_write <= 1'b1;
+            end else begin
+                f_write <= 1'b0;
+            end
         end
     end
 
@@ -162,7 +173,7 @@ module tb_tanimoto_top(
     integer ii;
     always @ (posedge clk)
     begin
-        if(rstn && state) begin
+        if(rstn && state && input_valid) begin
             for(ii = 0; ii*32 < VECTOR_WIDTH; ii = ii + 1) begin
                 f_din[ii*32 +: 32] <= $urandom();
             end
