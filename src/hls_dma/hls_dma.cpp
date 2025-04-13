@@ -15,38 +15,45 @@
 
 void mm2stream( bus_t*                vec_in,
                 axi_stream_vec_t&     vec_out,
-                unsigned int          sub_vec_no    )
+                unsigned int          data_word_no,
+                unsigned int          last    )
 {
-
-    axis_vec_t      buffer[AXI_BURST_LENGTH];
-    unsigned int    remaining = sub_vec_no;
+	bus_t           data_buffer[AXI_BURST_LENGTH];
+    axis_vec_t      tmp;
+    unsigned int    remaining = data_word_no;
 
     while (remaining > AXI_BURST_LENGTH)
     {
         // Read into buffer
-        for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
-            buffer[i].data = *(vec_in++);
-        }
+        // memcpy(data_buffer, vec_in, BUS_WIDTH_BYTES*AXI_BURST_LENGTH);
+    	for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
+    	    data_buffer[i] = *(vec_in++);
+    	}
 
         // Write to sink
         for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
-            vec_out.write(buffer[i]);
+        	tmp.data = data_buffer[i];
+        	tmp.last = 0;
+        	vec_out.write(tmp);
         }
 
         remaining -= AXI_BURST_LENGTH;
     }
 
     for(unsigned int i = 0; i < remaining; i++){
-        buffer[i].data = *(vec_in++);
+        data_buffer[i] = *(vec_in++);
     }
 
-    // Read remaining into buffer
-    buffer[remaining-1].last = 1;
-
-    for(unsigned int i = 0; i < remaining; i++){
-        vec_out.write(buffer[i]);
+    for(unsigned int i = 0; i < remaining-1; i++){
+    	tmp.data = data_buffer[i];
+    	tmp.last = 0;
+    	vec_out.write(tmp);
     }
     
+    tmp.data = data_buffer[remaining-1];
+    if(last) tmp.last = 1;
+    vec_out.write(tmp);
+
     // All vectors were pushed, return
 }
 
@@ -65,8 +72,8 @@ void vec_intf(  bus_t*              ref_vec,
                 unsigned int        cmp_sub_vec_no
             )
 {
-    mm2stream(ref_vec, vec_out, ref_sub_vec_no);
-    mm2stream(cmp_vec, vec_out, cmp_sub_vec_no);
+    mm2stream(ref_vec, vec_out, ref_sub_vec_no, 0);
+    mm2stream(cmp_vec, vec_out, cmp_sub_vec_no, 1);
 }
 
 

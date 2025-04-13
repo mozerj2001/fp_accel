@@ -8,16 +8,18 @@
 
 
 #define BUS_WIDTH 128
+#define BUS_WIDTH_BYTES 16
 #define VEC_ID_WIDTH 8
 #define REF_VEC_NO 8                            // how many ref_vecs can be pushed before the comparison vectors (SHR_DEPTH)
 #define AXI_BURST_LENGTH 16
 
 typedef ap_uint<BUS_WIDTH>         	bus_t;       // 512 bit wide data word
-typedef ap_uint<VEC_ID_WIDTH*2> 	id_pair_t;   // pair of output vector IDs
+typedef ap_uint<VEC_ID_WIDTH*2> 	   id_pair_t;   // pair of output vector IDs
+typedef ap_uint<1>                  bit_t;
 
 // AXI Stream lib types for interfaces
-typedef hls::axis<bus_t, 0, 0, 0>       axis_vec_t;
-typedef hls::axis<id_pair_t, 0, 0, 0>   axis_id_pair_t;
+typedef hls::axis<bus_t, 1, 0, 0>       axis_vec_t;
+typedef hls::axis<id_pair_t, 1, 0, 0>   axis_id_pair_t;
 typedef hls::stream<axis_vec_t>         axi_stream_vec_t;
 typedef hls::stream<axis_id_pair_t>     axi_stream_id_pair_t;
 
@@ -25,7 +27,8 @@ typedef hls::stream<axis_id_pair_t>     axi_stream_id_pair_t;
 
 void mm2stream( bus_t*             vec_in,
                 axi_stream_vec_t&  vec_out,
-				    unsigned int       sub_vec_no
+				unsigned int       data_word_no,
+                unsigned int       last
             );
 
 void vec_intf(  bus_t*              ref_vec,
