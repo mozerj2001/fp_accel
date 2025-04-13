@@ -65,6 +65,7 @@ module tanimoto_top
     localparam LOAD_REF     = 2'b00;
     localparam COMPARE      = 2'b01;
     localparam FLUSH        = 2'b10;
+    localparam OVER         = 2'b11;
     // Delays
     localparam CNT1_DELAY   = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 3;
     localparam FLUSH_DELAY  = CNT1_DELAY + SHR_DEPTH*SUB_VECTOR_NO + CNT1_DELAY;      // flush time until FIFO tree is the only factor
@@ -89,6 +90,7 @@ module tanimoto_top
     wire      w_StartCompare;
     wire      w_StartFlush;
     wire      w_ProcessingOver;
+    wire      w_ResetPipeline;
 
     assign w_StartCompare   = ( w_CNT1_New                              &&
                                (r_ShrID_0[CNT1_DELAY-1] == SHR_DEPTH)   &&
@@ -101,6 +103,9 @@ module tanimoto_top
                                 w_ComparationOver                   &&
                                 w_FifoTreeEmpty                     );
 
+    assign w_ResetPipeline  = ((r_State == OVER) && i_IDPair_Read);
+
+
     always @ (posedge clk)
     begin
         if(!rstn) begin
@@ -110,6 +115,8 @@ module tanimoto_top
         end else if(w_StartFlush) begin
             r_State <= FLUSH;
         end else if(w_ProcessingOver) begin
+            r_State <= OVER;
+        end else if (w_ResetPipeline) begin
             r_State <= LOAD_REF;
         end
     end
@@ -663,10 +670,10 @@ module tanimoto_top
     assign w_FifoTreeEmpty = &r_FifoEmpty;
 
     // Connect the root of the FIFO-tree with IO ports
-    assign o_IDPair_Out     = w_ProcessingOver ? 0 : w_fifo_dout[1];
-    assign o_IDPair_Ready   = w_ProcessingOver ? 1'b1 : ~w_fifo_empty[1];
+    assign o_IDPair_Out     = (r_State == OVER) ? 0 : w_fifo_dout[1];
+    assign o_IDPair_Ready   = (r_State == OVER) ? 1'b1 : ~w_fifo_empty[1];
     assign w_fifo_rd_en[1]  = i_IDPair_Read;
-    assign o_IDPair_Last    = w_ProcessingOver;
+    assign o_IDPair_Last    = (r_State == OVER);
 
 
 endmodule // tanimoto_top
