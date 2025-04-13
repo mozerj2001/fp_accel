@@ -41,7 +41,12 @@ module top_intf
         input wire [CNT_WIDTH-1:0]          BRAM_PORTA_wrdata_a , 
         output wire [CNT_WIDTH-1:0]         BRAM_PORTA_rddata_a , 
         input wire                          BRAM_PORTA_en_a     ,  
-        input wire                          BRAM_PORTA_we_a
+        input wire                          BRAM_PORTA_we_a     ,
+
+        output wire                         cmp_over,
+        output wire                         fifo_tree_empty,
+        output wire                         propagate_ctrl,
+        output wire [1:0]                   state_SHR_last
 
     );
 
@@ -109,7 +114,12 @@ module top_intf
         .o_Read             (o_Read             ),
         .o_IDPair_Ready     (o_IDPair_Ready     ),
         .o_IDPair_Out       (o_IDPair_Out       ),
-        .o_IDPair_Last      (o_IDPair_Last      )
+        .o_IDPair_Last      (o_IDPair_Last      ),
+
+        .o_ComparationOver(cmp_over),
+        .o_FifoTreeEmpty(fifo_tree_empty),
+        .o_PropagateControl(propagate_ctrl),
+        .o_StateSHRLast(state_SHR_last)
     );
 
 endmodule

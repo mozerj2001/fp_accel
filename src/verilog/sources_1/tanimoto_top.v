@@ -47,8 +47,19 @@ module tanimoto_top
         output wire                         o_Read,
         output wire                         o_IDPair_Ready,
         output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out,
-        output wire                         o_IDPair_Last
+        output wire                         o_IDPair_Last,
+
+        // Greybox for debug
+        output wire                         o_ComparationOver,
+        output wire                         o_FifoTreeEmpty,
+        output wire                         o_PropagateControl,
+        output wire [1:0]                   o_StateSHRLast
     );
+
+    assign o_ComparationOver = w_ComparationOver;
+    assign o_FifoTreeEmpty = w_FifoTreeEmpty;
+    assign o_PropagateControl = w_PropagateControl;
+    assign o_StateSHRLast = r_State_Shr[SHR_DEPTH-1];
 
     // States
     localparam LOAD_REF     = 2'b00;
@@ -214,10 +225,10 @@ module tanimoto_top
     // the sub_vectors needs to be delayed by one clk before being
     // fed to the output CNT1 module.
     wire w_Shift_A;
-    assign w_Shift_A = w_CNT1_Valid && ((r_State == LOAD_REF) && !w_StartCompare);
+    assign w_Shift_A = w_CNT1_Valid && (r_State == LOAD_REF);
 
     wire w_Shift_B;
-    assign w_Shift_B = w_CNT1_Valid && ((r_State > LOAD_REF) || w_StartCompare);
+    assign w_Shift_B = w_CNT1_Valid && (r_State > LOAD_REF);
 
     reg [BUS_WIDTH-1:0] r_Vector_Array_A[SHR_DEPTH-1:0][SUB_VECTOR_NO-1:0];
     reg [BUS_WIDTH-1:0] r_Vector_Array_B[SHR_DEPTH-1:0][SUB_VECTOR_NO-1:0];
@@ -265,18 +276,6 @@ module tanimoto_top
         end
     endgenerate
 
-
-    // CNT SHIFTREGISTERS
-    // Store CNT1 reslults from the input CNT1 unit in a LUT shiftregister.
-    // r_State selects whether the results are from A or B vectors, similarly
-    // to the VECTOR SHIFTREGISTERS.
-    wire w_Shift_CntA;
-    assign w_Shift_CntA = w_CNT1_New && (r_State == LOAD_REF);
-
-    wire w_Shift_CntB;
-    assign w_Shift_CntB = w_CNT1_New && (r_State == COMPARE);
-
-    reg [CNT_WIDTH-1:0] r_Cnt_Array_A[SHR_DEPTH-1:0];
 
     // CNT SHIFTREGISTERS
     // Store CNT1 reslults from the input CNT1 unit in a LUT shiftregister.

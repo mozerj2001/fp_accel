@@ -103,6 +103,12 @@ c:
 	cp -f src/c_impl/vectors.bin build/vectors.bin
 	cp -f src/c_impl/results.txt build/results.txt
 
+host:
+	@echo "############################################################################"
+	@echo "# BUILDING HOST APPLICATION"
+	@echo "############################################################################"
+
+
 clean_c:
 	rm src/c_impl/main.o
 	rm src/c_impl/vectors.bin
