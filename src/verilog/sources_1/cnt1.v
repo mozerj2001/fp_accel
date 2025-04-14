@@ -59,7 +59,6 @@ module cnt1
     // delayed input vectors.
     wire                        w_LastWordOfVector;
     reg [WORD_CNTR_WIDTH-1:0]   r_WordCntr;
-    wire                        w_ValidDel;
 
     always @ (posedge clk)
     begin
@@ -67,12 +66,12 @@ module cnt1
             r_WordCntr <= 0;
         end else if(w_LastWordOfVector && dn_Ready) begin
             r_WordCntr <= 0;
-        end else if(r_DelaySubVector_SHR[CNT1_DELAY-1] && dn_Ready) begin
+        end else if(r_DelayValid_SHR[CNT1_DELAY-1] && dn_Ready) begin
             r_WordCntr <= r_WordCntr + 1;
         end
     end
 
-    assign w_LastWordOfVector = (r_WordCntr == SUB_VECTOR_NO-1);
+    assign w_LastWordOfVector = (r_WordCntr == SUB_VECTOR_NO-1) && r_DelayValid_SHR[CNT1_DELAY-1];
 
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +105,7 @@ module cnt1
         else if(w_LastWordOfVector && dn_Ready) begin
             r_Accumulator <= w_Sum;
         end
-        else if(r_DelaySubVector_SHR[CNT1_DELAY-2] && dn_Ready) begin
+        else if(r_DelayValid_SHR[CNT1_DELAY-2] && dn_Ready) begin
             r_Accumulator <= r_Accumulator + {{PAD_WIDTH{1'b0}}, w_Sum};
         end
     end
