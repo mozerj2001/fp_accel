@@ -112,7 +112,8 @@ module tb_tanimoto_top(
     reg state = 0;
     reg [31:0] vec_cntr = 0;
     reg [1:0] sparsity_cntr = 0;
-    wire input_valid = (sparsity_cntr == 2'b11);
+    reg sparse_traffic_test = 1;
+    wire input_valid = sparse_traffic_test ? (sparsity_cntr == 2'b11) : 1'b1;
 
     always @ (posedge clk)
     begin

@@ -77,6 +77,7 @@ module vec_cat
     // VECTOR SHIFT --> store current and previous CAT_REG_NO number of input vectors
     reg [CAT_REG_NO*BUS_WIDTH-1:0]  r_InnerVector;
     wire                            w_Overflow;
+    reg                             r_OverflowDel;
 
     genvar ii;
     generate
@@ -96,6 +97,15 @@ module vec_cat
             end
         end
     endgenerate
+
+    always @ (posedge clk)
+    begin
+        if(!rstn) begin
+            r_OverflowDel <= 1'b0;
+        end else begin
+            r_OverflowDel <= w_Overflow;
+        end
+    end
 
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -141,18 +151,17 @@ module vec_cat
     wire                            w_ValidOut;
     
     // 1 when unemitted parts of the next word would be shifted out of the input shift-register
-    assign w_Overflow = ((r_IdxReg + DELTA) > (CAT_REG_NO-1)*BUS_WIDTH) &&
-                          (r_State == PAD);
+    assign w_Overflow = ((r_IdxReg + DELTA) > (CAT_REG_NO-1)*BUS_WIDTH) && w_FullNext;
 
-    assign w_ValidOut = r_ValidShr[0] || w_Overflow;
+    assign w_ValidOut = r_ValidShr[0] || r_OverflowDel;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
-            r_SubVecCntr <= {$clog2(SUB_VEC_NO){1'b1}};
-        end else if(w_DoShift && (r_State == PAD)) begin
             r_SubVecCntr <= 0;
-        end else if(w_DoShift) begin
+        end else if(w_ValidOut && dn_Ready && (r_State == PAD)) begin
+            r_SubVecCntr <= 0;
+        end else if(w_ValidOut && dn_Ready) begin
             r_SubVecCntr <= r_SubVecCntr + 1;
         end
     end
