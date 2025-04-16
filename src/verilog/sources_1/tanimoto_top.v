@@ -191,9 +191,8 @@ module tanimoto_top
 
     // Propagate control signals and vectors when: a) vectors are compared, b) when the pipeline is being flushed
     wire w_PropagateControl;
-    assign w_PropagateControl = (  (r_State > LOAD_REF) &&
-                                    w_CNT1_New          &&
-                                    !w_HaltPipeline         );
+    assign w_PropagateControl = (   ((r_State == COMPARE && w_CNT1_New) || (r_State == FLUSH)) &&
+                                    !w_HaltPipeline );
 
     genvar vv;
     generate
@@ -638,7 +637,7 @@ module tanimoto_top
 
                     // Pipeline output to first layer of FIFOs (compatible vector
                     // IDs are conacatenated as output)
-                    // Upper levels of the FIFO tree take input from FIFOs on
+                    // Upper levels of the FIFO tree take inp/t from FIFOs on
                     // previous levels, priorizing FIFOs that are closer to being
                     // full.
                     if(tt == FIFO_TREE_DEPTH-1) begin           // CNT1 output to lowest FIFO-level
