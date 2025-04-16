@@ -206,7 +206,7 @@ module vec_cat
     assign dn_VecID  = r_IDCntr;
     assign dn_Valid  = w_ValidOut;
     assign up_Ready  = w_DoShift && ~w_Overflow;
-    assign dn_Last   = r_LastShr[0];
+    assign dn_Last   = r_LastShr[0] && w_ValidOut;
 
     
     endmodule
