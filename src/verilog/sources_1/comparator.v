@@ -16,31 +16,35 @@
 module comparator
     #(
         VECTOR_WIDTH    = 920,
+        VEC_ID_WIDTH    = 16,
         //
         CNT_WIDTH       = $clog2(VECTOR_WIDTH)
     )(
-        input wire                  clk,
-        input wire                  rstn,
-        input wire [CNT_WIDTH-1:0]  i_CntA,
-        input wire [CNT_WIDTH-1:0]  i_CntB,
-        input wire [CNT_WIDTH-1:0]  i_CntC,
+        input wire                      clk,
+        input wire                      rstn,
+        input wire [CNT_WIDTH-1:0]      i_CntA,
+        input wire [CNT_WIDTH-1:0]      i_CntB,
+        input wire [CNT_WIDTH-1:0]      i_CntC,
+        input wire [VEC_ID_WIDTH-1:0]   i_ID,
+
 
         // RAM I/O
-        input wire                  i_BRAM_Clk,
-        input wire                  i_BRAM_Rst,
-        input wire [CNT_WIDTH-1:0]  i_BRAM_Addr,
-        input wire [CNT_WIDTH-1:0]  i_BRAM_Din,
-        input wire                  i_BRAM_En,
-        input wire                  i_BRAM_WrEn,
-        output wire                 o_Dout,
+        input wire                      i_BRAM_Clk,
+        input wire                      i_BRAM_Rst,
+        input wire [CNT_WIDTH-1:0]      i_BRAM_Addr,
+        input wire [CNT_WIDTH-1:0]      i_BRAM_Din,
+        input wire                      i_BRAM_En,
+        input wire                      i_BRAM_WrEn,
+        output wire [VEC_ID_WIDTH-1:0]  o_ID,
+        output wire                     o_Dout,
         
         // Valid signal
-        input wire                  i_Valid,
-        output wire                 o_Valid,
+        input wire                      i_Valid,
+        output wire                     o_Valid,
 
         // Last signal
-        input wire                  i_Last,
-        output wire                 o_Last
+        input wire                      i_Last,
+        output wire                     o_Last
     );
 
     // Similarity calc
@@ -74,18 +78,21 @@ module comparator
     );
 
     // Valid delay register
-    reg r_ValidDelay;
-    reg r_LastDelay;
+    reg                     r_ValidDelay;
+    reg                     r_LastDelay;
+    reg [VEC_ID_WIDTH-1:0]  r_ID_Delay;
 
     always @ (posedge clk)
     begin
         r_ValidDelay <= i_Valid;
-        r_LastDelay <= i_Last;
+        r_LastDelay <=  i_Last;
+        r_ID_Delay <=   i_ID;
     end
 
-    assign o_Dout = i_BRAM_WrEn ? 0 : (r_Sum >= {1'b0, w_Result});
+    assign o_Dout  = i_BRAM_WrEn ? 0 : (r_Sum >= {1'b0, w_Result});
     assign o_Valid = r_ValidDelay;
-    assign o_Last = r_LastDelay;
+    assign o_Last  = r_LastDelay;
+    assign o_ID    = r_ID_Delay;
 
 endmodule
 
