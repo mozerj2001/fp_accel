@@ -28,6 +28,7 @@ module cnt1
         BUS_WIDTH           = 128,
         SUB_VECTOR_NO       = $rtoi($ceil($itor(VECTOR_WIDTH)/$itor(BUS_WIDTH))),
         GRANULE_WIDTH       = 6,
+        VEC_ID_WIDTH        = 16,
 
         //
         CNT_WIDTH           = $clog2(VECTOR_WIDTH)
@@ -36,10 +37,12 @@ module cnt1
         input wire                              clk,
         input wire                              rstn,
         input wire [BUS_WIDTH-1:0]              up_Vector,
+        input wire [VEC_ID_WIDTH-1:0]           up_ID,
         input wire                              up_Valid,
         input wire                              up_Last,
         output wire                             up_Ready,
         output wire [BUS_WIDTH-1:0]             dn_SubVector,
+        output wire [VEC_ID_WIDTH-1:0]          dn_ID,
 	    output wire				                dn_Valid,
         output wire [CNT_WIDTH-1:0]             dn_Cnt,
         output wire                             dn_CntNew,
@@ -116,9 +119,10 @@ module cnt1
     // --> delay input vector as well as valid signal and signal marking the last word
     // of the vector, until the corresponding sum is calculated and can be
     // read from the accumulator register.
-    reg [BUS_WIDTH-1:0]  r_DelaySubVector_SHR[CNT1_DELAY-1:0];
-    reg [CNT1_DELAY-1:0] r_DelayValid_SHR;
-    reg [CNT1_DELAY-1:0] r_DelayLast_SHR;
+    reg [BUS_WIDTH-1:0]     r_DelaySubVector_SHR[CNT1_DELAY-1:0];
+    reg [VEC_ID_WIDTH-1:0]  r_DelayID_SHR       [CNT1_DELAY-1:0];
+    reg [CNT1_DELAY-1:0]    r_DelayValid_SHR;
+    reg [CNT1_DELAY-1:0]    r_DelayLast_SHR;
 
     genvar ii;
     generate
@@ -128,14 +132,16 @@ module cnt1
                 if(ii == 0) begin
                     if(dn_Ready) begin
                         r_DelaySubVector_SHR[ii] <= up_Vector;
-                        r_DelayValid_SHR[ii] <= up_Valid;
-                        r_DelayLast_SHR[ii] <= up_Last;
+                        r_DelayID_SHR       [ii] <= up_ID;
+                        r_DelayValid_SHR    [ii] <= up_Valid;
+                        r_DelayLast_SHR     [ii] <= up_Last;
                     end
                 end else begin
                     if(dn_Ready) begin
                         r_DelaySubVector_SHR[ii] <= r_DelaySubVector_SHR[ii-1];
-                        r_DelayValid_SHR[ii] <= r_DelayValid_SHR[ii-1];
-                        r_DelayLast_SHR[ii] <= r_DelayLast_SHR[ii-1];
+                        r_DelayID_SHR       [ii] <= r_DelayID_SHR       [ii-1];
+                        r_DelayValid_SHR    [ii] <= r_DelayValid_SHR    [ii-1];
+                        r_DelayLast_SHR     [ii] <= r_DelayLast_SHR     [ii-1];
                     end
                 end
             end
@@ -145,12 +151,13 @@ module cnt1
 
     /////////////////////////////////////////////////////////////////////////////////////
     // ASSIGN OUTPUTS
-    assign dn_Cnt        = r_Accumulator;
-    assign dn_SubVector  = r_DelaySubVector_SHR[CNT1_DELAY-1];
-    assign dn_CntNew     = w_LastWordOfVector;
-    assign dn_Valid      = r_DelayValid_SHR[CNT1_DELAY-1];
-    assign dn_Last       = r_DelayLast_SHR[CNT1_DELAY-1];
-    assign up_Ready      = dn_Ready;
+    assign dn_Cnt       = r_Accumulator;
+    assign dn_SubVector = r_DelaySubVector_SHR[CNT1_DELAY-1];
+    assign dn_ID        = r_DelayID_SHR[CNT1_DELAY-1];
+    assign dn_CntNew    = w_LastWordOfVector;
+    assign dn_Valid     = r_DelayValid_SHR[CNT1_DELAY-1];
+    assign dn_Last      = r_DelayLast_SHR[CNT1_DELAY-1];
+    assign up_Ready     = dn_Ready;
     
 
 endmodule
