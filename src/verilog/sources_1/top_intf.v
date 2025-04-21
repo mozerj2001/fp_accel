@@ -8,15 +8,15 @@
 
 module top_intf
     #(
-        BUS_WIDTH       = 128                   ,
-        VECTOR_WIDTH    = 920                   ,
-        SHR_DEPTH       = 8                     ,
+        BUS_WIDTH       = 128                           ,
+        VECTOR_WIDTH    = 920                           ,
+        SHR_DEPTH       = 8                             ,
         //
-        SUB_VECTOR_NO   = 2                     ,
-        GRANULE_WIDTH   = 6                     ,
-        VEC_ID_WIDTH    = 8                     ,
+        SUB_VECTOR_NO   = $ceil(VECTOR_WIDTH/BUS_WIDTH) ,
+        GRANULE_WIDTH   = 6                             ,
+        VEC_ID_WIDTH    = 8                             ,
         //
-        CNT_WIDTH       = $clog2(VECTOR_WIDTH),
+        CNT_WIDTH       = $clog2(VECTOR_WIDTH)          ,
         FIFO_TREE_DEPTH = ($clog2(SHR_DEPTH) + 1)
     )(
         input wire                          ap_clk              ,
