@@ -79,29 +79,32 @@ module tb_tanimoto_top(
 
     assign id_pair_read = id_pair_ready;
 
-    tanimoto_top
-    #(
-        .BUS_WIDTH      (BUS_WIDTH      ),
-        .VECTOR_WIDTH   (VECTOR_WIDTH   ),
-        .SUB_VECTOR_NO  (SUB_VECTOR_NO  ),
-        .GRANULE_WIDTH  (GRANULE_WIDTH  ),
-        .SHR_DEPTH      (SHR_DEPTH      ),
-        .VEC_ID_WIDTH   (VEC_ID_WIDTH   )
+    top_intf #(
+        .BUS_WIDTH       (BUS_WIDTH     ),
+        .VECTOR_WIDTH    (VECTOR_WIDTH  ),
+        .SHR_DEPTH       (SHR_DEPTH     ),
+        //
+        .SUB_VECTOR_NO   (SUB_VECTOR_NO ),
+        .GRANULE_WIDTH   (GRANULE_WIDTH ),
+        .VEC_ID_WIDTH    (VEC_ID_WIDTH  )
     ) dut (
-        .clk                    (clk                ),
-        .rstn                   (rstn               ),
-        .i_Vector               (f_dout             ),
-        .i_Valid                (~f_empty && state  ),
-        .i_Last                 (input_last         ),
-        .i_BRAM_Addr            (threshold_addr     ),
-        .i_BRAM_Din             (threshold          ),
-        .i_BRAM_En              (1'b1               ),
-        .i_BRAM_WrEn            (wr_threshold       ),
-        .i_IDPair_Read          (id_pair_read       ),
-        .o_Read                 (f_read             ),
-        .o_IDPair_Ready         (id_pair_ready      ),
-        .o_IDPair_Out           (id_pair_out        ),
-        .o_IDPair_Last          (id_pair_last       )
+        .ap_clk                 (clk                ),
+        .ap_rstn                (rstn               ),
+        .S_AXIS_DATA_tdata      (f_dout             ),
+        .S_AXIS_DATA_tvalid     (~f_empty && state  ),
+        .S_AXIS_DATA_tlast      (input_last         ),
+        .S_AXIS_DATA_tready     (f_read             ),
+        .M_AXIS_ID_PAIR_tdata   (id_pair_out        ),
+        .M_AXIS_ID_PAIR_tvalid  (id_pair_ready      ),
+        .M_AXIS_ID_PAIR_tlast   (id_pair_last       ),
+        .M_AXIS_ID_PAIR_tready  (id_pair_read       ),
+        .BRAM_PORTA_clk_a       (clk                ),
+        .BRAM_PORTA_rst_a       (!rstn              ),  
+        .BRAM_PORTA_addr_a      (threshold_addr     ),
+        .BRAM_PORTA_wrdata_a    (threshold          ), 
+        .BRAM_PORTA_rddata_a    (                   ), 
+        .BRAM_PORTA_en_a        (1'b1               ),  
+        .BRAM_PORTA_we_a        (wr_threshold       )
     );
 
     always begin 

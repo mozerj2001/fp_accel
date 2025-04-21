@@ -51,7 +51,7 @@ module cnt1
     );
 
     localparam WORD_CNTR_WIDTH      = $clog2(SUB_VECTOR_NO);
-    localparam BIT_CNTR_OUT_WIDTH   = $clog2(BUS_WIDTH);
+    localparam BIT_CNTR_OUT_WIDTH   = $clog2(BUS_WIDTH)+1;
     localparam PAD_WIDTH            = CNT_WIDTH-BIT_CNTR_OUT_WIDTH;
     localparam CNT1_DELAY           = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
 
