@@ -551,11 +551,13 @@ module tanimoto_top
     wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_wr_clk                                       ;
     wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_fifo_wr_en                                        ;
                                         
-    wire [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]    w_FifoDin_Sel                                       ;
-
     // reg for empty signals
     reg  [2**FIFO_TREE_DEPTH-1:1]           r_FifoEmpty                                         ;
     wire                                    w_FifoTreeEmpty                                     ;
+
+    // Logic to decide which FIFO output to take forward into the next stage (Round-Robin)
+    reg [FIFO_TREE_DEPTH*SHR_DEPTH-1:1]     r_PreviousSource                                    ;
+    reg [FIFO_TREE_DEPTH*SHR_DEPTH-1:0]     w_FifoDin_Sel                                       ;
 
     genvar tt, uu;
     generate
@@ -617,28 +619,49 @@ module tanimoto_top
 
                     // Pipeline output to first layer of FIFOs (compatible vector
                     // IDs are conacatenated as output)
-                    // Upper levels of the FIFO tree take inp/t from FIFOs on
-                    // previous levels, priorizing FIFOs that are closer to being
-                    // full.
+                    // Upper levels of the FIFO tree take input from FIFOs on
+                    // previous levels in a Round-Robin fashion.
                     if(tt == FIFO_TREE_DEPTH-1) begin           // CNT1 output to lowest FIFO-level
                         assign w_fifo_din   [2**tt + uu]        = w_CompareID[uu];
                         assign w_fifo_wr_en [2**tt + uu]        = (w_CompareDout[uu] && w_CompareValid[uu]);
                     end else if(uu < LOCAL_DEPTH) begin         // other FIFO levels
-                        assign w_FifoDin_Sel[2**tt + uu]        = ((w_fifo_wr_data_count[2**(tt+1) + 2*uu] > w_fifo_wr_data_count[2**(tt+1) + 2*uu+1]) ||
-                                                                  (r_State == FLUSH && ~w_fifo_empty[2**(tt+1) + 2*uu])) ? 1'b1 : 1'b0;
-                        assign w_fifo_din   [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? w_fifo_dout[2**(tt+1) + 2*uu] : w_fifo_dout[2**(tt+1) + 2*uu+1];
-                        assign w_fifo_wr_en [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_empty[2**(tt+1) + 2*uu] : ~w_fifo_empty[2**(tt+1) + 2*uu+1];
-                        assign w_fifo_rd_en [2**(tt+1) + 2*uu]  = w_FifoDin_Sel[2**tt + uu] ? ~w_fifo_full[2**tt + uu] : 1'b0;
-                        assign w_fifo_rd_en [2**(tt+1) + 2*uu+1]= w_FifoDin_Sel[2**tt + uu] ? 1'b0 : ~w_fifo_full[2**tt + uu];
+
+                        always @ (w_fifo_empty[2**(tt+1) + 2*uu], w_fifo_empty[2**(tt+1) + 2*uu+1], r_PreviousSource[2**tt+uu]) begin
+                            // Both upstream FIFOs have data --> read from the one that was not previously read from
+                            if({ w_fifo_empty[2**(tt+1) + 2*uu], w_fifo_empty[2**(tt+1) + 2*uu+1] } == 2'b00) begin
+                                w_FifoDin_Sel[2**tt+uu] = ~r_PreviousSource[2**tt+uu];
+                            end
+                            // Even upstream FIFO has data, the odd one doesn't
+                            else if(~w_fifo_empty[2**(tt+1) + 2*uu]) begin
+                                w_FifoDin_Sel[2**tt+uu] = 1'b0;
+                            end
+                            // Odd upstream FIFO has data, the even one doesn't
+                            else if(~w_fifo_empty[2**(tt+1) + 2*uu+1]) begin
+                                w_FifoDin_Sel[2**tt+uu] = 1'b1;
+                            end
+                            // Default value for when neither FIFO has valid data
+                            else begin
+                                w_FifoDin_Sel[2**tt+uu] = 1'b0;
+                            end
+                        end
+
+                        assign w_fifo_din   [2**tt + uu]        = w_FifoDin_Sel[2**tt + uu] ? w_fifo_dout[2**(tt+1) + 2*uu+1] : w_fifo_dout[2**(tt+1) + 2*uu];
+                        assign w_fifo_wr_en [2**tt + uu]        = (~w_fifo_empty[2**(tt+1) + 2*uu]) || (~w_fifo_empty[2**(tt+1) + 2*uu+1]);
+                        // w_FifoDin_Sel == 0 selects even upstream FIFO, w_FifoDin_Sel == 1 select odd upstream FIFO
+                        assign w_fifo_rd_en [2**(tt+1) + 2*uu]  = ~w_FifoDin_Sel[2**tt + uu];
+                        assign w_fifo_rd_en [2**(tt+1) + 2*uu+1]= w_FifoDin_Sel[2**tt + uu];
+
                     end
 
                     // FIFO port tie-offs
                     assign w_fifo_sleep[2**tt + uu] = 1'b0;
 
-                    // intermediate reg for empty signals
                     always @(posedge clk)
                     begin
-                        r_FifoEmpty[2**tt + uu] <= w_fifo_empty[2**tt + uu];
+                        // intermediate reg for empty signals
+                        r_FifoEmpty[2**tt + uu]         <= w_fifo_empty[2**tt + uu];
+                        // track which FIFO was last read from in Round-Robin
+                        r_PreviousSource[2**tt + uu]    <= w_FifoDin_Sel[2**tt + uu];
                     end
 
                 end
