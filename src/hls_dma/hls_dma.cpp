@@ -4,6 +4,19 @@
 //#include "ap_utils.h"
 #include "hls_dma.h"
 
+// AXI Burst Read Function
+
+/*
+ * axi_in:  AXI bus "pointer"
+ * buf_out: Internal BRAM buffer to read into.
+*/
+void do_axi_burst_read(bus_t* axi_in, bus_t buf_out[AXI_BURST_LENGTH])
+{
+    for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
+        buf_out[i] = *(axi_in++);
+    }
+}
+
 // AXI ==> AXI Stream
 
 /*
@@ -25,10 +38,7 @@ void mm2stream( bus_t*                vec_in,
     while (remaining > AXI_BURST_LENGTH)
     {
         // Read into buffer
-        // memcpy(data_buffer, vec_in, BUS_WIDTH_BYTES*AXI_BURST_LENGTH);
-    	for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){
-    	    data_buffer[i] = *(vec_in++);
-    	}
+        do_axi_burst_read(vec_in, data_buffer);
 
         // Write to sink
         for(unsigned int i = 0; i < AXI_BURST_LENGTH; i++){

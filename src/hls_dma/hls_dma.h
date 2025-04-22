@@ -24,6 +24,8 @@ typedef hls::stream<axis_vec_t>         axi_stream_vec_t;
 typedef hls::stream<axis_id_pair_t>     axi_stream_id_pair_t;
 
 
+void do_axi_burst_read( bus_t* axi_in,
+                        bus_t  buf_out[AXI_BURST_LENGTH] );
 
 void mm2stream( bus_t*             vec_in,
                 axi_stream_vec_t&  vec_out,
