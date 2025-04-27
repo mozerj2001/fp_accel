@@ -90,6 +90,47 @@ int writeVectorsToFile(const char *filename)
 
 
 /*
+ * Function: writeIDsToFile
+ * Writes the contents of tanimotoResults to a binary file with no header
+ * or extra information in the following way:
+ * {refID[0], cmpID[0]} {refID[1], cmpID[1]} ... {refID[N-1], cmpID[N-1]}
+*/
+int writeIDsToFile(const char *filename, double threshold)
+{
+    uint32_t tmp[REF_VECTOR_NO*CMP_VECTOR_NO*2];
+    unsigned int cnt = 0;
+
+    FILE *fp = fopen(filename, "wb");
+    if (!fp) {
+        perror("Failed to open output file");
+        return -1;
+    }
+
+    for(int i = 0; i < REF_VECTOR_NO*CMP_VECTOR_NO; i++){
+        if(tanimotoResults[i].tanimotoCoefficient < threshold){
+            tmp[2*cnt]   = tanimotoResults[i].referenceVectorID;
+            tmp[2*cnt+1] = tanimotoResults[i].comparisonVectorID;
+            cnt++;
+        }
+    }
+
+    size_t written = fwrite(tmp,
+                            sizeof(uint32_t), 
+                            cnt*2, 
+                            fp);
+
+    if (written != cnt*2) {
+        perror("Failed to write comparison vector data");
+        fclose(fp);
+        return -1;
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+
+/*
  * Function: createIntermediaryVectors
  * -----------------------------------
  * For each pair (ref, cmp), compute the bitwise AND of the 115 data bytes

@@ -21,7 +21,7 @@
 #define CMP_VEC_NO_REG_BASEADDR 0x80010000
 
 // Define Tanimoto threshold
-#define THRESHOLD 0.33
+#define THRESHOLD 0.31
 
 // Macro that submits OpenCL calls, then checks whether an error has occurred.
 #define OCL_CHECK(error, call)                                                                   \
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
               ptr_idp = (int*)q.enqueueMapBuffer(id_pair_buffer, CL_TRUE, CL_MAP_READ, 0, id_pair_size, NULL, NULL, &err));
 
     // Load data/randomize in place
-    if(1/*readVectorsFromFile((uint8_t*) ptr_ref, (uint8_t*) ptr_cmp, "vectors.bin")*/) {
+    if(readVectorsFromFile((uint8_t*) ptr_ref, (uint8_t*) ptr_cmp, "vectors.bin")) {
         std::cout << "[WARNING] Test data could not be loaded, continuing with random data.\n";
         for (int i = 0; i < (int) ref_buf_size/sizeof(int); i++) {
             ptr_ref[i] = rand() % RAND_MAX;
