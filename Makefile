@@ -99,9 +99,7 @@ c:
 	@echo "# BUILDING C IMPLEMENTATION"
 	@echo "############################################################################"
 	cd src/c_impl; gcc main.c tanimoto.c -o main.o -Wall -Wextra
-	./src/c_impl/main.o
-	cp -f src/c_impl/vectors.bin build/vectors.bin
-	cp -f src/c_impl/results.txt build/results.txt
+	./src/c_impl/main.o -v build/vectors.bin -r build/results.bin
 
 host:
 	@echo "############################################################################"
