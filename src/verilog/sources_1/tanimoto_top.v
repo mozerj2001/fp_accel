@@ -47,19 +47,8 @@ module tanimoto_top
         output wire                         o_Read,
         output wire                         o_IDPair_Ready,
         output wire [2*VEC_ID_WIDTH-1:0]    o_IDPair_Out,
-        output wire                         o_IDPair_Last,
-
-        // Greybox for debug
-        output wire                         o_ComparationOver,
-        output wire                         o_FifoTreeEmpty,
-        output wire                         o_PropagateControl,
-        output wire [1:0]                   o_StateSHRLast
+        output wire                         o_IDPair_Last
     );
-
-    assign o_ComparationOver = w_ComparationOver;
-    assign o_FifoTreeEmpty = w_FifoTreeEmpty;
-    assign o_PropagateControl = w_PropagateControl;
-    assign o_StateSHRLast = r_State_Shr[SHR_DEPTH-1];
 
     // States
     localparam LOAD_REF     = 2'b00;
