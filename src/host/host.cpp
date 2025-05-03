@@ -6,6 +6,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "host.h"
+#include "extract.h"
+#include "globals.h"
 #include <CL/cl2.hpp>
 
 /*  ################################
@@ -32,63 +34,27 @@
  *  GLOBAL CONSTANTS
  */
 
-static const unsigned int VECTOR_WIDTH = 920;
-static const unsigned int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
-static const unsigned int REF_VEC_NO = 8;
-static const unsigned int CMP_VEC_NO = 92;
-static const unsigned int ID_SIZE = 1;           // ID_WIDTH in bytes
-static const unsigned int MEMORY_BUS_WIDTH_BYTES = 16;
-static const unsigned int MEMORY_BUS_WIDTH_BITS = 128;
+const unsigned int VECTOR_WIDTH = 920;
+const unsigned int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
+const unsigned int REF_VEC_NO = 8;
+const unsigned int CMP_VEC_NO = 92;
+const unsigned int ID_SIZE = 1;           // ID_WIDTH in bytes
+const unsigned int MEMORY_BUS_WIDTH_BYTES = 16;
+const unsigned int MEMORY_BUS_WIDTH_BITS = 128;
 
 /*  ################################
  *  FUNCTION DECLARATIONS
  */
 
-int configure_threshold_ram();
+int configureThresholdRAM();
 
-int readVectorsFromFile(
-    uint8_t* ptr_ref,
-    uint8_t* ptr_cmp,
-    const char* filename
-);
-
-size_t  readIDsFromFile(
-    uint32_t** buf_in,
-    const char* filename
-);
-
-void extractExpectedIDs(
-    unsigned int _no_exp_ids,
-    uint32_t*    _raw_id_exp,
-    uint32_t**   ref_id_exp_,
-    uint32_t**   cmp_id_exp_
-);
-
-unsigned int countOutputIDs(
-    uint8_t* _id_buf
-);
-
-void extractResults(
-    unsigned int _no_result_ids,
-    uint8_t*     _result_buffer,
-    uint32_t**   ref_id_result_,
-    uint32_t**   cmp_id_result_
-);
-
-void dumpIDs(
-    unsigned int _exp_id_num,
-    uint32_t* _ref_id_exp,
-    uint32_t* _cmp_id_exp,
-    unsigned int _result_id_num,
-    uint32_t* _ref_id_result,
-    uint32_t* _cmp_id_result
-);
-
-/*  ################################
- *  MAIN
- *  --> read vectors from binary file
- *  --> push to accelerator
- *  --> compare results
+/*
+ * Function: main
+ * --> read vectors from binary file
+ * --> push to accelerator
+ * --> read results from memory
+ * --> load pre-calculated expected results
+ * --> compare results vs expected
  */
 
 int main(int argc, char* argv[]) {
@@ -186,7 +152,7 @@ int main(int argc, char* argv[]) {
     // be used to reference the memory locations on the device.
     uint8_t id_pair_buffer_init[id_pair_size] = {};
 
-    printf("[INFO] Setting up OCL buffer objects with buffer sizes:\nref_buf_size = %d\tcmp_buf_size = %d\tid_pair_size = %d\n",
+    printf("[INFO] Setting up OCL buffer objects with buffer sizes:\nref_buf_size = %ld\tcmp_buf_size = %ld\tid_pair_size = %ld\n",
         ref_buf_size, cmp_buf_size, id_pair_size);
     OCL_CHECK(err, cl::Buffer
         vec_ref_buffer(context, CL_MEM_READ_ONLY, ref_buf_size, NULL, &err));
@@ -219,10 +185,10 @@ int main(int argc, char* argv[]) {
     // Load data/randomize in place
     if(readVectorsFromFile((uint8_t*) ptr_ref, (uint8_t*) ptr_cmp, "vectors.bin")) {
         std::cout << "[WARNING] Test data could not be loaded, continuing with random data.\n";
-        for (int i = 0; i < (int) ref_buf_size/sizeof(int); i++) {
+        for (int i = 0; i < (int) (ref_buf_size/sizeof(uint32_t)); i++) {
             ptr_ref[i] = rand() % RAND_MAX;
         }
-        for (int i = 0; i < (int) cmp_buf_size/sizeof(int); i++) {
+        for (int i = 0; i < (int) (cmp_buf_size/sizeof(uint32_t)); i++) {
             ptr_cmp[i] = rand() % RAND_MAX;
         }
     }
@@ -232,7 +198,7 @@ int main(int argc, char* argv[]) {
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({vec_ref_buffer, cmp_ref_buffer}, 0 /* 0 means from host*/));
 
     // Configure threshold BRAM
-    if(configure_threshold_ram()){
+    if(configureThresholdRAM()){
         std::cout << "[ERROR][CFG_THRESHOLD] Someting went wrong when accessing the memory mapped threshold BRAMs.\n";
     }
 
@@ -280,6 +246,15 @@ int main(int argc, char* argv[]) {
         &cmp_id_result
     );
 
+    dumpIDs(
+        no_of_exp_ids,
+        ref_id_exp,
+        cmp_id_exp,
+        no_of_result_ids,
+        ref_id_result,
+        cmp_id_result
+    );
+
     // Verify the result --> Just check if we are getting data at all for now
     /* ... CHECKING ... */
 
@@ -305,10 +280,13 @@ int main(int argc, char* argv[]) {
  *  FUNCTION DEFINITIONS
  */
 
-// FUNCTION: Load division results to the threshold BRAM in the comparator module
-// See documentation on how this avoids doing division in the PL
-// Use /dev/mem and mmap to access memory mapped IO in physical memory
-int configure_threshold_ram(){
+/*
+ * Function: configureThresholdRAM
+ * Load division results to the threshold BRAM in the comparator module
+ * See documentation on how this avoids doing division in the PL
+ * Use /dev/mem and mmap to access memory mapped IO in physical memory
+ */
+int configureThresholdRAM(){
     int mem_fp = open("/dev/mem", O_RDWR | O_SYNC);
     if(mem_fp < 0){
         std::cout << "[ERROR][CFG_THRESHOLD] Cannot open /dev/mem.\n";
@@ -333,199 +311,4 @@ int configure_threshold_ram(){
     return 0;
 }
 
-// FUNCTION: Read pre-generated binary test vectors.
-// Input file "vectors.bin" assumed to be present in working directory for now.
-int readVectorsFromFile(uint8_t *ptr_ref, uint8_t *ptr_cmp, const char *filename)
-{
-    FILE *fp = fopen(filename, "rb");
-    if (fp == NULL) {
-        perror("[ERROR][FILE_OPS] Error opening vectors file");
-        return 1;
-    }
 
-    size_t refBytes = REF_VEC_NO * 115;
-    size_t cmpBytes = CMP_VEC_NO * 115;
-
-    /* Read reference vectors (refBytes total) */
-    size_t bytesRead = fread(ptr_ref, sizeof(uint8_t), refBytes, fp);
-    if (bytesRead != refBytes) {
-        perror("[ERROR][FILE_OPS] Error reading reference vectors");
-        fclose(fp);
-        return 1;
-    }
-
-    /* Read comparison vectors (cmpBytes total) */
-    bytesRead = fread(ptr_cmp, sizeof(uint8_t), cmpBytes, fp);
-    if (bytesRead != cmpBytes) {
-        perror("[ERROR][FILE_OPS] Error reading comparison vectors");
-        fclose(fp);
-        return 1;
-    }
-
-    fclose(fp);
-    return 0;
-}
-
-// FUNCTION: Read pre-calculated ID pairs.
-// Input file "results.bin" assumed to be present in the working directory for now.
-size_t  readIDsFromFile(uint32_t** buf_out, const char* filename)
-{
-    size_t bytes;
-    size_t read;
-    uint32_t *buf_in;
-
-    std::cout << "[INFO] Read pre-calculated IDs from results file." << std::endl;
-
-    FILE *fp = fopen(filename, "rb");
-    if (fp == NULL) {
-        perror("[ERROR][FILE_OPS] Error opening results file");
-        return 1;
-    }
-
-    if (fseek(fp, 0, SEEK_END) != 0) {
-        perror("[ERROR][FILE_OPS] Error seeking results file!");
-        fclose(fp);
-        return -1;
-    }
-
-    bytes = ftell(fp);
-    if (bytes < 0) {
-        perror("[ERROR][FILE_OPS] Error telling pointer position of results file!");
-        fclose(fp);
-        return -1;
-    }
-
-    if ((bytes % sizeof(uint32_t)) != 0) {
-        perror("[ERROR][FILE_OPS] Unexpected number of bytes in results file!");
-        fclose(fp);
-        return -1;
-    }
-
-    rewind(fp);
-
-    buf_in = (uint32_t*) malloc(bytes);
-    read = fread(buf_in, 1, bytes, fp);
-    if (read != bytes) {
-        perror("[ERROR][FILE_OPS] Unexpected number of bytes read from reasults file!");
-        fclose(fp);
-        free(buf_in);
-        return -1;
-    }
-
-    fclose(fp);
-    *buf_out = buf_in;
-
-    return bytes / sizeof(uint32_t);
-}
-
-// FUNCTION: Separate expected IDs from interleaved array read from file.
-void extractExpectedIDs(
-    unsigned int _no_exp_ids,
-    uint32_t*    _raw_id_exp,
-    uint32_t**   ref_id_exp_,
-    uint32_t**   cmp_id_exp_
-){
-
-    std::cout << "[INFO] Uninterleaving expected ID array." << std::endl;
-
-    uint32_t* ref_id_exp = (uint32_t*) malloc(_no_exp_ids/2 * sizeof(uint32_t));
-    uint32_t* cmp_id_exp = (uint32_t*) malloc(_no_exp_ids/2 * sizeof(uint32_t));
-
-    for(unsigned int i = 0; i < _no_exp_ids/2; i++){
-        ref_id_exp[i] = _raw_id_exp[2*i];
-        cmp_id_exp[i] = _raw_id_exp[2*i+1];
-    }
-
-    *ref_id_exp_ = ref_id_exp;
-    *cmp_id_exp_ = cmp_id_exp;
-
-}
-
-// FUNCTION: Count number of result IDs to be un-interleaved.
-unsigned int countOutputIDs(
-    uint8_t* _id_buf
-){
-
-    bool current_id_is_zero = false;
-    unsigned int cnt = 0;
-
-    // Look for two consecutive zeroes
-    while(!current_id_is_zero){
-        current_id_is_zero = true;
-
-        for(unsigned int i = 0; i < ID_SIZE*2; i++){
-            if(_id_buf[ID_SIZE*cnt+i] != 0){
-                current_id_is_zero = false;
-            }
-        }
-
-        cnt += 2;
-    }
-
-    return cnt-2;
-}
-
-// FUNCTION: Extract IDs from the result buffer.
-// -- x-byte wide IDs will be extracted to uint32_t integers
-// -- IDs to be un-interleaved into two arrays
-void extractResults(
-    unsigned int _no_result_ids,
-    uint8_t*     _result_buffer,
-    uint32_t**   ref_id_result_,
-    uint32_t**   cmp_id_result_
-){
-    uint32_t tmp = 0;
-    uint32_t tmp_interleaved_buf[_no_result_ids];
-    uint32_t* ref_id_result = (uint32_t*) malloc(_no_result_ids/2 * sizeof(uint32_t));
-    uint32_t* cmp_id_result = (uint32_t*) malloc(_no_result_ids/2 * sizeof(uint32_t));
-
-    for(unsigned int id = 0; id < _no_result_ids; id++){
-        for(unsigned int j = 0; j < ID_SIZE; j++){
-            tmp += (uint32_t) _result_buffer[id*ID_SIZE+j];
-            tmp << (ID_SIZE-j-1)*8;
-        }
-
-        tmp_interleaved_buf[id] = tmp;
-        tmp = 0;
-    }
-
-    for(unsigned int i = 0; i < _no_result_ids/2; i++){
-        ref_id_result[i] = tmp_interleaved_buf[2*i];
-        cmp_id_result[i] = tmp_interleaved_buf[2*i+1];
-    }
-
-    *ref_id_result_ = ref_id_result;
-    *cmp_id_result_ = cmp_id_result;
-
-}
-
-
-// FUNCTION: Write ID pairs to text file for manual comparison.
-void dumpIDs(
-    unsigned int _exp_id_num,
-    uint32_t* _ref_id_exp,
-    uint32_t* _cmp_id_exp,
-    unsigned int _result_id_num,
-    uint32_t* _ref_id_result,
-    uint32_t* _cmp_id_result
-){
-    FILE* fp = fopen("id_dump.txt", "w");
-
-    if (!fp) {
-        perror("[ERROR][FILE_OPS] Failed to open ID dump TXT file!");
-        return;
-    }
-
-    fprintf(fp, "EXPECTED ID PAIRS ################################\n");
-    for(unsigned int i = 0; i < _exp_id_num/2; i++){
-        fprintf(fp, "%08x\t%08x\n", _ref_id_exp[i], _cmp_id_exp[i]);
-    }
-
-    fprintf(fp, "ACTUAL ID PAIRS ################################\n");
-    for(unsigned int i = 0; i < _result_id_num/2; i++){
-        fprintf(fp, "%08x\t%08x\n", _ref_id_result[i], _cmp_id_result[i]);
-    }
-
-    fclose(fp);
-
-}
