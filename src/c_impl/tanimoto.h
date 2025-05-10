@@ -29,16 +29,33 @@ typedef struct {
 
 extern TanimotoResult tanimotoResults[REF_VECTOR_NO*CMP_VECTOR_NO];
 
-void initVectors(void);                                         /* Fill vector data with randomly generated values */
-int  writeVectorsToFile(const char *filename);                  /* Write ref and cmp vectors to binary file */
-int  writeIDsToFile(const char *filename, double threshold);    /* Write the results of the calculation to binary file */
-void createIntermediaryVectors(void);                           /* Create C = A & B vectors */
-void calculateBinaryWeight(BinaryVector *vec);                  /* Calculate binary weight of the input vector */
+/* Fill vector data with randomly generated values */
+void initVectors(void);
+
+/* Write ref and cmp vectors to binary file */
+int  writeVectorsToFile(const char *filename);
+
+/* Write the results of the calculation to binary file */
+int  writeIDsToFile(const char *filename, double threshold);
+
+/* Create C = A & B vectors */
+void createIntermediaryVectors(void);
+
+/* Calculate binary weight of the input vector */
+void calculateBinaryWeight(BinaryVector *vec);
+
+/* Calculate the Tanimoto coefficient using the weights of the input vectors */
 double computeTanimotoSimilarity(const BinaryVector *ref,
                                  const BinaryVector *cmp,
-                                 const BinaryVector *inter);    /* Calculate the Tanimoto coefficient using the weights of the input vectors */
-void computeAllTanimotoSimilarities(void);                      /* Tanimoto coeff for all global vectors */
-void printResult(const TanimotoResult result, double threshold);/* Print result struct to console */
-void printAllResultsToTxtFile(const char *filename);            /* Export results to TXT file */
+                                 const BinaryVector *inter);
+
+/* Tanimoto coeff for all global vectors */
+void computeAllTanimotoSimilarities(void);
+
+/* Print result struct to console */
+void printResult(const TanimotoResult result, double threshold);
+
+/* Export results to TXT file */
+void printAllResultsToTxtFile(const char *filename);
 
 #endif // TANIMOTO_H
