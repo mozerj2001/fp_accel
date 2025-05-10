@@ -12,17 +12,15 @@ TanimotoResult tanimotoResults[REF_VECTOR_NO*CMP_VECTOR_NO];
 
 /* 
  * Function: initVectors
- * ---------------------
  * Initializes the 115-byte data fields of the global reference and comparison
  * vectors with random values to be used for testing.
  */
-
 void initVectors(void)
 {
     srand((unsigned) time(NULL));
 
     /* Initialize reference vectors */
-    for (int i = 0; i < REF_VECTOR_NO; i++) {
+    for (int i = 1; i <= REF_VECTOR_NO; i++) {
         referenceVectors[i].id = i;       /* Assign a simple ID. */
         referenceVectors[i].weight = 0;   /* Will be calculated later. */
 
@@ -32,7 +30,7 @@ void initVectors(void)
     }
 
     /* Initialize comparison vectors */
-    for (int i = 0; i < CMP_VECTOR_NO; i++) {
+    for (int i = REF_VECTOR_NO+1; i <= REF_VECTOR_NO+CMP_VECTOR_NO; i++) {
         comparisonVectors[i].id = i;      /* Assign a simple ID. */
         comparisonVectors[i].weight = 0;  /* Will be calculated later. */
 
@@ -45,7 +43,6 @@ void initVectors(void)
 
 /*
  * Function: writeVectorsToFile
- * ----------------------------
  * Writes the data[] bytes of the referenceVectors followed immediately
  * by the data[] bytes of the comparisonVectors to a single binary file,
  * with no header or extra information.
@@ -132,7 +129,6 @@ int writeIDsToFile(const char *filename, double threshold)
 
 /*
  * Function: createIntermediaryVectors
- * -----------------------------------
  * For each pair (ref, cmp), compute the bitwise AND of the 115 data bytes
  * and store it in intermediaryVectors.
  * 
@@ -161,7 +157,6 @@ void createIntermediaryVectors(void)
 
 /*
  * Function: calculateBinaryWeight
- * ----------------------------------
  * Counts the number of '1' bits in the data[115] array of the input vector
  * and stores this value in the vector's weight field.
  */
@@ -181,7 +176,6 @@ void calculateBinaryWeight(BinaryVector *vec)
 
 /*
  * Function: computeTanimotoSimilarity
- * --------------------------------------
  * Calculates the Tanimoto similarity between the reference, comparison,
  * and their ANDed intermediary vector. We assume weight fields have already
  * been computed.
@@ -210,7 +204,6 @@ double computeTanimotoSimilarity(const BinaryVector *ref,
 
 /*
  * Function: computeAllTanimotoSimilarities
- * -------------------------------------------
  * Iterates over all referenceVector - comparisonVector pairs, along with
  * their corresponding intermediary vector, to compute and store the Tanimoto
  * similarity for each pairing in the global tanimotoResults[] array.
@@ -221,9 +214,10 @@ void computeAllTanimotoSimilarities(void)
         for (int j = 0; j < CMP_VECTOR_NO; j++) {
             int idx = i * CMP_VECTOR_NO + j;
             /* Compute Tanimoto using the ref, cmp, and intermediary vectors */
-            tanimotoResults[idx].tanimotoCoefficient = computeTanimotoSimilarity(&referenceVectors[i], 
-                                                                                 &comparisonVectors[j], 
-                                                                                 &intermediaryVectors[idx]);
+            tanimotoResults[idx].tanimotoCoefficient
+                = computeTanimotoSimilarity(&referenceVectors[i], 
+                                            &comparisonVectors[j], 
+                                            &intermediaryVectors[idx]);
             tanimotoResults[idx].referenceVectorID = referenceVectors[i].id;
             tanimotoResults[idx].comparisonVectorID = comparisonVectors[j].id;
         }
@@ -233,7 +227,6 @@ void computeAllTanimotoSimilarities(void)
 
 /*
  * Function: printResult
- * ---------------------
  * Prints the referenceVectorID and comparisonVectorID from a TanimotoResult,
  * if the calculated coefficient is less than the given threshold
  */
@@ -249,7 +242,6 @@ void printResult(const TanimotoResult result, double threshold)
 
 /*
  * Function: printAllResultsToTxtFile
- * ----------------------------------
  * Export all results to TXT file. Comparison with accelerator output to be done
  * on the targed device
  */

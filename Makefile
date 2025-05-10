@@ -108,9 +108,10 @@ host:
 
 
 clean_c:
-	rm src/c_impl/main.o
-	rm src/c_impl/vectors.bin
-	rm src/c_impl/results.txt
+	rm -f src/c_impl/main.o
+	rm -f build/vectors.bin
+	rm -f build/results.bin
+	rm -f src/c_impl/results.txt
 
 clean_platform:
 	rm -rf platform/WorkSpace/zcu106_custom_platform/
