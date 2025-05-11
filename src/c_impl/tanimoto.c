@@ -14,15 +14,17 @@ TanimotoResult tanimotoResults[REF_VECTOR_NO*CMP_VECTOR_NO];
  * Function: initVectors
  * Initializes the 115-byte data fields of the global reference and comparison
  * vectors with random values to be used for testing.
+ * ID assigned is the same as hardware. ID == 0 is reserved for the accelerator.
+ * Weights are initialized to 0 as they are calculated later.
  */
 void initVectors(void)
 {
     srand((unsigned) time(NULL));
 
     /* Initialize reference vectors */
-    for (int i = 1; i <= REF_VECTOR_NO; i++) {
-        referenceVectors[i].id = i;       /* Assign a simple ID. */
-        referenceVectors[i].weight = 0;   /* Will be calculated later. */
+    for (int i = 0; i < REF_VECTOR_NO; i++) {
+        referenceVectors[i].id = i+1;
+        referenceVectors[i].weight = 0;
 
         for (int j = 0; j < 115; j++) {
             referenceVectors[i].data[j] = (uint8_t)(rand() % 256);
@@ -30,9 +32,9 @@ void initVectors(void)
     }
 
     /* Initialize comparison vectors */
-    for (int i = REF_VECTOR_NO+1; i <= REF_VECTOR_NO+CMP_VECTOR_NO; i++) {
-        comparisonVectors[i].id = i;      /* Assign a simple ID. */
-        comparisonVectors[i].weight = 0;  /* Will be calculated later. */
+    for (int i = 0; i < CMP_VECTOR_NO; i++) {
+        comparisonVectors[i].id = i + REF_VECTOR_NO + 1;
+        comparisonVectors[i].weight = 0;
 
         for (int j = 0; j < 115; j++) {
             comparisonVectors[i].data[j] = (uint8_t)(rand() % 256);
@@ -164,11 +166,7 @@ void calculateBinaryWeight(BinaryVector *vec)
 {
     uint32_t bitCount = 0;
     for (int i = 0; i < 115; i++) {
-        uint8_t byteVal = vec->data[i];
-        /* Count bits in byteVal */
-        for (int b = 0; b < 8; b++) {
-            bitCount += (byteVal >> b) & 1U;
-        }
+        bitCount += __builtin_popcount(vec->data[i]);
     }
     vec->weight = bitCount;
 }
@@ -233,7 +231,7 @@ void computeAllTanimotoSimilarities(void)
 void printResult(const TanimotoResult result, double threshold)
 {
     if(result.tanimotoCoefficient <= threshold) {
-        printf("refID:\t%u\tcmpID:\t%u\tcoeff:\t%f\n",
+        printf("refID:\t0x%08x\tcmpID:\t0x%08x\tcoeff:\t%f\n",
                result.referenceVectorID,
                result.comparisonVectorID,
                result.tanimotoCoefficient);
@@ -254,7 +252,7 @@ void printAllResultsToTxtFile(const char *filename)
     }
 
     for (int i = 0; i < REF_VECTOR_NO * CMP_VECTOR_NO; i++) {
-        fprintf(fp, "refID:\t%u\tcmpID:\t%u\tcoeff:\t%f\n",
+        fprintf(fp, "refID:\t0x%08x\tcmpID:\t0x%08x\tcoeff:\t%f\n",
                 tanimotoResults[i].referenceVectorID,
                 tanimotoResults[i].comparisonVectorID,
                 tanimotoResults[i].tanimotoCoefficient);

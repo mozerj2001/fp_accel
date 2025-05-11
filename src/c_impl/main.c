@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         printResult(tanimotoResults[i], THRESHOLD);
     }
 
-    // printAllResultsToTxtFile("results.txt");
+    printAllResultsToTxtFile("results.txt");
 
     writeIDsToFile(fnameResults, THRESHOLD);
 

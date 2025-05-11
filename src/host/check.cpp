@@ -28,13 +28,20 @@ struct IDPairEqual {
 // Description: Compares two arrays of IDs. Expected IDs must be unique. Returns a structure
 // containing lists of missing expected values, unexpected results, and duplicate results.
 // The returned structure contains dynamically allocated arrays that must be freed by the caller.
-ComparisonResult compareResults(
+void compareResults(
+    ComparisonResult* comparison,
     const IDPair* expected,
     const IDPair* results,
     int expected_count,
     int result_count
 ) {
-    ComparisonResult comparison = {nullptr, nullptr, nullptr, 0, 0, 0};
+    // Initialize the comparison structure
+    comparison->missing_expected = nullptr;
+    comparison->unexpected_results = nullptr;
+    comparison->duplicate_results = nullptr;
+    comparison->missing_count = 0;
+    comparison->unexpected_count = 0;
+    comparison->duplicate_count = 0;
     
     // Create a set of expected pairs for quick lookup
     std::unordered_map<IDPair, int, IDPairHash, IDPairEqual> expected_pairs;
@@ -47,40 +54,40 @@ ComparisonResult compareResults(
     for (int i = 0; i < result_count; i++) {
         result_counts[results[i]]++;
         if (expected_pairs.find(results[i]) == expected_pairs.end()) {
-            comparison.unexpected_count++;
+            comparison->unexpected_count++;
         }
     }
 
     // Find missing expected values
     for (int i = 0; i < expected_count; i++) {
         if (result_counts[expected[i]] == 0) {
-            comparison.missing_count++;
+            comparison->missing_count++;
         }
     }
     
     // Find duplicates
     for (const auto& pair : result_counts) {
         if (pair.second > 1) {
-            comparison.duplicate_count++;
+            comparison->duplicate_count++;
         }
     }
     
     // Allocate arrays for results
-    if (comparison.missing_count > 0) {
-        comparison.missing_expected = new IDPair[comparison.missing_count];
+    if (comparison->missing_count > 0) {
+        comparison->missing_expected = new IDPair[comparison->missing_count];
     }
-    if (comparison.unexpected_count > 0) {
-        comparison.unexpected_results = new IDPair[comparison.unexpected_count];
+    if (comparison->unexpected_count > 0) {
+        comparison->unexpected_results = new IDPair[comparison->unexpected_count];
     }
-    if (comparison.duplicate_count > 0) {
-        comparison.duplicate_results = new IDPair[comparison.duplicate_count];
+    if (comparison->duplicate_count > 0) {
+        comparison->duplicate_results = new IDPair[comparison->duplicate_count];
     }
     
     // Fill missing expected array
     int missing_idx = 0;
     for (int i = 0; i < expected_count; i++) {
         if (result_counts[expected[i]] == 0) {
-            comparison.missing_expected[missing_idx++] = expected[i];
+            comparison->missing_expected[missing_idx++] = expected[i];
         }
     }
     
@@ -88,19 +95,20 @@ ComparisonResult compareResults(
     int unexpected_idx = 0;
     for (const auto& pair : result_counts) {
         if (expected_pairs.find(pair.first) == expected_pairs.end()) {
-            comparison.unexpected_results[unexpected_idx++] = pair.first;
+            comparison->unexpected_results[unexpected_idx++] = pair.first;
         }
     }
+    
+    // Update unexpected count to number of unique unexpected results
+    comparison->unexpected_count = unexpected_idx;
     
     // Fill duplicate results array
     int duplicate_idx = 0;
     for (const auto& pair : result_counts) {
         if (pair.second > 1) {
-            comparison.duplicate_results[duplicate_idx++] = pair.first;
+            comparison->duplicate_results[duplicate_idx++] = pair.first;
         }
     }
-    
-    return comparison;
 }
 
 // Function: freeComparisonResult
@@ -123,7 +131,7 @@ void freeComparisonResult(ComparisonResult& result) {
 // result - ComparisonResult structure containing the comparison results
 // filename - Name of the file to write results to
 // Returns: 0 on success, 1 on failure
-int dumpCheckResults(const ComparisonResult& result, const char* filename) {
+int dumpCheckResults(const ComparisonResult* result, const char* filename) {
     
     int match = 0;
 
@@ -134,22 +142,32 @@ int dumpCheckResults(const ComparisonResult& result, const char* filename) {
         return 1;
     }
 
-    if (result.missing_count > 0) {
-        fprintf(fp, "Missing expected ID pairs (%d):\n", result.missing_count);
-        for (int i = 0; i < result.missing_count; i++) {
+    if (result->missing_count > 0) {
+        fprintf(fp, "Missing expected ID pairs (%d):\n", result->missing_count);
+        for (int i = 0; i < result->missing_count; i++) {
             fprintf(fp, "  Ref ID: 0x%08x, Cmp ID: 0x%08x\n", 
-                result.missing_expected[i].ref_id,
-                result.missing_expected[i].cmp_id);
+                result->missing_expected[i].ref_id,
+                result->missing_expected[i].cmp_id);
         }
         match = 1;
     }
     
-    if (result.duplicate_count > 0) {
-        fprintf(fp, "Duplicate ID pairs in results (%d):\n", result.duplicate_count);
-        for (int i = 0; i < result.duplicate_count; i++) {
+    if (result->unexpected_count > 0) {
+        fprintf(fp, "Unexpected ID pairs in results (%d):\n", result->unexpected_count);
+        for (int i = 0; i < result->unexpected_count; i++) {
             fprintf(fp, "  Ref ID: 0x%08x, Cmp ID: 0x%08x\n",
-                result.duplicate_results[i].ref_id,
-                result.duplicate_results[i].cmp_id);
+                result->unexpected_results[i].ref_id,
+                result->unexpected_results[i].cmp_id);
+        }
+        match = 1;
+    }
+    
+    if (result->duplicate_count > 0) {
+        fprintf(fp, "Duplicate ID pairs in results (%d):\n", result->duplicate_count);
+        for (int i = 0; i < result->duplicate_count; i++) {
+            fprintf(fp, "  Ref ID: 0x%08x, Cmp ID: 0x%08x\n",
+                result->duplicate_results[i].ref_id,
+                result->duplicate_results[i].cmp_id);
         }
         match = 1;
     }

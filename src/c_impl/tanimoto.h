@@ -8,7 +8,7 @@
 #include <getopt.h>
 
 #define REF_VECTOR_NO   8
-#define CMP_VECTOR_NO   92
+#define CMP_VECTOR_NO   24
 #define THRESHOLD       0.31
 
 typedef struct {
