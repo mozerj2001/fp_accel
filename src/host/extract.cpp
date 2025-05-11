@@ -105,7 +105,8 @@ size_t readIDsFromFile(uint32_t** buf_out_, const char* _filename)
     return (size_t) (bytes / sizeof(uint32_t));
 }
 
-/* Function: extractExpectedIDs
+/* 
+ * Function: extractExpectedIDs
  * _no_exp_ids - total number of expected IDs
  * _raw_id_exp - input array containing all expected IDs as uint32_t, interleaved in pairs
  * ref_id_exp_ - output array containing uninterleaved ref IDs, _order preserved, mem alloc by func_
@@ -136,7 +137,7 @@ void extractExpectedIDs(
 
 /*
  * Function: countOutputIDs
- * _id_buf - input array containing an unknown number of ID-pairs, terminated by two 0 IDs
+ * _id_buf - input array containing an unknown number of ID-pairs, terminated by a 0 ID.
  */
 unsigned int countOutputIDs(
     uint8_t* _id_buf
@@ -149,16 +150,16 @@ unsigned int countOutputIDs(
     while(!current_id_is_zero){
         current_id_is_zero = true;
 
-        for(unsigned int i = 0; i < ID_SIZE*2; i++){
+        for(unsigned int i = 0; i < ID_SIZE; i++){
             if(_id_buf[ID_SIZE*cnt+i] != 0){
                 current_id_is_zero = false;
             }
         }
 
-        cnt += 2;
+        cnt++;
     }
 
-    return cnt-2;
+    return cnt-1;
 }
 
 /*
@@ -233,12 +234,12 @@ void dumpIDs(
         return;
     }
 
-    fprintf(fp, "EXPECTED ID PAIRS (%d) ################################\n", _exp_id_num);
+    fprintf(fp, "EXPECTED ID PAIRS (%d) ################################\n", _exp_id_num/2);
     for(unsigned int i = 0; i < _exp_id_num/2; i++){
         fprintf(fp, "%08x\t%08x\n", _ref_id_exp[i], _cmp_id_exp[i]);
     }
 
-    fprintf(fp, "ACTUAL ID PAIRS (%d) ################################\n", _result_id_num);
+    fprintf(fp, "ACTUAL ID PAIRS (%d) ################################\n", _result_id_num/2);
     for(unsigned int i = 0; i < _result_id_num/2; i++){
         fprintf(fp, "%08x\t%08x\n", _ref_id_result[i], _cmp_id_result[i]);
     }

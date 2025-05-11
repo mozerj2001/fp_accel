@@ -38,7 +38,7 @@
 const unsigned int VECTOR_WIDTH = 920;
 const unsigned int VECTOR_SIZE = 115;     // 920 bits == 115 bytes
 const unsigned int REF_VEC_NO = 8;
-const unsigned int CMP_VEC_NO = 92;
+const unsigned int CMP_VEC_NO = 24;
 const unsigned int ID_SIZE = 1;           // ID_WIDTH in bytes
 const unsigned int MEMORY_BUS_WIDTH_BYTES = 16;
 const unsigned int MEMORY_BUS_WIDTH_BITS = 128;
@@ -259,15 +259,17 @@ int main(int argc, char* argv[]) {
     );
 
     // Convert arrays to IDPair arrays
-    IDPair* expected_pairs = new IDPair[no_of_exp_ids];
-    IDPair* result_pairs = new IDPair[no_of_result_ids];
+    int no_exp_id_pairs = no_of_exp_ids/2;
+    int no_result_id_pairs = no_of_result_ids/2;
+    IDPair* expected_pairs = new IDPair[no_exp_id_pairs];
+    IDPair* result_pairs = new IDPair[no_result_id_pairs];
     
-    for (int i = 0; i < no_of_exp_ids; i++) {
+    for (int i = 0; i < no_exp_id_pairs; i++) {
         expected_pairs[i].ref_id = ref_id_exp[i];
         expected_pairs[i].cmp_id = cmp_id_exp[i];
     }
     
-    for (int i = 0; i < no_of_result_ids; i++) {
+    for (int i = 0; i < no_result_id_pairs; i++) {
         result_pairs[i].ref_id = ref_id_result[i];
         result_pairs[i].cmp_id = cmp_id_result[i];
     }
@@ -275,14 +277,16 @@ int main(int argc, char* argv[]) {
     // Compare results with expected values
     std::cout << "[INFO] Comparing results with expected values...\n";
     
-    ComparisonResult comparison = compareResults(
+    ComparisonResult comparison;
+    compareResults(
+        &comparison,
         expected_pairs,
         result_pairs,
-        no_of_exp_ids,
-        no_of_result_ids
+        no_exp_id_pairs,
+        no_result_id_pairs
     );
     
-    match = dumpCheckResults(comparison, "check_results.txt");
+    match = dumpCheckResults(&comparison, "check_results.txt");
     
     // Free comparison results
     freeComparisonResult(comparison);
@@ -303,7 +307,11 @@ int main(int argc, char* argv[]) {
     free(ref_id_result);
     free(cmp_id_result);
 
-    std::cout << "[INFO] TEST FINISHED!\t##################" << std::endl;
+    if (match) {
+        std::cout << "[INFO] TEST FAILED!\t##################" << std::endl;
+    } else {
+        std::cout << "[INFO] TEST SUCCESS!\t##################" << std::endl;
+    }
     return (match ? EXIT_FAILURE : EXIT_SUCCESS);
 
 }

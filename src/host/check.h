@@ -17,7 +17,8 @@ struct ComparisonResult {
     int duplicate_count;
 };
 
-ComparisonResult compareResults(
+void compareResults(
+    ComparisonResult* comparison,
     const IDPair* expected,
     const IDPair* results,
     int expected_count,
@@ -27,7 +28,7 @@ ComparisonResult compareResults(
 void freeComparisonResult(ComparisonResult& result);
 
 int dumpCheckResults(
-    const ComparisonResult& result,
+    const ComparisonResult* result,
     const char* filename
 );
 

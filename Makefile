@@ -94,7 +94,7 @@ xclbin_debug:
     	-o ./build/tanimoto_krnl.xclbin
 	cp -rf ./_x/link/vivado/vpl/prj/prj.runs/impl_1/system_wrapper.bit ./platform/WorkSpace/petalinux_project/images/linux/system.bit
 
-c:
+c_impl:
 	@echo "############################################################################"
 	@echo "# BUILDING C IMPLEMENTATION"
 	@echo "############################################################################"
@@ -174,6 +174,7 @@ help:
 	@echo "hls_xo: Generate .xo file of the interface written in HLS."
 	@echo "xclbin: Generate .xclbin file that can be used as an OpenCL target in Vitis."
 	@echo "all: All of the above."
+	@echo "c_impl: Create randomized test data."
 	@echo "clean: Remove all generated and build files, except for platform build results and final .xo files."
 	@echo "clean_platform: Remove zcu106_custom_platform and zcu106_custom."
 	@echo "clean_workspace: Clean Vitis workspace files. Needs to be run for Vitis GUI to recognize platforms and the app_component."
