@@ -8,6 +8,7 @@
 #include "host.h"
 #include "extract.h"
 #include "globals.h"
+#include "check.h"
 #include <CL/cl2.hpp>
 
 /*  ################################
@@ -74,8 +75,10 @@ int main(int argc, char* argv[]) {
     size_t id_pair_size = REF_VEC_NO * CMP_VEC_NO * ID_SIZE * 2;
 
     // how many bus cycles are required to transfer REF_VEC_NO + CMP_VEC_NO vectors? (round up)
-    unsigned int ref_bus_cycle_no = (ref_buf_size + MEMORY_BUS_WIDTH_BYTES -1)*8 / MEMORY_BUS_WIDTH_BITS;
-    unsigned int cmp_bus_cycle_no = (cmp_buf_size + MEMORY_BUS_WIDTH_BYTES -1)*8 / MEMORY_BUS_WIDTH_BITS;
+    unsigned int ref_bus_cycle_no
+        = (ref_buf_size + MEMORY_BUS_WIDTH_BYTES -1)*8 / MEMORY_BUS_WIDTH_BITS;
+    unsigned int cmp_bus_cycle_no
+        = (cmp_buf_size + MEMORY_BUS_WIDTH_BYTES -1)*8 / MEMORY_BUS_WIDTH_BITS;
 
     // Creates a vector of DATA_SIZE elements with an initial value of 10 and 32
     // using customized allocator for getting buffer alignment to 4k boundary
@@ -255,8 +258,38 @@ int main(int argc, char* argv[]) {
         cmp_id_result
     );
 
-    // Verify the result --> Just check if we are getting data at all for now
-    /* ... CHECKING ... */
+    // Convert arrays to IDPair arrays
+    IDPair* expected_pairs = new IDPair[no_of_exp_ids];
+    IDPair* result_pairs = new IDPair[no_of_result_ids];
+    
+    for (int i = 0; i < no_of_exp_ids; i++) {
+        expected_pairs[i].ref_id = ref_id_exp[i];
+        expected_pairs[i].cmp_id = cmp_id_exp[i];
+    }
+    
+    for (int i = 0; i < no_of_result_ids; i++) {
+        result_pairs[i].ref_id = ref_id_result[i];
+        result_pairs[i].cmp_id = cmp_id_result[i];
+    }
+
+    // Compare results with expected values
+    std::cout << "[INFO] Comparing results with expected values...\n";
+    
+    ComparisonResult comparison = compareResults(
+        expected_pairs,
+        result_pairs,
+        no_of_exp_ids,
+        no_of_result_ids
+    );
+    
+    match = dumpCheckResults(comparison, "check_results.txt");
+    
+    // Free comparison results
+    freeComparisonResult(comparison);
+    
+    // Free temporary arrays
+    delete[] expected_pairs;
+    delete[] result_pairs;
 
     std::cout << "[INFO] Free buffers.\n";
     OCL_CHECK(err, err = q.enqueueUnmapMemObject(vec_ref_buffer, ptr_ref));
