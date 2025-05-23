@@ -5,16 +5,18 @@ int main(int argc, char *argv[])
     // Handle commandline arguments
     char* fnameVectors = "vectors.bin";
     char* fnameResults = "results.bin";
+    char* fnameResultsTxt = "results.txt";
 
     static struct option long_opts[] = {
         // name      has_arg         flag  short-val
         { "vectors", required_argument, NULL, 'v' },
         { "results", required_argument, NULL, 'r' },
+        { "results-txt", required_argument, NULL, 't' },
         { NULL,      0,                 NULL,  0  }  // terminator
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "v:r:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "v:r:t:", long_opts, NULL)) != -1) {
         switch (opt) {
             case 'v':
                 fnameVectors = optarg;
@@ -22,9 +24,12 @@ int main(int argc, char *argv[])
             case 'r':
                 fnameResults = optarg;
                 break;
+            case 't':
+                fnameResultsTxt = optarg;
+                break;
             default:
                 fprintf(stderr,
-                        "Usage: %s [--vectors file] [--results file]\n",
+                        "Usage: %s [--vectors file] [--results file] [--results-txt file]\n",
                         argv[0]);
                 return -1;
         }
@@ -62,7 +67,7 @@ int main(int argc, char *argv[])
         printResult(tanimotoResults[i], THRESHOLD);
     }
 
-    printAllResultsToTxtFile("results.txt");
+    printAllResultsToTxtFile(fnameResultsTxt);
 
     writeIDsToFile(fnameResults, THRESHOLD);
 
