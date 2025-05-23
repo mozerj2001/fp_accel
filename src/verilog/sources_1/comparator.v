@@ -89,7 +89,7 @@ module comparator
         r_ID_Delay <=   i_ID;
     end
 
-    assign o_Dout  = i_BRAM_WrEn ? 0 : (r_Sum >= {1'b0, w_Result});
+    assign o_Dout  = i_BRAM_WrEn ? 0 : (r_Sum > {1'b0, w_Result});
     assign o_Valid = r_ValidDelay;
     assign o_Last  = r_LastDelay;
     assign o_ID    = r_ID_Delay;

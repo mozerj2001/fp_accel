@@ -2,9 +2,9 @@
 
 `include "../sources_1/tanimoto_top.v"
 
-module tb_tanimoto_top(
-
-    );
+module tb_tanimoto_top #(
+)(
+);
 
     localparam BUS_WIDTH          = 128;
     localparam BUS_WIDTH_BYTES    = BUS_WIDTH/8;
@@ -12,7 +12,7 @@ module tb_tanimoto_top(
     localparam VECTOR_WIDTH_BYTES = 115;
     localparam SUB_VECTOR_NO      = 8;
     localparam REF_VEC_NO         = 8;
-    localparam CMP_VEC_NO         = 128;
+    localparam CMP_VEC_NO         = 24;
 
     localparam BUS_WIDTH_r          = $itor(BUS_WIDTH         );
     localparam BUS_WIDTH_BYTES_r    = $itor(BUS_WIDTH_BYTES   );
@@ -26,7 +26,7 @@ module tb_tanimoto_top(
     localparam NUM_CMP_BUS_CYCLES = $rtoi(((CMP_VEC_NO_r*VECTOR_WIDTH_BYTES_r) + BUS_WIDTH_BYTES_r - 1)*8 / BUS_WIDTH_r);
 
     localparam GRANULE_WIDTH    = 6;
-    localparam VEC_ID_WIDTH     = $clog2(VECTOR_WIDTH);
+    localparam VEC_ID_WIDTH     = 8;
     localparam CNT_WIDTH        = $clog2(VECTOR_WIDTH);
 
     localparam SHR_DEPTH        = REF_VEC_NO;
@@ -36,7 +36,6 @@ module tb_tanimoto_top(
 
     reg clk                         = 1'b0;
     reg rstn                        = 1'b0;
-    reg [BUS_WIDTH-1:0] vector;
     wire cmp_rdy;
 
     reg [CNT_WIDTH:0]   threshold = 0;
@@ -52,7 +51,6 @@ module tb_tanimoto_top(
     wire [BUS_WIDTH-1:0] f_dout;
     wire f_full;
     wire f_empty;
-
 
     // TEST FIFO
     srl_fifo
@@ -138,19 +136,55 @@ module tb_tanimoto_top(
         if(vec_cntr == (NUM_REF_BUS_CYCLES + NUM_CMP_BUS_CYCLES)) begin
             state <= 1'b0;
         end
+
+        if(id_pair_ready && id_pair_read) begin
+            $fwrite(id_file, "%x\t%x\n",
+                id_pair_out[2*VEC_ID_WIDTH-1:VEC_ID_WIDTH], id_pair_out[VEC_ID_WIDTH-1:0]);
+        end
+    end
+
+    integer id_file;
+    initial begin
+        id_file = $fopen("results.bin", "wb");
+        wait(id_pair_last == 1'b1);
+        $fclose(id_file);
     end
 
     // STIMULUS
-    // load threshold RAM
+    // load threshold RAM and vectors
+    integer vector_file;
+    integer scan_file;
+    reg [7:0] vectors [(REF_VEC_NO+CMP_VEC_NO)*VECTOR_WIDTH_BYTES-1:0];
+    real THRESHOLD = 0.66;
+
     initial begin
+        // Read vectors from binary file
+        vector_file = $fopen("vectors.bin", "rb");
+        
+        if (vector_file == 0) begin
+            $display("Error: Could not open vectors.bin");
+            $finish;
+        end
+        
+        scan_file = $fread(vectors, vector_file);
+        if (scan_file == 0) begin
+            $display("Error: Failed to read vectors from vectors.bin!");
+            $finish;
+        end else begin
+            $display("Info: fread returned %d\n", scan_file);
+        end
+        
+        $fclose(vector_file);
+
+        // Load threshold RAM with pre-calculated data
         #50;
         rstn <= 1'b1;
         #10;
         #CLK_PERIOD;
         wr_threshold <= 1;
-        for(integer i = 0; i < VECTOR_WIDTH; i = i + 1) begin
-            threshold = threshold + 1;
-            threshold_addr = threshold_addr + 1;
+        for(integer cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c = cnt_c + 1) begin
+            threshold = $rtoi(cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+            threshold_addr = cnt_c;
             #CLK_PERIOD;
         end
         wr_threshold <= 0;
@@ -173,17 +207,22 @@ module tb_tanimoto_top(
         end
     end
 
-    // generate random input vectors
-    integer ii;
+    // Feed vectors to FIFO
+    integer ii, jj;
     always @ (posedge clk)
     begin
         if(rstn && state && input_valid) begin
-            for(ii = 0; ii*32 < VECTOR_WIDTH; ii = ii + 1) begin
-                f_din[ii*32 +: 32] <= $urandom();
+            ii = vec_cntr;
+            for(jj = 0; jj < BUS_WIDTH_BYTES; jj = jj + 1) begin
+                if(ii*BUS_WIDTH_BYTES + jj < scan_file) begin
+                    f_din[jj*8 +: 8] <= vectors[ii*BUS_WIDTH_BYTES + jj];
+                    // $display("CURRENT BYTE - %d\t%d\t%d\n", ii, jj, vectors[ii*BUS_WIDTH_BYTES + jj]);
+                end else begin
+                    f_din[jj*8 +: 8] <= 8'h0;
+                end
             end
         end
     end
-
 
     initial begin
         #100;

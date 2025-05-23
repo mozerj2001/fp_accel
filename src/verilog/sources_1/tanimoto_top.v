@@ -61,14 +61,13 @@ module tanimoto_top
 
     // SUB_VECTOR_COUNTER
     // Counts backwards due to SHR_A indexing considerations
-    reg [VEC_ID_WIDTH-1:0] r_SubVectorCntr;
+    localparam SUB_VECTOR_CNTR_WIDTH = $clog2(SUB_VECTOR_NO);
+    reg [SUB_VECTOR_CNTR_WIDTH-1:0] r_SubVectorCntr;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
-            r_SubVectorCntr <= SUB_VECTOR_NO-1;
-        end else if(w_CNT1_New && !w_HaltPipeline) begin
-            r_SubVectorCntr <= SUB_VECTOR_NO-1;
+            r_SubVectorCntr <= 0;
         end else if(w_CNT1_Valid && !w_HaltPipeline) begin
             r_SubVectorCntr <= r_SubVectorCntr - 1;
         end
@@ -282,7 +281,7 @@ module tanimoto_top
     genvar mm;
     generate
         for(mm = 0; mm < SHR_DEPTH; mm = mm + 1) begin
-            assign w_SHR2CNT1_AnB[mm] = r_Vector_Array_A[mm][r_SubVectorCntr] & r_Vector_Array_B[mm][SUB_VECTOR_NO-1];
+            assign w_SHR2CNT1_AnB[mm] = r_Vector_Array_A[mm][r_SubVectorCntr] & r_Vector_Array_B[mm][0];
         end
     endgenerate
 
