@@ -20,9 +20,6 @@
 #define BRAM_MAXADDR 0x82001FFF     // BRAM region upper limit as integer pointer
 #define BRAM_IO_SIZE 32768          // BRAM region size in bytes
 
-// Define Tanimoto threshold
-#define THRESHOLD 0.31
-
 // Macro that submits OpenCL calls, then checks whether an error has occurred.
 #define OCL_CHECK(error, call)                                                                   \
     call;                                                                                        \
@@ -47,7 +44,7 @@ const unsigned int MEMORY_BUS_WIDTH_BITS = 128;
  *  FUNCTION DECLARATIONS
  */
 
-int configureThresholdRAM();
+int configureThresholdRAM(float _threshold);
 
 /*
  * Function: main
@@ -60,14 +57,16 @@ int configureThresholdRAM();
 
 int main(int argc, char* argv[]) {
 
+    float THRESHOLD;
 
     // TARGET_DEVICE macro needs to be passed from gcc command line
-    if (argc != 2) {
-        std::cout << "Usage: " << argv[0] << " <xclbin>" << std::endl;
+    if (argc != 3) {
+        std::cout << "Usage: " << argv[0] << " <xclbin>" << " <THRESHOLD>" << std::endl;
         return EXIT_FAILURE;
     }
 
     std::string xclbinFilename = argv[1];
+    THRESHOLD = strtof(argv[2], NULL);
 
     // Vector buffer sizes in bytes
     size_t ref_buf_size = REF_VEC_NO * VECTOR_SIZE;
@@ -201,7 +200,7 @@ int main(int argc, char* argv[]) {
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({vec_ref_buffer, cmp_ref_buffer}, 0 /* 0 means from host*/));
 
     // Configure threshold BRAM
-    if(configureThresholdRAM()){
+    if(configureThresholdRAM(THRESHOLD)){
         std::cout << "[ERROR][CFG_THRESHOLD] Someting went wrong when accessing the memory mapped threshold BRAMs.\n";
     }
 
@@ -327,7 +326,7 @@ int main(int argc, char* argv[]) {
  * See documentation on how this avoids doing division in the PL
  * Use /dev/mem and mmap to access memory mapped IO in physical memory
  */
-int configureThresholdRAM(){
+int configureThresholdRAM(float _threshold){
     int mem_fp = open("/dev/mem", O_RDWR | O_SYNC);
     if(mem_fp < 0){
         std::cout << "[ERROR][CFG_THRESHOLD] Cannot open /dev/mem.\n";
@@ -344,7 +343,7 @@ int configureThresholdRAM(){
     // Configure threshold RAM
     unsigned int *bram = (unsigned int*) mem;
     for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
-        *(bram + cnt_c) = (unsigned int) (cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+        *(bram + cnt_c) = (unsigned int) (cnt_c * (2.0-_threshold)/(1.0-_threshold));
     }
     
     munmap(mem, BRAM_IO_SIZE);
