@@ -196,7 +196,7 @@ double computeTanimotoSimilarity(const BinaryVector *ref,
         return 0.0; 
     }
 
-    return andWeight / denominator;
+    return 1 - andWeight / denominator;
 }
 
 
