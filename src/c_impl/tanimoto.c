@@ -50,7 +50,7 @@ void initVectors(bool generate)
         }
 
         for(int i = 0; i < 24; i++){
-            referenceVectors[i] = testComparisonVectors[i];
+            comparisonVectors[i] = testComparisonVectors[i];
         }
     }
 }

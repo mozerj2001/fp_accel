@@ -186,12 +186,13 @@ module vec_cat
 
     /////////////////////////////////////////////////////////////////////////////////////
     // CREATE VECTOR ID
+    // ID 0 is reserved
     reg [VEC_ID_WIDTH-1:0] r_IDCntr;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
-            r_IDCntr <= 0;
+            r_IDCntr <= 1;
         end else if(w_FullNext) begin
             r_IDCntr <= r_IDCntr + 1;
         end

@@ -343,7 +343,7 @@ int configureThresholdRAM(float _threshold){
     // Configure threshold RAM
     unsigned int *bram = (unsigned int*) mem;
     for(unsigned int cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c++){
-        *(bram + cnt_c) = (unsigned int) (cnt_c * (2.0-_threshold)/(1.0-_threshold));
+        *(bram + cnt_c) = (unsigned int) ((float) cnt_c * (2.0-_threshold)/(1.0-_threshold));
     }
     
     munmap(mem, BRAM_IO_SIZE);
