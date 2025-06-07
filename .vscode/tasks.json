@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: gcc build c_impl/main.c",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${workspaceFolder}/src/c_impl/main.c",
+                "${workspaceFolder}/src/c_impl/tanimoto.c",
+                "${workspaceFolder}/src/c_impl/test.c",
+                "-o",
+                "${workspaceFolder}/src/c_impl/main"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/c_impl"
+            },
+            "problemMatcher": ["$gcc"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Builds the main C project in c_impl folder."
+        }
+    ]
+}
