@@ -1,4 +1,5 @@
 #include "tanimoto.h"
+#include <stdbool.h>
 
 int main(int argc, char *argv[])
 {
@@ -6,17 +7,21 @@ int main(int argc, char *argv[])
     char* fnameVectors = "vectors.bin";
     char* fnameResults = "results.bin";
     char* fnameResultsTxt = "results.txt";
+    bool printResults = false;
+    bool generate = false;
 
     static struct option long_opts[] = {
-        // name      has_arg         flag  short-val
-        { "vectors", required_argument, NULL, 'v' },
-        { "results", required_argument, NULL, 'r' },
-        { "results-txt", required_argument, NULL, 't' },
-        { NULL,      0,                 NULL,  0  }  // terminator
+        // name             has_arg               flag  short-val
+        { "vectors",        required_argument   , NULL, 'v' },
+        { "results",        required_argument   , NULL, 'r' },
+        { "results-txt",    required_argument   , NULL, 't' },
+        { "print",          no_argument         , NULL, 'p' },
+        { "generate",       no_argument         , NULL, 'g' },
+        { NULL,             0                   , NULL,  0  }
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "v:r:t:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "v:r:t:pg", long_opts, NULL)) != -1) {
         switch (opt) {
             case 'v':
                 fnameVectors = optarg;
@@ -27,16 +32,22 @@ int main(int argc, char *argv[])
             case 't':
                 fnameResultsTxt = optarg;
                 break;
+            case 'p':
+                printResults = true;
+                break;
+            case 'g':
+                generate = true;
+                break;
             default:
                 fprintf(stderr,
-                        "Usage: %s [--vectors file] [--results file] [--results-txt file]\n",
+                        "Usage: %s [--vectors file] [--results file] [--results-txt file] [--print] [--generate]\n",
                         argv[0]);
                 return -1;
         }
     }
 
     // Create random vectors
-    initVectors();
+    initVectors(generate);
 
     // Export random vectors to binary file, to be read by the accelerator OCL kernel
     if (writeVectorsToFile(fnameVectors) != 0) {
@@ -63,8 +74,10 @@ int main(int argc, char *argv[])
     computeAllTanimotoSimilarities();
 
     // Take a look at some of the results locally
-    for(int i = 0; i < REF_VECTOR_NO * CMP_VECTOR_NO; i++) {
-        printResult(tanimotoResults[i], THRESHOLD);
+    if (printResults) {
+        for(int i = 0; i < REF_VECTOR_NO * CMP_VECTOR_NO; i++) {
+            printResult(tanimotoResults[i], THRESHOLD);
+        }
     }
 
     printAllResultsToTxtFile(fnameResultsTxt);

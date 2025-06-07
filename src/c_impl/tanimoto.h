@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <getopt.h>
+#include <stdbool.h>
 
 #define REF_VECTOR_NO   8
 #define CMP_VECTOR_NO   24
@@ -22,15 +23,16 @@ extern BinaryVector comparisonVectors[CMP_VECTOR_NO];
 extern BinaryVector intermediaryVectors[REF_VECTOR_NO*CMP_VECTOR_NO];
 
 typedef struct {
-    uint32_t referenceVectorID;         /* ID of the reference vector this result belongs to */
-    uint32_t comparisonVectorID;        /* ID of the comparison vector this result belongs to */
+    BinaryVector* A;
+    BinaryVector* B;
+    BinaryVector* C;
     double tanimotoCoefficient;         /* Calculated Tanimoto similarity coefficient */
 } TanimotoResult;
 
 extern TanimotoResult tanimotoResults[REF_VECTOR_NO*CMP_VECTOR_NO];
 
 /* Fill vector data with randomly generated values */
-void initVectors(void);
+void initVectors(bool generate);
 
 /* Write ref and cmp vectors to binary file */
 int  writeVectorsToFile(const char *filename);

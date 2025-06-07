@@ -1,4 +1,6 @@
 #include "tanimoto.h"
+#include "test.h"
+#include <stdbool.h>
 
 /*
  * Declare global arrays. Functions defined within this file assume the
@@ -17,27 +19,38 @@ TanimotoResult tanimotoResults[REF_VECTOR_NO*CMP_VECTOR_NO];
  * ID assigned is the same as hardware. ID == 0 is reserved for the accelerator.
  * Weights are initialized to 0 as they are calculated later.
  */
-void initVectors(void)
+void initVectors(bool generate)
 {
     srand((unsigned) time(NULL));
 
-    /* Initialize reference vectors */
-    for (int i = 0; i < REF_VECTOR_NO; i++) {
-        referenceVectors[i].id = i+1;
-        referenceVectors[i].weight = 0;
+    if (generate) {
+        /* Initialize reference vectors */
+        for (int i = 0; i < REF_VECTOR_NO; i++) {
+            referenceVectors[i].id = i+1;
+            referenceVectors[i].weight = 0;
 
-        for (int j = 0; j < 115; j++) {
-            referenceVectors[i].data[j] = (uint8_t)(rand() % 256);
+            for (int j = 0; j < 115; j++) {
+                referenceVectors[i].data[j] = (uint8_t)(rand() % 256);
+            }
         }
-    }
 
-    /* Initialize comparison vectors */
-    for (int i = 0; i < CMP_VECTOR_NO; i++) {
-        comparisonVectors[i].id = i + REF_VECTOR_NO + 1;
-        comparisonVectors[i].weight = 0;
+        /* Initialize comparison vectors */
+        for (int i = 0; i < CMP_VECTOR_NO; i++) {
+            comparisonVectors[i].id = i + REF_VECTOR_NO + 1;
+            comparisonVectors[i].weight = 0;
 
-        for (int j = 0; j < 115; j++) {
-            comparisonVectors[i].data[j] = (uint8_t)(rand() % 256);
+            for (int j = 0; j < 115; j++) {
+                comparisonVectors[i].data[j] = (uint8_t)(rand() % 256);
+            }
+        }
+    } else {
+        /* Use hard-coded test data */
+        for(int i = 0; i < 8; i++){
+            referenceVectors[i] = testReferenceVectors[i];
+        }
+
+        for(int i = 0; i < 24; i++){
+            referenceVectors[i] = testComparisonVectors[i];
         }
     }
 }
@@ -106,9 +119,9 @@ int writeIDsToFile(const char *filename, double threshold)
     }
 
     for(int i = 0; i < REF_VECTOR_NO*CMP_VECTOR_NO; i++){
-        if(tanimotoResults[i].tanimotoCoefficient < threshold){
-            tmp[2*cnt]   = tanimotoResults[i].referenceVectorID;
-            tmp[2*cnt+1] = tanimotoResults[i].comparisonVectorID;
+        if(tanimotoResults[i].tanimotoCoefficient > threshold){
+            tmp[2*cnt]   = tanimotoResults[i].A->id;
+            tmp[2*cnt+1] = tanimotoResults[i].B->id;
             cnt++;
         }
     }
@@ -216,8 +229,9 @@ void computeAllTanimotoSimilarities(void)
                 = computeTanimotoSimilarity(&referenceVectors[i], 
                                             &comparisonVectors[j], 
                                             &intermediaryVectors[idx]);
-            tanimotoResults[idx].referenceVectorID = referenceVectors[i].id;
-            tanimotoResults[idx].comparisonVectorID = comparisonVectors[j].id;
+            tanimotoResults[idx].A = &referenceVectors[i];
+            tanimotoResults[idx].B = &comparisonVectors[j];
+            tanimotoResults[idx].C = &comparisonVectors[idx];
         }
     }
 }
@@ -230,11 +244,29 @@ void computeAllTanimotoSimilarities(void)
  */
 void printResult(const TanimotoResult result, double threshold)
 {
-    if(result.tanimotoCoefficient <= threshold) {
+    if(result.tanimotoCoefficient > threshold) {
         printf("refID:\t0x%08x\tcmpID:\t0x%08x\tcoeff:\t%f\n",
-               result.referenceVectorID,
-               result.comparisonVectorID,
+               result.A->id,
+               result.B->id,
                result.tanimotoCoefficient);
+
+        printf("A: ");
+        for(unsigned int i = 0; i < 115; i++){
+            printf("%02x", result.A->data[i]);
+        }
+        printf("\n");
+
+        printf("B: ");
+        for(unsigned int i = 0; i < 115; i++){
+            printf("%02x", result.B->data[i]);
+        }
+        printf("\n");
+
+        printf("C: ");
+        for(unsigned int i = 0; i < 115; i++){
+            printf("%02x", result.C->data[i]);
+        }
+        printf("\n");
     }
 }
 
@@ -252,10 +284,14 @@ void printAllResultsToTxtFile(const char *filename)
     }
 
     for (int i = 0; i < REF_VECTOR_NO * CMP_VECTOR_NO; i++) {
-        fprintf(fp, "refID:\t0x%08x\tcmpID:\t0x%08x\tcoeff:\t%f\n",
-                tanimotoResults[i].referenceVectorID,
-                tanimotoResults[i].comparisonVectorID,
-                tanimotoResults[i].tanimotoCoefficient);
+        fprintf(fp, "refID:\t0x%08x\tcmpID:\t0x%08x\tcoeff:\t%f\tCNT[A]:\t%d\tCNT[B]\t%d\tCNT[C]\t%d\n",
+                tanimotoResults[i].A->id,
+                tanimotoResults[i].B->id,
+                tanimotoResults[i].tanimotoCoefficient,
+                tanimotoResults[i].A->weight,
+                tanimotoResults[i].B->weight,
+                tanimotoResults[i].C->weight
+        );
     }
 
     fclose(fp);
