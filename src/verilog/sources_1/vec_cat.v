@@ -73,6 +73,20 @@ module vec_cat
         end
     end
 
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // REVERSED VECTOR
+    // - reverse input vector endianness
+    // - needed because SW writes bytes from least significant to most significant, but
+    // the hardware treats it the other way
+    reg [BUS_WIDTH-1:0]             r_ReversedVector;
+
+    always @ (*) begin
+        for(integer ii = 0; ii < BUS_WIDTH; ii = ii + 1) begin
+            r_ReversedVector[ii] <= up_Vector[BUS_WIDTH-ii-1];
+        end
+    end
+
     /////////////////////////////////////////////////////////////////////////////////////
     // VECTOR SHIFT --> store current and previous CAT_REG_NO number of input vectors
     reg [CAT_REG_NO*BUS_WIDTH-1:0]  r_InnerVector;
@@ -85,7 +99,7 @@ module vec_cat
             if(ii == 1) begin
                 always @ (posedge clk) begin
                     if(w_DoShift && ~w_Overflow) begin
-                        r_InnerVector[BUS_WIDTH-1:0] <= up_Vector;
+                        r_InnerVector[BUS_WIDTH-1:0] <= r_ReversedVector;
                     end
                 end
             end else begin

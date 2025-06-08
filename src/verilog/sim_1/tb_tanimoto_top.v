@@ -216,7 +216,6 @@ module tb_tanimoto_top #(
             for(jj = 0; jj < BUS_WIDTH_BYTES; jj = jj + 1) begin
                 if(ii*BUS_WIDTH_BYTES + jj < scan_file) begin
                     f_din[jj*8 +: 8] <= vectors[ii*BUS_WIDTH_BYTES + jj];
-                    // $display("CURRENT BYTE - %d\t%d\t%d\n", ii, jj, vectors[ii*BUS_WIDTH_BYTES + jj]);
                 end else begin
                     f_din[jj*8 +: 8] <= 8'h0;
                 end
