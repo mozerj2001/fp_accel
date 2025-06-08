@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_tanimoto_top_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="\$unit_xpm_cdc_sv_220102727 " />
+            <top_module name="glbl" />
+            <top_module name="tb_tanimoto_top" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="9,644.240 ns"></ZoomStartTime>
+      <ZoomEndTime time="9,691.091 ns"></ZoomEndTime>
+      <Cursor1Time time="9,636.590 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="365"></NameColumnWidth>
+      <ValueColumnWidth column_width="315"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="21" />
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/rstn">
+      <obj_property name="ElementShortName">rstn</obj_property>
+      <obj_property name="ObjectShortName">rstn</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/i_Vector">
+      <obj_property name="ElementShortName">i_Vector[127:0]</obj_property>
+      <obj_property name="ObjectShortName">i_Vector[127:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/i_Valid">
+      <obj_property name="ElementShortName">i_Valid</obj_property>
+      <obj_property name="ObjectShortName">i_Valid</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/i_Last">
+      <obj_property name="ElementShortName">i_Last</obj_property>
+      <obj_property name="ObjectShortName">i_Last</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/o_Read">
+      <obj_property name="ElementShortName">o_Read</obj_property>
+      <obj_property name="ObjectShortName">o_Read</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/dn_Vector">
+      <obj_property name="ElementShortName">dn_Vector[127:0]</obj_property>
+      <obj_property name="ObjectShortName">dn_Vector[127:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/dn_VecID">
+      <obj_property name="ElementShortName">dn_VecID[7:0]</obj_property>
+      <obj_property name="ObjectShortName">dn_VecID[7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/dn_Valid">
+      <obj_property name="ElementShortName">dn_Valid</obj_property>
+      <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/dn_Last">
+      <obj_property name="ElementShortName">dn_Last</obj_property>
+      <obj_property name="ObjectShortName">dn_Last</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/dn_Ready">
+      <obj_property name="ElementShortName">dn_Ready</obj_property>
+      <obj_property name="ObjectShortName">dn_Ready</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/i_IDPair_Read">
+      <obj_property name="ElementShortName">i_IDPair_Read</obj_property>
+      <obj_property name="ObjectShortName">i_IDPair_Read</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/r_IdxReg">
+      <obj_property name="ElementShortName">r_IdxReg[7:0]</obj_property>
+      <obj_property name="ObjectShortName">r_IdxReg[7:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/w_StepIdxUp">
+      <obj_property name="ElementShortName">w_StepIdxUp</obj_property>
+      <obj_property name="ObjectShortName">w_StepIdxUp</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/w_StepIdxDown">
+      <obj_property name="ElementShortName">w_StepIdxDown</obj_property>
+      <obj_property name="ObjectShortName">w_StepIdxDown</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/w_PermArray">
+      <obj_property name="ElementShortName">w_PermArray[255:0][127:0]</obj_property>
+      <obj_property name="ObjectShortName">w_PermArray[255:0][127:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/r_InnerVector">
+      <obj_property name="ElementShortName">r_InnerVector[255:0]</obj_property>
+      <obj_property name="ObjectShortName">r_InnerVector[255:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/o_IDPair_Ready">
+      <obj_property name="ElementShortName">o_IDPair_Ready</obj_property>
+      <obj_property name="ObjectShortName">o_IDPair_Ready</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/o_IDPair_Out">
+      <obj_property name="ElementShortName">o_IDPair_Out[15:0]</obj_property>
+      <obj_property name="ObjectShortName">o_IDPair_Out[15:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/o_IDPair_Last">
+      <obj_property name="ElementShortName">o_IDPair_Last</obj_property>
+      <obj_property name="ObjectShortName">o_IDPair_Last</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_vec_cat_0/DELTA">
+      <obj_property name="ElementShortName">DELTA[31:0]</obj_property>
+      <obj_property name="ObjectShortName">DELTA[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+</wave_config>

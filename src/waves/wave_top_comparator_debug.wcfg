@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_tanimoto_top_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="\$unit_xpm_cdc_sv_220102727 " />
+            <top_module name="glbl" />
+            <top_module name="tb_tanimoto_top" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="14,344.800 ns"></ZoomStartTime>
+      <ZoomEndTime time="14,712.601 ns"></ZoomEndTime>
+      <Cursor1Time time="14,582.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="365"></NameColumnWidth>
+      <ValueColumnWidth column_width="315"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="21" />
+   <wave_markers>
+      <marker label="" time="16470000" />
+      <marker label="" time="16060000" />
+      <marker label="" time="16350000" />
+   </wave_markers>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/rstn">
+      <obj_property name="ElementShortName">rstn</obj_property>
+      <obj_property name="ObjectShortName">rstn</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/i_Vector">
+      <obj_property name="ElementShortName">i_Vector[127:0]</obj_property>
+      <obj_property name="ObjectShortName">i_Vector[127:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/i_Valid">
+      <obj_property name="ElementShortName">i_Valid</obj_property>
+      <obj_property name="ObjectShortName">i_Valid</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/i_Last">
+      <obj_property name="ElementShortName">i_Last</obj_property>
+      <obj_property name="ObjectShortName">i_Last</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/o_Read">
+      <obj_property name="ElementShortName">o_Read</obj_property>
+      <obj_property name="ObjectShortName">o_Read</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/i_IDPair_Read">
+      <obj_property name="ElementShortName">i_IDPair_Read</obj_property>
+      <obj_property name="ObjectShortName">i_IDPair_Read</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/o_IDPair_Ready">
+      <obj_property name="ElementShortName">o_IDPair_Ready</obj_property>
+      <obj_property name="ObjectShortName">o_IDPair_Ready</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/o_IDPair_Out">
+      <obj_property name="ElementShortName">o_IDPair_Out[15:0]</obj_property>
+      <obj_property name="ObjectShortName">o_IDPair_Out[15:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/o_IDPair_Last">
+      <obj_property name="ElementShortName">o_IDPair_Last</obj_property>
+      <obj_property name="ObjectShortName">o_IDPair_Last</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_ShrID_A">
+      <obj_property name="ElementShortName">r_ShrID_A[7:0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">r_ShrID_A[7:0][7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_ShrID_B">
+      <obj_property name="ElementShortName">r_ShrID_B[7:0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">r_ShrID_B[7:0][7:0]</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group105">
+      <obj_property name="label">CNT_0</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /up_ID">
+         <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_ID">
+         <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[0].u_comparator /i_CntA">
+         <obj_property name="ElementShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[0].u_comparator /i_CntB">
+         <obj_property name="ElementShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[0].u_comparator /i_CntC">
+         <obj_property name="ElementShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[0].u_comparator /i_ID">
+         <obj_property name="ElementShortName">i_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_ID[15:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group111">
+      <obj_property name="label">CNT_1</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[1].u_cnt1_out /up_ID">
+         <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[1].u_cnt1_out /up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[1].u_cnt1_out /dn_ID">
+         <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[1].u_cnt1_out /dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[1].u_cnt1_out /dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[1].u_cnt1_out /dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[1].u_comparator /i_CntA">
+         <obj_property name="ElementShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[1].u_comparator /i_CntB">
+         <obj_property name="ElementShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[1].u_comparator /i_CntC">
+         <obj_property name="ElementShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[1].u_comparator /i_ID">
+         <obj_property name="ElementShortName">i_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_ID[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group118">
+      <obj_property name="label">CNT_2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[2].u_cnt1_out /up_ID">
+         <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[2].u_cnt1_out /up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[2].u_cnt1_out /dn_ID">
+         <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[2].u_cnt1_out /dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[2].u_cnt1_out /dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[2].u_cnt1_out /dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[2].u_comparator /i_CntA">
+         <obj_property name="ElementShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[2].u_comparator /i_CntB">
+         <obj_property name="ElementShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[2].u_comparator /i_CntC">
+         <obj_property name="ElementShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[2].u_comparator /i_ID">
+         <obj_property name="ElementShortName">i_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_ID[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group127">
+      <obj_property name="label">CNT_3</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[3].u_cnt1_out /up_ID">
+         <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[3].u_cnt1_out /up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[3].u_cnt1_out /dn_ID">
+         <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[3].u_cnt1_out /dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[3].u_cnt1_out /dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[3].u_cnt1_out /dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[3].u_comparator /i_CntA">
+         <obj_property name="ElementShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[3].u_comparator /i_CntB">
+         <obj_property name="ElementShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[3].u_comparator /i_CntC">
+         <obj_property name="ElementShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[3].u_comparator /i_ID">
+         <obj_property name="ElementShortName">i_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_ID[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group134">
+      <obj_property name="label">CNT_4</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[4].u_cnt1_out /up_ID">
+         <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[4].u_cnt1_out /up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[4].u_cnt1_out /dn_ID">
+         <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[4].u_cnt1_out /dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[4].u_cnt1_out /dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[4].u_cnt1_out /dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[4].u_comparator /i_CntA">
+         <obj_property name="ElementShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[4].u_comparator /i_CntB">
+         <obj_property name="ElementShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[4].u_comparator /i_CntC">
+         <obj_property name="ElementShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[4].u_comparator /i_ID">
+         <obj_property name="ElementShortName">i_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_ID[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group141">
+      <obj_property name="label">CNT_5</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[5].u_cnt1_out /up_ID">
+         <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[5].u_cnt1_out /up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[5].u_cnt1_out /dn_ID">
+         <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[5].u_cnt1_out /dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[5].u_cnt1_out /dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[5].u_cnt1_out /dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[5].u_comparator /i_CntA">
+         <obj_property name="ElementShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[5].u_comparator /i_CntB">
+         <obj_property name="ElementShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[5].u_comparator /i_CntC">
+         <obj_property name="ElementShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[5].u_comparator /i_ID">
+         <obj_property name="ElementShortName">i_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_ID[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group148">
+      <obj_property name="label">CNT_6</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[6].u_cnt1_out /up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[6].u_cnt1_out /up_Last">
+         <obj_property name="ElementShortName">up_Last</obj_property>
+         <obj_property name="ObjectShortName">up_Last</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[6].u_cnt1_out /dn_ID">
+         <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[6].u_cnt1_out /dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[6].u_cnt1_out /dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[6].u_cnt1_out /dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[6].u_comparator /i_CntA">
+         <obj_property name="ElementShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[6].u_comparator /i_CntB">
+         <obj_property name="ElementShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[6].u_comparator /i_CntC">
+         <obj_property name="ElementShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[6].u_comparator /i_ID">
+         <obj_property name="ElementShortName">i_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_ID[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group155">
+      <obj_property name="label">CNT_7</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[7].u_cnt1_out /up_ID">
+         <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[7].u_cnt1_out /up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[7].u_cnt1_out /dn_ID">
+         <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[7].u_cnt1_out /dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[7].u_cnt1_out /dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[7].u_cnt1_out /dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[7].u_comparator /i_CntA">
+         <obj_property name="ElementShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntA[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[7].u_comparator /i_CntB">
+         <obj_property name="ElementShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntB[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[7].u_comparator /i_CntC">
+         <obj_property name="ElementShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="ObjectShortName">i_CntC[9:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[7].u_comparator /i_ID">
+         <obj_property name="ElementShortName">i_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_ID[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group216">
+      <obj_property name="label">CNT_IN</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/up_Vector">
+         <obj_property name="ElementShortName">up_Vector[127:0]</obj_property>
+         <obj_property name="ObjectShortName">up_Vector[127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/up_ID">
+         <obj_property name="ElementShortName">up_ID[7:0]</obj_property>
+         <obj_property name="ObjectShortName">up_ID[7:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/up_Valid">
+         <obj_property name="ElementShortName">up_Valid</obj_property>
+         <obj_property name="ObjectShortName">up_Valid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/up_Last">
+         <obj_property name="ElementShortName">up_Last</obj_property>
+         <obj_property name="ObjectShortName">up_Last</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/up_Ready">
+         <obj_property name="ElementShortName">up_Ready</obj_property>
+         <obj_property name="ObjectShortName">up_Ready</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_SubVector">
+         <obj_property name="ElementShortName">dn_SubVector[127:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_SubVector[127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_ID">
+         <obj_property name="ElementShortName">dn_ID[7:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_ID[7:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_Valid">
+         <obj_property name="ElementShortName">dn_Valid</obj_property>
+         <obj_property name="ObjectShortName">dn_Valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_Cnt">
+         <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_CntNew">
+         <obj_property name="ElementShortName">dn_CntNew</obj_property>
+         <obj_property name="ObjectShortName">dn_CntNew</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_Last">
+         <obj_property name="ElementShortName">dn_Last</obj_property>
+         <obj_property name="ObjectShortName">dn_Last</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_Ready">
+         <obj_property name="ElementShortName">dn_Ready</obj_property>
+         <obj_property name="ObjectShortName">dn_Ready</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>
