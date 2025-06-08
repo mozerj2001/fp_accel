@@ -231,7 +231,7 @@ void computeAllTanimotoSimilarities(void)
                                             &intermediaryVectors[idx]);
             tanimotoResults[idx].A = &referenceVectors[i];
             tanimotoResults[idx].B = &comparisonVectors[j];
-            tanimotoResults[idx].C = &comparisonVectors[idx];
+            tanimotoResults[idx].C = &intermediaryVectors[idx];
         }
     }
 }
