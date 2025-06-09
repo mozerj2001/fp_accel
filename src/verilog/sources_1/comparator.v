@@ -32,7 +32,7 @@ module comparator
         input wire                      i_BRAM_Clk,
         input wire                      i_BRAM_Rst,
         input wire [CNT_WIDTH-1:0]      i_BRAM_Addr,
-        input wire [CNT_WIDTH-1:0]      i_BRAM_Din,
+        input wire [CNT_WIDTH:0]        i_BRAM_Din,
         input wire                      i_BRAM_En,
         input wire                      i_BRAM_WrEn,
         output wire [VEC_ID_WIDTH-1:0]  o_ID,
@@ -63,11 +63,11 @@ module comparator
     wire [CNT_WIDTH-1:0] w_Addr;
     assign w_Addr = i_BRAM_WrEn ? i_BRAM_Addr : i_CntC;
 
-    wire [CNT_WIDTH-1:0] w_Result;
+    wire [CNT_WIDTH:0] w_Result;
     block_ram_rd_1st
     #(
         .DEPTH  (VECTOR_WIDTH+1 ),
-        .WIDTH  (CNT_WIDTH      )
+        .WIDTH  (CNT_WIDTH+1    )
     ) u_result_ram (
         .clk    (clk        ),
         .we     (i_BRAM_WrEn),
@@ -89,7 +89,7 @@ module comparator
         r_ID_Delay <=   i_ID;
     end
 
-    assign o_Dout  = i_BRAM_WrEn ? 0 : (r_Sum > {1'b0, w_Result});
+    assign o_Dout  = i_BRAM_WrEn ? 0 : (r_Sum > w_Result);
     assign o_Valid = r_ValidDelay;
     assign o_Last  = r_LastDelay;
     assign o_ID    = r_ID_Delay;

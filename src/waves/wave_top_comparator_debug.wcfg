@@ -12,19 +12,19 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="16,553.166 ns"></ZoomStartTime>
-      <ZoomEndTime time="16,741.367 ns"></ZoomEndTime>
-      <Cursor1Time time="16,710.000 ns"></Cursor1Time>
+      <ZoomStartTime time="11,895.500 ns"></ZoomStartTime>
+      <ZoomEndTime time="12,039.201 ns"></ZoomEndTime>
+      <Cursor1Time time="11,980.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="365"></NameColumnWidth>
-      <ValueColumnWidth column_width="311"></ValueColumnWidth>
+      <ValueColumnWidth column_width="303"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="21" />
+   <WVObjectSize size="29" />
    <wave_markers>
-      <marker label="" time="16470000" />
-      <marker label="" time="16060000" />
-      <marker label="" time="16350000" />
+      <marker label="" time="13150000" />
+      <marker label="" time="12860000" />
+      <marker label="" time="13290000" />
    </wave_markers>
    <wvobject type="logic" fp_name="/tb_tanimoto_top/clk">
       <obj_property name="ElementShortName">clk</obj_property>
@@ -90,10 +90,78 @@
       <obj_property name="ElementShortName">r_ShrID_B[7:0][7:0]</obj_property>
       <obj_property name="ObjectShortName">r_ShrID_B[7:0][7:0]</obj_property>
    </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Cnt_Array_A">
+      <obj_property name="ElementShortName">r_Cnt_Array_A[7:0][9:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Cnt_Array_A[7:0][9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Cnt_Array_B">
+      <obj_property name="ElementShortName">r_Cnt_Array_B[7:0][9:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Cnt_Array_B[7:0][9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_A">
+      <obj_property name="ElementShortName">r_Vector_Array_A[7:0][7:0][127:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Vector_Array_A[7:0][7:0][127:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B">
+      <obj_property name="ElementShortName">r_Vector_Array_B[7:0][7:0][127:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Vector_Array_B[7:0][7:0][127:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B[7]">
+         <obj_property name="ElementShortName">[7][7:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">[7][7:0][127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B[6]">
+         <obj_property name="ElementShortName">[6][7:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">[6][7:0][127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B[5]">
+         <obj_property name="ElementShortName">[5][7:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">[5][7:0][127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B[4]">
+         <obj_property name="ElementShortName">[4][7:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">[4][7:0][127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B[3]">
+         <obj_property name="ElementShortName">[3][7:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][7:0][127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B[2]">
+         <obj_property name="ElementShortName">[2][7:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][7:0][127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B[1]">
+         <obj_property name="ElementShortName">[1][7:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][7:0][127:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Vector_Array_B[0]">
+         <obj_property name="ElementShortName">[0][7:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][7:0][127:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Valid_Shr">
+      <obj_property name="ElementShortName">r_Valid_Shr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Valid_Shr[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/w_SHR2CNT1_AnB">
+      <obj_property name="ElementShortName">w_SHR2CNT1_AnB[7:0][127:0]</obj_property>
+      <obj_property name="ObjectShortName">w_SHR2CNT1_AnB[7:0][127:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
    <wvobject type="group" fp_name="group105">
       <obj_property name="label">CNT_0</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /up_Vector">
+         <obj_property name="ElementShortName">up_Vector[127:0]</obj_property>
+         <obj_property name="ObjectShortName">up_Vector[127:0]</obj_property>
+      </wvobject>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /up_ID">
          <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
          <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
@@ -105,20 +173,32 @@
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_ID">
          <obj_property name="ElementShortName">dn_ID[15:0]</obj_property>
          <obj_property name="ObjectShortName">dn_ID[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_SubVector">
+         <obj_property name="ElementShortName">dn_SubVector[127:0]</obj_property>
+         <obj_property name="ObjectShortName">dn_SubVector[127:0]</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_Valid">
          <obj_property name="ElementShortName">dn_Valid</obj_property>
          <obj_property name="ObjectShortName">dn_Valid</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_Cnt">
          <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
          <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[0].u_cnt1_out /dn_CntNew">
          <obj_property name="ElementShortName">dn_CntNew</obj_property>
          <obj_property name="ObjectShortName">dn_CntNew</obj_property>
-         <obj_property name="CustomSignalColor">#FFA500</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
          <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[0].u_comparator /i_CntA">
@@ -148,11 +228,18 @@
          <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
          <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[0].u_comparator /o_ID">
+         <obj_property name="ElementShortName">o_ID[15:0]</obj_property>
+         <obj_property name="ObjectShortName">o_ID[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk6[0].u_comparator /o_Dout">
+         <obj_property name="ElementShortName">o_Dout</obj_property>
+         <obj_property name="ObjectShortName">o_Dout</obj_property>
+      </wvobject>
    </wvobject>
    <wvobject type="group" fp_name="group111">
       <obj_property name="label">CNT_1</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[1].u_cnt1_out /up_ID">
          <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
          <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
@@ -209,7 +296,6 @@
    <wvobject type="group" fp_name="group118">
       <obj_property name="label">CNT_2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[2].u_cnt1_out /up_ID">
          <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
          <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
@@ -266,7 +352,6 @@
    <wvobject type="group" fp_name="group127">
       <obj_property name="label">CNT_3</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[3].u_cnt1_out /up_ID">
          <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
          <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
@@ -323,7 +408,6 @@
    <wvobject type="group" fp_name="group134">
       <obj_property name="label">CNT_4</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[4].u_cnt1_out /up_ID">
          <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
          <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
@@ -380,7 +464,6 @@
    <wvobject type="group" fp_name="group141">
       <obj_property name="label">CNT_5</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[5].u_cnt1_out /up_ID">
          <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
          <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
@@ -437,7 +520,6 @@
    <wvobject type="group" fp_name="group148">
       <obj_property name="label">CNT_6</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[6].u_cnt1_out /up_Valid">
          <obj_property name="ElementShortName">up_Valid</obj_property>
          <obj_property name="ObjectShortName">up_Valid</obj_property>
@@ -494,7 +576,6 @@
    <wvobject type="group" fp_name="group155">
       <obj_property name="label">CNT_7</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/\genblk5[7].u_cnt1_out /up_ID">
          <obj_property name="ElementShortName">up_ID[15:0]</obj_property>
          <obj_property name="ObjectShortName">up_ID[15:0]</obj_property>
@@ -551,6 +632,7 @@
    <wvobject type="group" fp_name="group216">
       <obj_property name="label">CNT_IN</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/up_Vector">
          <obj_property name="ElementShortName">up_Vector[127:0]</obj_property>
          <obj_property name="ObjectShortName">up_Vector[127:0]</obj_property>
@@ -571,6 +653,38 @@
          <obj_property name="ElementShortName">up_Ready</obj_property>
          <obj_property name="ObjectShortName">up_Ready</obj_property>
       </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/r_WordCntr">
+         <obj_property name="ElementShortName">r_WordCntr[2:0]</obj_property>
+         <obj_property name="ObjectShortName">r_WordCntr[2:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/w_Sum">
+         <obj_property name="ElementShortName">w_Sum[7:0]</obj_property>
+         <obj_property name="ObjectShortName">w_Sum[7:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/r_Accumulator">
+         <obj_property name="ElementShortName">r_Accumulator[9:0]</obj_property>
+         <obj_property name="ObjectShortName">r_Accumulator[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/r_DelaySubVector_SHR">
+         <obj_property name="ElementShortName">r_DelaySubVector_SHR[3:0][127:0]</obj_property>
+         <obj_property name="ObjectShortName">r_DelaySubVector_SHR[3:0][127:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/r_DelayID_SHR">
+         <obj_property name="ElementShortName">r_DelayID_SHR[3:0][7:0]</obj_property>
+         <obj_property name="ObjectShortName">r_DelayID_SHR[3:0][7:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/r_DelayValid_SHR">
+         <obj_property name="ElementShortName">r_DelayValid_SHR[3:0]</obj_property>
+         <obj_property name="ObjectShortName">r_DelayValid_SHR[3:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/r_DelayLast_SHR">
+         <obj_property name="ElementShortName">r_DelayLast_SHR[3:0]</obj_property>
+         <obj_property name="ObjectShortName">r_DelayLast_SHR[3:0]</obj_property>
+      </wvobject>
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_SubVector">
          <obj_property name="ElementShortName">dn_SubVector[127:0]</obj_property>
          <obj_property name="ObjectShortName">dn_SubVector[127:0]</obj_property>
@@ -586,6 +700,7 @@
       <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_Cnt">
          <obj_property name="ElementShortName">dn_Cnt[9:0]</obj_property>
          <obj_property name="ObjectShortName">dn_Cnt[9:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject type="logic" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/u_cnt1_in/dn_CntNew">
          <obj_property name="ElementShortName">dn_CntNew</obj_property>
@@ -599,5 +714,16 @@
          <obj_property name="ElementShortName">dn_Ready</obj_property>
          <obj_property name="ObjectShortName">dn_Ready</obj_property>
       </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Cnt_Array_A">
+      <obj_property name="ElementShortName">r_Cnt_Array_A[7:0][9:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Cnt_Array_A[7:0][9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_tanimoto_top/dut/u_tanimoto_top/r_Cnt_Array_B">
+      <obj_property name="ElementShortName">r_Cnt_Array_B[7:0][9:0]</obj_property>
+      <obj_property name="ObjectShortName">r_Cnt_Array_B[7:0][9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
 </wave_config>
