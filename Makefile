@@ -72,7 +72,7 @@ xclbin:
     	./build/hls_dma.xo \
     	--save-temps \
     	-o ./build/tanimoto_krnl.xclbin
-	cp -rf ./_x/link/vivado/vpl/prj/prj.runs/impl_1/system_wrapper.bit ./platform/WorkSpace/petalinux_project/images/linux/system.bit
+	cp -rf ./_x/link/vivado/vpl/prj/prj.runs/impl_1/system_wrapper.bit ./platform/petalinux_project/images/linux/system.bit
 
 xclbin_debug:
 	@echo "############################################################################"

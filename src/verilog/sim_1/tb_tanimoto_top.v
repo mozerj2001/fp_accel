@@ -123,31 +123,19 @@ module tb_tanimoto_top #(
 
     always @ (posedge clk)
     begin
-        if(f_read && ~f_empty) begin
+        if(input_valid && state) begin
             vec_cntr <= vec_cntr + 1;
         end
 
-        if(vec_cntr == (NUM_REF_BUS_CYCLES+NUM_CMP_BUS_CYCLES-1)) begin
+        if(vec_cntr == (NUM_REF_BUS_CYCLES+NUM_CMP_BUS_CYCLES)) begin
             input_last <= 1'b1;
         end else begin
             input_last <= 1'b0;
         end
 
-        if(vec_cntr == (NUM_REF_BUS_CYCLES + NUM_CMP_BUS_CYCLES)) begin
+        if(vec_cntr == (NUM_REF_BUS_CYCLES + NUM_CMP_BUS_CYCLES+1)) begin
             state <= 1'b0;
         end
-
-        if(id_pair_ready && id_pair_read) begin
-            $fwrite(id_file, "%x\t%x\n",
-                id_pair_out[2*VEC_ID_WIDTH-1:VEC_ID_WIDTH], id_pair_out[VEC_ID_WIDTH-1:0]);
-        end
-    end
-
-    integer id_file;
-    initial begin
-        id_file = $fopen("results.bin", "wb");
-        wait(id_pair_last == 1'b1);
-        $fclose(id_file);
     end
 
     // STIMULUS
@@ -199,7 +187,7 @@ module tb_tanimoto_top #(
         if(!rstn || !state) begin
             f_write <= 0;
         end else begin
-            if(input_valid) begin
+            if(rstn && state && input_valid) begin
                 f_write <= 1'b1;
             end else begin
                 f_write <= 1'b0;
