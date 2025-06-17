@@ -8,7 +8,7 @@
 # ###########################################################
 
 # Ignore timing violations? --> ignore for bringup
-ERROR_ON_HOLD_VIOLATION=FALSE
+ERROR_ON_HOLD_VIOLATION=TRUE
 
 
 .PHONY: all kernel clean clean_platform platform rtl_xo hls_xo rtl_ip xclbin xclbin_debug docs

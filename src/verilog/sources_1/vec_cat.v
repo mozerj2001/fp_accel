@@ -50,7 +50,8 @@ module vec_cat
     
     // internal valid signal
     wire w_DoShift;
-    assign w_DoShift = up_Valid && dn_Ready;
+    // assign w_DoShift = up_Valid && dn_Ready;
+    assign w_DoShift = r_ValidShr[0] && dn_Ready;
 
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -79,13 +80,17 @@ module vec_cat
     // - reverse input vector endianness
     // - needed because SW writes bytes from least significant to most significant, but
     // the hardware treats it the other way
-    reg [BUS_WIDTH-1:0]             r_ReversedVector;
+    reg [BUS_WIDTH-1:0] r_ReversedVector;
 
-    always @ (*) begin
-        for(integer ii = 0; ii < BUS_WIDTH; ii = ii + 1) begin
-            r_ReversedVector[ii] <= up_Vector[BUS_WIDTH-ii-1];
+    genvar jj;
+    generate
+        for(jj = 0; jj < BUS_WIDTH; jj = jj + 1) begin
+            always @ (posedge clk)
+            begin
+                r_ReversedVector[jj] <= up_Vector[BUS_WIDTH-jj-1];
+            end
         end
-    end
+    endgenerate
 
     /////////////////////////////////////////////////////////////////////////////////////
     // VECTOR SHIFT --> store current and previous CAT_REG_NO number of input vectors
@@ -150,10 +155,10 @@ module vec_cat
     // vectors will be selected by r_IdxReg
     wire [BUS_WIDTH-1:0] w_PermArray [CAT_REG_NO*BUS_WIDTH-1:0];
 
-    genvar jj;
+    genvar kk;
     generate
-        for(jj = 0; jj <= CAT_REG_NO*BUS_WIDTH; jj = jj + 1) begin
-            assign w_PermArray[jj] = (jj <= (CAT_REG_NO-1)*BUS_WIDTH) ? r_InnerVector[jj+BUS_WIDTH-1 -: BUS_WIDTH] : 0;
+        for(kk = 0; kk <= CAT_REG_NO*BUS_WIDTH; kk = kk + 1) begin
+            assign w_PermArray[kk] = (kk <= (CAT_REG_NO-1)*BUS_WIDTH) ? r_InnerVector[kk+BUS_WIDTH-1 -: BUS_WIDTH] : 0;
         end
     endgenerate
 
@@ -167,7 +172,7 @@ module vec_cat
     // 1 when unemitted parts of the next word would be shifted out of the input shift-register
     assign w_Overflow = ((r_IdxReg + DELTA) > (CAT_REG_NO-1)*BUS_WIDTH) && w_FullNext;
 
-    assign w_ValidOut = r_ValidShr[0] || r_OverflowDel;
+    assign w_ValidOut = r_ValidShr[1] || r_OverflowDel;
 
     always @ (posedge clk)
     begin
@@ -221,7 +226,7 @@ module vec_cat
     assign dn_VecID  = r_IDCntr;
     assign dn_Valid  = w_ValidOut;
     assign up_Ready  = w_DoShift && ~w_Overflow;
-    assign dn_Last   = r_LastShr[0] && w_ValidOut;
+    assign dn_Last   = r_LastShr[1] && w_ValidOut;
 
     
     endmodule
