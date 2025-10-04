@@ -187,7 +187,8 @@ module tanimoto_top
 
     // Propagate control signals and vectors when: a) vectors are compared, b) when the pipeline is being flushed
     wire w_PropagateControl;
-    assign w_PropagateControl = (   ((r_State == COMPARE && w_CNT1_New) || (r_State == FLUSH)) &&
+    assign w_PropagateControl = (   ((r_State == COMPARE && w_CNT1_New) ||
+                                    (r_State == FLUSH)) &&
                                     !w_HaltPipeline );
 
     genvar vv;

@@ -113,7 +113,7 @@ module tb_tanimoto_top #(
     reg state = 0;
     reg [31:0] vec_cntr = 0;
     reg [1:0] sparsity_cntr = 0;
-    reg sparse_traffic_test = 1;
+    reg sparse_traffic_test = 0;
     wire input_valid = sparse_traffic_test ? (sparsity_cntr == 2'b11) : 1'b1;
 
     always @ (posedge clk)
@@ -214,6 +214,16 @@ module tb_tanimoto_top #(
     initial begin
         #100;
         rstn <= 1'b1;
+    end
+
+    // Print output ID pairs
+    integer id_pair_no = 0;
+    always @ (posedge clk)
+    begin
+        if(id_pair_read) begin
+            $display("id_pair_out[%d]: %x - %x", id_pair_no, id_pair_out[2*VEC_ID_WIDTH-1:VEC_ID_WIDTH], id_pair_out[VEC_ID_WIDTH-1:0]);
+            id_pair_no = id_pair_no + 1;
+        end
     end
 
 endmodule

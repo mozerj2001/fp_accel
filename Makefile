@@ -7,9 +7,6 @@
 # 2023-2024, Jozsef Mozer
 # ###########################################################
 
-# Ignore timing violations? --> ignore for bringup
-ERROR_ON_HOLD_VIOLATION=FALSE
-
 
 .PHONY: all kernel clean clean_platform platform rtl_xo hls_xo rtl_ip xclbin xclbin_debug docs
 
@@ -64,7 +61,6 @@ xclbin:
     	--link \
 		--log_dir ./logs/xclbin \
 		--report_dir ./logs/xclbin \
-		--advanced.param compiler.errorOnHoldViolation=${ERROR_ON_HOLD_VIOLATION} \
 		--advanced.param compiler.userPostSysLinkOverlayTcl=scripting/post_link.tcl \
     	--platform ./platform/WorkSpace/zcu106_custom/export/zcu106_custom/zcu106_custom.xpfm \
     	--config ./scripting/connections.cfg \
@@ -92,7 +88,7 @@ xclbin_debug:
     	./build/hls_dma.xo \
     	--save-temps \
     	-o ./build/tanimoto_krnl.xclbin
-	cp -rf ./_x/link/vivado/vpl/prj/prj.runs/impl_1/system_wrapper.bit ./platform/WorkSpace/petalinux_project/images/linux/system.bit
+	cp -rf ./_x/link/vivado/vpl/prj/prj.runs/impl_1/system_wrapper.bit ./platform/petalinux/images/linux/system.bit
 
 c_impl:
 	@echo "############################################################################"

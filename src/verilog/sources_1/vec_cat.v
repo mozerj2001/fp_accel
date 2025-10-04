@@ -43,7 +43,8 @@ module vec_cat
     );
 
     localparam CAT_REG_NO		    = 2                                  ;  // min. 2
-    localparam DELTA 			    = SUB_VEC_NO*BUS_WIDTH - VECTOR_WIDTH;  // step distance in each iterateion
+    localparam DELTA 			    = SUB_VEC_NO*BUS_WIDTH - VECTOR_WIDTH;  // step distance in each iteration
+    localparam PADDED_SLICE_W       = BUS_WIDTH - DELTA                  ;  // width of meaningful bits in a padded vector
     localparam IDX_REG_WIDTH        = $clog2((CAT_REG_NO-1)*BUS_WIDTH)+1 ;
     localparam FULL                 = 0                                  ;
     localparam PAD                  = 1                                  ;
@@ -75,21 +76,6 @@ module vec_cat
 
 
     /////////////////////////////////////////////////////////////////////////////////////
-    // REVERSED VECTOR
-    // - reverse input vector endianness
-    // - needed because SW writes bytes from least significant to most significant, but
-    // the hardware treats it the other way
-    wire [BUS_WIDTH-1:0] w_ReversedVector;
-
-    
-    genvar jj;
-    generate
-        for(jj = 0; jj < BUS_WIDTH; jj = jj + 1) begin
-            assign w_ReversedVector[jj] = up_Vector[BUS_WIDTH-jj-1];
-        end
-    endgenerate
-
-    /////////////////////////////////////////////////////////////////////////////////////
     // VECTOR SHIFT --> store current and previous CAT_REG_NO number of input vectors
     reg [CAT_REG_NO*BUS_WIDTH-1:0]  r_InnerVector;
     wire                            w_Overflow;
@@ -98,16 +84,16 @@ module vec_cat
     genvar ii;
     generate
         for(ii = 1; ii <= CAT_REG_NO; ii = ii + 1) begin
-            if(ii == 1) begin
+            if(ii == CAT_REG_NO) begin
                 always @ (posedge clk) begin
                     if(w_DoShift && ~w_Overflow) begin
-                        r_InnerVector[BUS_WIDTH-1:0] <= w_ReversedVector;
+                        r_InnerVector[CAT_REG_NO*BUS_WIDTH-1:(CAT_REG_NO-1)*BUS_WIDTH] <= up_Vector;
                     end
                 end
             end else begin
                 always @ (posedge clk) begin
                     if(w_DoShift && ~w_Overflow) begin
-                        r_InnerVector[ii*BUS_WIDTH-1:(ii-1)*BUS_WIDTH] <= r_InnerVector[(ii-1)*BUS_WIDTH-1:(ii-2)*BUS_WIDTH];
+                        r_InnerVector[ii*BUS_WIDTH-1:(ii-1)*BUS_WIDTH] <= r_InnerVector[(ii+1)*BUS_WIDTH-1:ii*BUS_WIDTH];
                     end
                 end
             end
@@ -154,8 +140,14 @@ module vec_cat
 
     genvar kk;
     generate
-        for(kk = 0; kk <= CAT_REG_NO*BUS_WIDTH; kk = kk + 1) begin
-            assign w_PermArray[kk] = (kk <= (CAT_REG_NO-1)*BUS_WIDTH) ? r_InnerVector[kk+BUS_WIDTH-1 -: BUS_WIDTH] : 0;
+        for(kk = 1; kk < CAT_REG_NO*BUS_WIDTH; kk = kk + 1) begin
+            if(kk <= BUS_WIDTH-1) begin
+                assign w_PermArray[kk] = { r_InnerVector[kk:0], {(BUS_WIDTH-kk-1){1'b0}} };
+                // assign w_PermArray[kk][kk:0] = { r_InnerVector[kk:0] };
+            end else begin
+                assign w_PermArray[kk] = r_InnerVector[kk -: BUS_WIDTH];
+            end
+            // assign w_PermArray[kk] = (kk <= (CAT_REG_NO-1)*BUS_WIDTH) ? r_InnerVector[kk+BUS_WIDTH-1 -: BUS_WIDTH] : 0;
         end
     endgenerate
 
@@ -166,8 +158,9 @@ module vec_cat
     reg [$clog2(SUB_VEC_NO)-1:0]    r_SubVecCntr;
     wire                            w_ValidOut;
     
-    // 1 when unemitted parts of the next word would be shifted out of the input shift-register
-    assign w_Overflow = ((r_IdxReg + DELTA) > (CAT_REG_NO-1)*BUS_WIDTH) && w_FullNext;
+    // 1 when unprocessed data would be shifted out, when the idx can't
+    // "follow the fresh data" anymore
+    assign w_Overflow = (r_IdxReg < BUS_WIDTH-1) && w_FullNext;
 
     assign w_ValidOut = r_ValidShr[0] || r_OverflowDel;
 
@@ -185,17 +178,21 @@ module vec_cat
     wire                            w_StepIdxUp;
     wire                            w_StepIdxDown;
 
-    assign w_StepIdxUp      = w_FullNext && ~w_Overflow;    // increment when state goes PAD --> FULL
-    assign w_StepIdxDown    = w_Overflow && dn_Ready;
+    // increment when shifting the next vector would result in an info loss
+    assign w_StepIdxUp      = w_Overflow && w_FullNext;
+    // decrement when state goes FULL --> PAD, meaning meaningful data from
+    // the current vector will be starting from r_IdxReg
+    assign w_StepIdxDown    = ~w_Overflow && w_PadNext;
 
+    // Indexing register logic to slice r_InnerVector (using PermArray)
     always @ (posedge clk)
     begin
         if(!rstn) begin
-            r_IdxReg = 0;
+            r_IdxReg = CAT_REG_NO*BUS_WIDTH-1;
         end else if(w_StepIdxUp) begin
-            r_IdxReg = r_IdxReg + DELTA;
+            r_IdxReg = r_IdxReg + BUS_WIDTH;    // step up to avoid loss of information (no shift)
         end else if(w_StepIdxDown) begin
-            r_IdxReg = r_IdxReg - (BUS_WIDTH-DELTA);                            // no shift due to information loss --> step back
+            r_IdxReg = r_IdxReg - DELTA;        // normal step down
         end
     end
 
@@ -219,7 +216,7 @@ module vec_cat
     // SELECT OUTPUT
     // --> select the correct output from the r_OutVectorArray register array
 
-    assign dn_Vector = (r_State == FULL) ? w_PermArray[r_IdxReg] : {w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA], {DELTA{1'b0}}};
+    assign dn_Vector = (r_State == FULL) ? w_PermArray[r_IdxReg] : {{DELTA{1'b0}}, w_PermArray[r_IdxReg][BUS_WIDTH-1:DELTA]};
     assign dn_VecID  = r_IDCntr;
     assign dn_Valid  = w_ValidOut;
     assign up_Ready  = w_DoShift && ~w_Overflow;
