@@ -240,9 +240,10 @@ void computeAllTanimotoSimilarities(void)
 /*
  * Function: printResult
  * Prints the referenceVectorID and comparisonVectorID from a TanimotoResult,
- * if the calculated coefficient is less than the given threshold
+ * if the calculated coefficient is greater than the given threshold.
+ * Return true, when this condition is fulfilled.
  */
-void printResult(const TanimotoResult result, double threshold)
+bool printResult(const TanimotoResult result, double threshold)
 {
     if(result.tanimotoCoefficient > threshold) {
         printf("refID:\t0x%08x\tcmpID:\t0x%08x\tcoeff:\t%f\n",
@@ -268,6 +269,8 @@ void printResult(const TanimotoResult result, double threshold)
         }
         printf("\n");
     }
+
+    return result.tanimotoCoefficient > threshold;
 }
 
 /*
@@ -275,7 +278,7 @@ void printResult(const TanimotoResult result, double threshold)
  * Export all results to TXT file. Comparison with accelerator output to be done
  * on the targed device
  */
-void printAllResultsToTxtFile(const char *filename)
+void printAllResultsToTxtFile(const char *filename, double threshold)
 {
     FILE *fp = fopen(filename, "w");
     if (!fp) {
@@ -284,15 +287,19 @@ void printAllResultsToTxtFile(const char *filename)
     }
 
     for (int i = 0; i < REF_VECTOR_NO * CMP_VECTOR_NO; i++) {
-        fprintf(fp, "refID:\t0x%08x\tcmpID:\t0x%08x\tcoeff:\t%f\tCNT[A]:\t%d\tCNT[B]\t%d\tCNT[C]\t%d\n",
-                tanimotoResults[i].A->id,
-                tanimotoResults[i].B->id,
-                tanimotoResults[i].tanimotoCoefficient,
-                tanimotoResults[i].A->weight,
-                tanimotoResults[i].B->weight,
-                tanimotoResults[i].C->weight
-        );
+        if(tanimotoResults[i].tanimotoCoefficient > threshold) {
+            fprintf(fp, "refID:\t0x%08x\tcmpID:\t0x%08x\tcoeff:\t%f\tCNT[A]:\t%d\tCNT[B]\t%d\tCNT[C]\t%d\n",
+                    tanimotoResults[i].A->id,
+                    tanimotoResults[i].B->id,
+                    tanimotoResults[i].tanimotoCoefficient,
+                    tanimotoResults[i].A->weight,
+                    tanimotoResults[i].B->weight,
+                    tanimotoResults[i].C->weight
+            );
+        }
     }
 
     fclose(fp);
 }
+
+

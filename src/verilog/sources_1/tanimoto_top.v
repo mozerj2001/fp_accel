@@ -62,14 +62,14 @@ module tanimoto_top
     // SUB_VECTOR_COUNTER
     // Counts backwards due to SHR_A indexing considerations
     localparam SUB_VECTOR_CNTR_WIDTH = $clog2(SUB_VECTOR_NO);
-    reg [SUB_VECTOR_CNTR_WIDTH-1:0] r_SubVectorCntr;
+    reg [SUB_VECTOR_CNTR_WIDTH-1:0] r_VecArrayIdxCntr;
 
     always @ (posedge clk)
     begin
         if(!rstn) begin
-            r_SubVectorCntr <= 0;
+            r_VecArrayIdxCntr <= 0;
         end else if(w_CNT1_Valid && !w_HaltPipeline) begin
-            r_SubVectorCntr <= r_SubVectorCntr - 1;
+            r_VecArrayIdxCntr <= r_VecArrayIdxCntr - 1;
         end
     end
 
@@ -80,17 +80,21 @@ module tanimoto_top
     wire      w_ProcessingOver;
     wire      w_ResetPipeline;
 
-    assign w_StartCompare   = ( w_CNT1_New              &&
-                               (w_CNT1_ID == SHR_DEPTH) &&
-                                !w_HaltPipeline           );
+    // last REF ID + CNT1 received --> start comparing vectors
+    assign w_StartCompare = (w_CNT1_New              &&
+                            (w_CNT1_ID == SHR_DEPTH) &&
+                            !w_HaltPipeline           );
 
+    // last CMP ID + CNT1 received --> start flushing data from the pipeline
     assign w_StartFlush     = (w_CNT1_Last && !w_HaltPipeline);
     
+    // no more data in the pipeline --> send TLAST signal to output
     assign w_ProcessingOver = ( r_State_Shr[SHR_DEPTH-1] == FLUSH   &&
                                 w_PropagateControl                  &&
                                 w_ComparationOver                   &&
                                 w_FifoTreeEmpty                     );
 
+    // TLAST cycle read from output --> reset pipeline
     assign w_ResetPipeline  = ((r_State == OVER) && i_IDPair_Read);
 
 
@@ -177,21 +181,39 @@ module tanimoto_top
     // the output CNT1 modules' inputs
     // FLUSH: push pipeline data even without valid input
     // r_SubValidShr: propagate valid alongside corresp sub-vector
-    reg  [SHR_DEPTH*SUB_VECTOR_NO-1:0]  r_SubValidShr;
+    reg  [SUB_VECTOR_NO-1:0]            r_SubValidShr   [SHR_DEPTH-1:0];
     wire [SHR_DEPTH-1:0]                w_StageValid;
     reg  [1:0]                          r_State_Shr     [SHR_DEPTH-1:0];
+    reg  [$clog2(SUB_VECTOR_NO)-1:0]    r_SubVecCntr;
     wire [SHR_DEPTH-1:0]                w_SHR2CNT1_Valid;
     wire [SHR_DEPTH-1:0]                w_SHR2CNT1_Last;
     wire [VEC_ID_WIDTH-1:0]             w_SHR2CNT1_ID_A [SHR_DEPTH-1:0];
     wire [VEC_ID_WIDTH-1:0]             w_SHR2CNT1_ID_B [SHR_DEPTH-1:0];
 
+    // Count sub_vectors to synchronize state shifting during flush with the
+    // propagation of the last CMP vector.
+    always @ (posedge clk)
+    begin
+        if(!rstn) begin
+            r_SubVecCntr <= 0;
+        end else if(w_StartCompare) begin
+            r_SubVecCntr <= 0;
+        end else if(r_State == COMPARE && w_CNT1_Valid) begin
+            r_SubVecCntr <= r_SubVecCntr + 1;
+        end else if(r_State == FLUSH) begin
+            r_SubVecCntr <= r_SubVecCntr + 1;
+        end
+    end
+    
+
     // Propagate control signals and vectors when: a) vectors are compared, b) when the pipeline is being flushed
     wire w_PropagateControl;
     assign w_PropagateControl = (   ((r_State == COMPARE && w_CNT1_New) ||
-                                    (r_State == FLUSH)) &&
+                                    (r_State == FLUSH && r_SubVecCntr == SUB_VECTOR_NO-1)) &&
                                     !w_HaltPipeline );
 
-    genvar vv;
+
+    genvar vv, zz;
     generate
 
         for(vv = 0; vv < SHR_DEPTH; vv = vv + 1) begin
@@ -216,30 +238,41 @@ module tanimoto_top
             end
         end
 
-        for(vv = 0; vv < SHR_DEPTH*SUB_VECTOR_NO; vv = vv + 1) begin
-            if(vv == 0) begin
-                always @ (posedge clk)
-                begin
-                    if(!rstn) begin
-                        r_SubValidShr[vv] <= 1'b0;
-                    end else if(w_CNT1_Valid && (r_State == COMPARE)) begin
-                        r_SubValidShr[vv] <= 1'b1;
+        for(vv = 0; vv < SHR_DEPTH; vv = vv + 1) begin
+            for(zz = 0; zz < SUB_VECTOR_NO; zz = zz + 1) begin
+                if(vv == 0 && zz == 0) begin
+                    always @ (posedge clk)
+                    begin
+                        if(!rstn) begin
+                            r_SubValidShr[zz][vv] <= 1'b0;
+                        end else if(w_Shift_B) begin
+                            r_SubValidShr[zz][vv] <= w_CNT1_Valid;
+                        end
                     end
-                end
-            end else begin
-                always @ (posedge clk)
-                begin
-                    if(!rstn) begin
-                        r_SubValidShr[vv] <= 1'b0;
-                    end else if(w_CNT1_Valid && (r_State == COMPARE)) begin
-                        r_SubValidShr[vv] <= r_SubValidShr[vv-1];
+                end else if(zz == 0) begin
+                    always @ (posedge clk)
+                    begin
+                        if(!rstn) begin
+                            r_SubValidShr[zz][vv] <= 1'b0;
+                        end else if(w_Shift_B) begin
+                            r_SubValidShr[zz][vv] <= r_SubValidShr[SUB_VECTOR_NO-1][vv-1];
+                        end
+                    end
+                end else begin
+                    always @ (posedge clk)
+                    begin
+                        if(!rstn) begin
+                            r_SubValidShr[zz][vv] <= 1'b0;
+                        end else if(w_Shift_B) begin
+                            r_SubValidShr[zz][vv] <= r_SubValidShr[zz-1][vv];
+                        end
                     end
                 end
             end
         end
 
         for(vv = 0; vv < SHR_DEPTH; vv = vv + 1) begin
-            assign w_StageValid[vv] = |r_SubValidShr[(vv+1)*SUB_VECTOR_NO-1 : vv*SUB_VECTOR_NO];
+            assign w_StageValid[vv] = |r_SubValidShr[vv];
         end
 
     endgenerate
@@ -255,7 +288,7 @@ module tanimoto_top
 
     wire w_Shift_B;
     reg  r_Shift_B_Del;
-    assign w_Shift_B = w_CNT1_Valid && (r_State > LOAD_REF);
+    assign w_Shift_B = w_CNT1_Valid && (r_State == COMPARE) || (r_State == FLUSH);
 
     always @ (posedge clk)
     begin
@@ -308,7 +341,7 @@ module tanimoto_top
     genvar mm;
     generate
         for(mm = 0; mm < SHR_DEPTH; mm = mm + 1) begin
-            assign w_SHR2CNT1_AnB[mm] = r_Vector_Array_A[mm][r_SubVectorCntr] & r_Vector_Array_B[mm][0];
+            assign w_SHR2CNT1_AnB[mm] = r_Vector_Array_A[mm][r_VecArrayIdxCntr] & r_Vector_Array_B[mm][0];
         end
     endgenerate
 
@@ -321,7 +354,7 @@ module tanimoto_top
     assign w_Shift_CntA = w_CNT1_New && (r_State == LOAD_REF);
 
     wire w_Shift_CntB;
-    assign w_Shift_CntB = w_CNT1_New && (r_State == COMPARE);
+    assign w_Shift_CntB = (w_CNT1_New && (r_State == COMPARE)) || (w_PropagateControl && (r_State == FLUSH));
 
     reg [CNT_WIDTH-1:0] r_Cnt_Array_A[SHR_DEPTH-1:0];
     reg [CNT_WIDTH-1:0] r_Cnt_Array_B[SHR_DEPTH-1:0];
@@ -349,6 +382,10 @@ module tanimoto_top
     //  (CNT1 delay + 2 clk for comparator addition and RAM activity)
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_A [SHR_DEPTH-1:0];
     reg [VEC_ID_WIDTH-1:0]  r_ShrID_B [SHR_DEPTH-1:0];
+    reg                     r_ShrLast [SHR_DEPTH-1:0];
+    wire                    w_ID_ShiftEn;   // TLAST synchronzied with the last ID
+
+    assign w_ID_ShiftEn = (r_State > LOAD_REF) ? w_PropagateControl : w_CNT1_New;
 
     genvar ee;
     generate
@@ -356,19 +393,23 @@ module tanimoto_top
             always @ (posedge clk)
             begin
                 if(ee == 0) begin
-                    if(w_CNT1_New) begin
+                    if(w_ID_ShiftEn) begin
                         if(r_State == LOAD_REF) begin
                             r_ShrID_A[ee] <= w_CNT1_ID;
+                            r_ShrLast[ee] <= 1'b0;
                         end else begin
                             r_ShrID_B[ee] <= w_CNT1_ID;
+                            r_ShrLast[ee] <= w_CNT1_Last;
                         end
                     end
                 end else begin
-                    if(w_CNT1_New) begin
+                    if(w_ID_ShiftEn) begin
                         if(r_State == LOAD_REF) begin
                             r_ShrID_A[ee] <= r_ShrID_A[ee-1];
+                            r_ShrLast[ee] <= 1'b0;
                         end else begin
                             r_ShrID_B[ee] <= r_ShrID_B[ee-1];
+                            r_ShrLast[ee] <= r_ShrLast[ee-1];
                         end
                     end
                 end
@@ -419,7 +460,7 @@ module tanimoto_top
             assign w_SHR2CNT1_ID_B[kk]  = r_ShrID_B[kk];
             // assign w_SHR2CNT1_Valid[kk] = w_StageValid[kk] && (r_State_Shr[kk] > LOAD_REF) && r_Shift_B_Del; // valid every time there is a new subvector + the current vector is valid
             assign w_SHR2CNT1_Valid[kk] = w_StageValid[kk] && r_Shift_B_Del; // valid every time there is a new subvector + the current vector is valid
-            assign w_SHR2CNT1_Last[kk]  = (r_State_Shr[kk] == FLUSH) && w_PropagateControl;
+            assign w_SHR2CNT1_Last[kk]  = r_ShrLast[kk];
 
             cnt1 #(
                 .VECTOR_WIDTH   (VECTOR_WIDTH   ),
@@ -492,7 +533,7 @@ module tanimoto_top
             begin
                 if(!rstn) begin
                     r_CompareLastObserved[cc] <= 1'b0;
-                end else if(w_StartCompare) begin
+                end else if(w_StartCompare || w_ResetPipeline) begin
                     r_CompareLastObserved[cc] <= 1'b0;
                 end else if(w_CompareLast[cc]) begin
                     r_CompareLastObserved[cc] <= 1'b1;
@@ -610,7 +651,7 @@ module tanimoto_top
                     // previous levels in a Round-Robin fashion.
                     if(tt == FIFO_TREE_DEPTH-1) begin           // CNT1 output to lowest FIFO-level
                         assign w_fifo_din   [2**tt + uu]        = w_CompareID[uu];
-                        assign w_fifo_wr_en [2**tt + uu]        = (w_CompareDout[uu] && w_CompareValid[uu]);
+                        assign w_fifo_wr_en [2**tt + uu]        = ~r_CompareLastObserved[uu] && (w_CompareDout[uu] && w_CompareValid[uu]);
                     end else if(uu < LOCAL_DEPTH) begin         // other FIFO levels
 
                         always @ (w_fifo_empty[2**(tt+1) + 2*uu], w_fifo_empty[2**(tt+1) + 2*uu+1], r_PreviousSource[2**tt+uu]) begin

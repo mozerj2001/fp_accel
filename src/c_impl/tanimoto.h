@@ -10,7 +10,7 @@
 
 #define REF_VECTOR_NO   8
 #define CMP_VECTOR_NO   24
-#define THRESHOLD       0.66
+#define THRESHOLD       0.5
 
 typedef struct {
     uint32_t id;                  /* ID of the vector */
@@ -55,9 +55,9 @@ double computeTanimotoSimilarity(const BinaryVector *ref,
 void computeAllTanimotoSimilarities(void);
 
 /* Print result struct to console */
-void printResult(const TanimotoResult result, double threshold);
+bool printResult(const TanimotoResult result, double threshold);
 
 /* Export results to TXT file */
-void printAllResultsToTxtFile(const char *filename);
+void printAllResultsToTxtFile(const char *filename, double threshold);
 
 #endif // TANIMOTO_H

@@ -61,6 +61,7 @@ xclbin:
     	--link \
 		--log_dir ./logs/xclbin \
 		--report_dir ./logs/xclbin \
+		--advanced.param compiler.errorOnHoldViolation=TRUE \
 		--advanced.param compiler.userPostSysLinkOverlayTcl=scripting/post_link.tcl \
     	--platform ./platform/WorkSpace/zcu106_custom/export/zcu106_custom/zcu106_custom.xpfm \
     	--config ./scripting/connections.cfg \
@@ -80,7 +81,7 @@ xclbin_debug:
     	--link \
 		--log_dir ./logs/xclbin \
 		--report_dir ./logs/xclbin \
-		--advanced.param compiler.errorOnHoldViolation=${ERROR_ON_HOLD_VIOLATION} \
+		--advanced.param compiler.errorOnHoldViolation=TRUE \
 		--advanced.param compiler.userPostSysLinkOverlayTcl=scripting/post_link.tcl \
     	--platform ./platform/WorkSpace/zcu106_custom/export/zcu106_custom/zcu106_custom.xpfm \
     	--config ./scripting/connections_debug.cfg \
@@ -97,8 +98,8 @@ c_impl:
 	cd src/c_impl; gcc main.c tanimoto.c test.c -o main.o -Wall -Wextra
 	./src/c_impl/main.o --vectors build/vectors.bin \
 		--results build/results.bin \
-		--results-txt build/results.txt \
-		--print
+		--results-txt build/results.txt
+
 
 host:
 	@echo "############################################################################"

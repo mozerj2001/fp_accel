@@ -113,7 +113,7 @@ module tb_tanimoto_top #(
     reg state = 0;
     reg [31:0] vec_cntr = 0;
     reg [1:0] sparsity_cntr = 0;
-    reg sparse_traffic_test = 0;
+    reg sparse_traffic_test = 1;
     wire input_valid = sparse_traffic_test ? (sparsity_cntr == 2'b11) : 1'b1;
 
     always @ (posedge clk)
@@ -143,7 +143,7 @@ module tb_tanimoto_top #(
     integer vector_file;
     integer scan_file;
     reg [7:0] vectors [(REF_VEC_NO+CMP_VEC_NO)*VECTOR_WIDTH_BYTES-1:0];
-    real THRESHOLD = 0.66;
+    real THRESHOLD = 0.5;
 
     initial begin
         // Read vectors from binary file

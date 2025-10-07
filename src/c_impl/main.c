@@ -3,6 +3,8 @@
 
 int main(int argc, char *argv[])
 {
+    int no_of_results = 0;
+
     // Handle commandline arguments
     char* fnameVectors = "vectors.bin";
     char* fnameResults = "results.bin";
@@ -76,11 +78,15 @@ int main(int argc, char *argv[])
     // Take a look at some of the results locally
     if (printResults) {
         for(int i = 0; i < REF_VECTOR_NO * CMP_VECTOR_NO; i++) {
-            printResult(tanimotoResults[i], THRESHOLD);
+            if(printResult(tanimotoResults[i], THRESHOLD)){
+                no_of_results++;
+            }
         }
+
+        printf("Total number of ID pairs: %d\n", no_of_results);
     }
 
-    printAllResultsToTxtFile(fnameResultsTxt);
+    printAllResultsToTxtFile(fnameResultsTxt, THRESHOLD);
 
     writeIDsToFile(fnameResults, THRESHOLD);
 
