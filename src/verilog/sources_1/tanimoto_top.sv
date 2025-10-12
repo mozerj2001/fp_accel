@@ -22,7 +22,7 @@ module tanimoto_top
         SHR_DEPTH           = 8,        // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 16,       // implicitly defines how wide vector counters need to be
         //
-        SUB_VECTOR_NO       = $rtoi($ceil($itor(VECTOR_WIDTH)/$itor(BUS_WIDTH))),
+        SUB_VECTOR_NO       = (VECTOR_WIDTH + BUS_WIDTH -1) / BUS_WIDTH,    // no real functions used
         CNT_WIDTH           = $clog2(VECTOR_WIDTH),
         FIFO_TREE_DEPTH     = ($clog2(SHR_DEPTH) + 1)
     )(
@@ -181,14 +181,14 @@ module tanimoto_top
     // the output CNT1 modules' inputs
     // FLUSH: push pipeline data even without valid input
     // r_SubValidShr: propagate valid alongside corresp sub-vector
-    reg  [SUB_VECTOR_NO-1:0]            r_SubValidShr   [SHR_DEPTH-1:0];
-    wire [SHR_DEPTH-1:0]                w_StageValid;
-    reg  [1:0]                          r_State_Shr     [SHR_DEPTH-1:0];
-    reg  [$clog2(SUB_VECTOR_NO)-1:0]    r_SubVecCntr;
-    wire [SHR_DEPTH-1:0]                w_SHR2CNT1_Valid;
-    wire [SHR_DEPTH-1:0]                w_SHR2CNT1_Last;
-    wire [VEC_ID_WIDTH-1:0]             w_SHR2CNT1_ID_A [SHR_DEPTH-1:0];
-    wire [VEC_ID_WIDTH-1:0]             w_SHR2CNT1_ID_B [SHR_DEPTH-1:0];
+    reg  [SHR_DEPTH*SUB_VECTOR_NO-1:0]      r_SubValidShr   ;
+    wire [SHR_DEPTH-1:0]                    w_StageValid;
+    reg  [1:0]                              r_State_Shr     [SHR_DEPTH-1:0];
+    reg  [$clog2(SUB_VECTOR_NO)-1:0]        r_SubVecCntr;
+    wire [SHR_DEPTH-1:0]                    w_SHR2CNT1_Valid;
+    wire [SHR_DEPTH-1:0]                    w_SHR2CNT1_Last;
+    wire [VEC_ID_WIDTH-1:0]                 w_SHR2CNT1_ID_A [SHR_DEPTH-1:0];
+    wire [VEC_ID_WIDTH-1:0]                 w_SHR2CNT1_ID_B [SHR_DEPTH-1:0];
 
     // Count sub_vectors to synchronize state shifting during flush with the
     // propagation of the last CMP vector.
@@ -238,41 +238,30 @@ module tanimoto_top
             end
         end
 
-        for(vv = 0; vv < SHR_DEPTH; vv = vv + 1) begin
-            for(zz = 0; zz < SUB_VECTOR_NO; zz = zz + 1) begin
-                if(vv == 0 && zz == 0) begin
-                    always @ (posedge clk)
-                    begin
-                        if(!rstn) begin
-                            r_SubValidShr[zz][vv] <= 1'b0;
-                        end else if(w_Shift_B) begin
-                            r_SubValidShr[zz][vv] <= w_CNT1_Valid;
-                        end
+        for(vv = 0; vv < SHR_DEPTH*SUB_VECTOR_NO; vv = vv + 1) begin
+            if(vv == 0) begin
+                always @ (posedge clk)
+                begin
+                    if(!rstn) begin
+                        r_SubValidShr[vv] <= 1'b0;
+                    end else if(w_Shift_B) begin
+                        r_SubValidShr[vv] <= w_CNT1_Valid;
                     end
-                end else if(zz == 0) begin
-                    always @ (posedge clk)
-                    begin
-                        if(!rstn) begin
-                            r_SubValidShr[zz][vv] <= 1'b0;
-                        end else if(w_Shift_B) begin
-                            r_SubValidShr[zz][vv] <= r_SubValidShr[SUB_VECTOR_NO-1][vv-1];
-                        end
-                    end
-                end else begin
-                    always @ (posedge clk)
-                    begin
-                        if(!rstn) begin
-                            r_SubValidShr[zz][vv] <= 1'b0;
-                        end else if(w_Shift_B) begin
-                            r_SubValidShr[zz][vv] <= r_SubValidShr[zz-1][vv];
-                        end
+                end
+            end else begin
+                always @ (posedge clk)
+                begin
+                    if(!rstn) begin
+                        r_SubValidShr[vv] <= 1'b0;
+                    end else if(w_Shift_B) begin
+                        r_SubValidShr[vv] <= r_SubValidShr[vv-1];
                     end
                 end
             end
         end
 
         for(vv = 0; vv < SHR_DEPTH; vv = vv + 1) begin
-            assign w_StageValid[vv] = |r_SubValidShr[vv];
+            assign w_StageValid[vv] = |r_SubValidShr[vv*SUB_VECTOR_NO +: SUB_VECTOR_NO];
         end
 
     endgenerate

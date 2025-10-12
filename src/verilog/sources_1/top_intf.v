@@ -12,7 +12,6 @@ module top_intf
         VECTOR_WIDTH    = 920                           ,
         SHR_DEPTH       = 8                             ,
         //
-        SUB_VECTOR_NO   = $ceil(VECTOR_WIDTH/BUS_WIDTH) ,
         GRANULE_WIDTH   = 6                             ,
         VEC_ID_WIDTH    = 8                             ,
         //
@@ -88,7 +87,6 @@ module top_intf
     tanimoto_top #(
         .BUS_WIDTH      (BUS_WIDTH          ),
         .VECTOR_WIDTH   (VECTOR_WIDTH       ),
-        .SUB_VECTOR_NO  (SUB_VECTOR_NO      ),
         .GRANULE_WIDTH  (GRANULE_WIDTH      ),
         .SHR_DEPTH      (SHR_DEPTH          ),
         .VEC_ID_WIDTH   (VEC_ID_WIDTH       )

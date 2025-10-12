@@ -10,7 +10,7 @@
 
 #define REF_VECTOR_NO   8
 #define CMP_VECTOR_NO   24
-#define THRESHOLD       0.5
+#define THRESHOLD       0.66
 
 typedef struct {
     uint32_t id;                  /* ID of the vector */

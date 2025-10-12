@@ -82,7 +82,6 @@ module tb_tanimoto_top #(
         .VECTOR_WIDTH    (VECTOR_WIDTH  ),
         .SHR_DEPTH       (SHR_DEPTH     ),
         //
-        .SUB_VECTOR_NO   (SUB_VECTOR_NO ),
         .GRANULE_WIDTH   (GRANULE_WIDTH ),
         .VEC_ID_WIDTH    (VEC_ID_WIDTH  )
     ) dut (
@@ -143,7 +142,8 @@ module tb_tanimoto_top #(
     integer vector_file;
     integer scan_file;
     reg [7:0] vectors [(REF_VEC_NO+CMP_VEC_NO)*VECTOR_WIDTH_BYTES-1:0];
-    real THRESHOLD = 0.5;
+    real THRESHOLD = 0.66;
+    integer tmp; // get the simulator to 100% round properly
 
     initial begin
         // Read vectors from binary file
@@ -171,7 +171,8 @@ module tb_tanimoto_top #(
         #CLK_PERIOD;
         wr_threshold <= 1;
         for(integer cnt_c = 0; cnt_c <= VECTOR_WIDTH; cnt_c = cnt_c + 1) begin
-            threshold = $rtoi(cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD));
+            tmp = cnt_c * (2.0-THRESHOLD)/(1.0-THRESHOLD);
+            threshold = tmp;
             threshold_addr = cnt_c;
             #CLK_PERIOD;
         end
@@ -221,7 +222,7 @@ module tb_tanimoto_top #(
     always @ (posedge clk)
     begin
         if(id_pair_read) begin
-            $display("id_pair_out[%d]: %x - %x", id_pair_no, id_pair_out[2*VEC_ID_WIDTH-1:VEC_ID_WIDTH], id_pair_out[VEC_ID_WIDTH-1:0]);
+            $display("id_pair_out[%d]\t%x\t%x", id_pair_no, id_pair_out[2*VEC_ID_WIDTH-1:VEC_ID_WIDTH], id_pair_out[VEC_ID_WIDTH-1:0]);
             id_pair_no = id_pair_no + 1;
         end
     end

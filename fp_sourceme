@@ -3,6 +3,6 @@ export RTL=$PWD/tanimoto_rtl
 export HLS=$PWD/hls_if
 export PFM=$PWD/platform/WorkSpace
 
-source /tools/Xilinx/Vivado/2023.2/settings64.sh
-source /tools/Xilinx/Vitis_HLS/2023.2/settings64.sh
-source /tools/Xilinx/Vitis/2023.2/settings64.sh
+source /xilinx/Vivado/2023.2/settings64.sh
+source /xilinx/Vitis_HLS/2023.2/settings64.sh
+source /xilinx/Vitis/2023.2/settings64.sh
