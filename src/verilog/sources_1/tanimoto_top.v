@@ -22,7 +22,6 @@ module tanimoto_top
         SHR_DEPTH           = 8,        // how many vectors this module is able to store as reference vectors
         VEC_ID_WIDTH        = 16,       // implicitly defines how wide vector counters need to be
         //
-        SUB_VECTOR_NO       = (VECTOR_WIDTH + BUS_WIDTH -1) / BUS_WIDTH,    // no real functions used
         CNT_WIDTH           = $clog2(VECTOR_WIDTH),
         FIFO_TREE_DEPTH     = ($clog2(SHR_DEPTH) + 1)
     )(
@@ -50,6 +49,8 @@ module tanimoto_top
         output wire                         o_IDPair_Last
     );
 
+    localparam SUB_VECTOR_NO = (VECTOR_WIDTH + BUS_WIDTH -1) / BUS_WIDTH;    // no real functions used
+
     // States
     localparam LOAD_REF     = 2'b00;
     localparam COMPARE      = 2'b01;
@@ -58,6 +59,7 @@ module tanimoto_top
     // Delays
     localparam CNT1_DELAY   = $rtoi($ceil($log10($itor(BUS_WIDTH)/($itor(GRANULE_WIDTH)*3.0))/$log10(3.0))) + 2;
     localparam FLUSH_DELAY  = CNT1_DELAY + SHR_DEPTH*SUB_VECTOR_NO + CNT1_DELAY;      // flush time until FIFO tree is the only factor
+
 
     // SUB_VECTOR_COUNTER
     // Counts backwards due to SHR_A indexing considerations
