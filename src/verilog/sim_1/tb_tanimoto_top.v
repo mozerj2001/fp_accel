@@ -2,6 +2,7 @@
 
 `include "../sources_1/tanimoto_top.v"
 
+
 module tb_tanimoto_top #(
 )(
 );
@@ -77,6 +78,7 @@ module tb_tanimoto_top #(
 
     assign id_pair_read = id_pair_ready;
 
+`ifndef POST_SYNTHESIS_SIMULATION
     top_intf #(
         .BUS_WIDTH       (BUS_WIDTH     ),
         .VECTOR_WIDTH    (VECTOR_WIDTH  ),
@@ -103,6 +105,34 @@ module tb_tanimoto_top #(
         .BRAM_PORTA_en_a        (1'b1               ),  
         .BRAM_PORTA_we_a        (wr_threshold       )
     );
+`else
+    top_intf_n #(
+        .BUS_WIDTH       (BUS_WIDTH     ),
+        .VECTOR_WIDTH    (VECTOR_WIDTH  ),
+        .SHR_DEPTH       (SHR_DEPTH     ),
+        //
+        .GRANULE_WIDTH   (GRANULE_WIDTH ),
+        .VEC_ID_WIDTH    (VEC_ID_WIDTH  )
+    ) dut (
+        .ap_clk                 (clk                ),
+        .ap_rstn                (rstn               ),
+        .S_AXIS_DATA_tdata      (f_dout             ),
+        .S_AXIS_DATA_tvalid     (~f_empty && state  ),
+        .S_AXIS_DATA_tlast      (input_last         ),
+        .S_AXIS_DATA_tready     (f_read             ),
+        .M_AXIS_ID_PAIR_tdata   (id_pair_out        ),
+        .M_AXIS_ID_PAIR_tvalid  (id_pair_ready      ),
+        .M_AXIS_ID_PAIR_tlast   (id_pair_last       ),
+        .M_AXIS_ID_PAIR_tready  (id_pair_read       ),
+        .BRAM_PORTA_clk_a       (clk                ),
+        .BRAM_PORTA_rst_a       (!rstn              ),  
+        .BRAM_PORTA_addr_a      (threshold_addr     ),
+        .BRAM_PORTA_wrdata_a    (threshold          ), 
+        .BRAM_PORTA_rddata_a    (                   ), 
+        .BRAM_PORTA_en_a        (1'b1               ),  
+        .BRAM_PORTA_we_a        (wr_threshold       )
+    );
+`endif  // POST_SYNTHESIS_SIMULATION
 
     always begin 
         clk <= ~clk;
